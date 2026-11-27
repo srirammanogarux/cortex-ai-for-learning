@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" class="f-sleek">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex · Onboarding Part A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <aside class="side">
+      <p class="eyebrow">Prototype · Part A · PM path</p>
+      <h2>Cortex onboarding</h2>
+      <p>Screens 1–7: the trailer, three quick questions, and choosing what to ponder. Tap through it like a new user.</p>
+      <nav class="jump" id="jump" aria-label="Screens"></nav>
+      <button class="replay" id="replay">↻ Replay from the start</button>
+    </aside>
+
+    <main id="phoneHolder">
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone">
+          <div class="island"></div>
+          <div class="screen is-dark" id="screen">
+            <div class="statusbar"><span>9:41</span><span aria-hidden="true" style="display:flex;gap:6px;align-items:center">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+              <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="currentColor"/></svg>
+            </span></div>
+
+            <div class="night" id="night"></div>
+            <div class="aurora" id="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i></div>
+            <div class="space" id="space"></div>
+            <div class="brain-wrap" id="brainWrap"><div class="brain-halo"></div><canvas id="brain" aria-label="Cortex brain. Touch it."></canvas></div>
+            <div class="touch-hint" id="touchHint" style="opacity:0">Touch it</div>
+            <div class="scrim" id="scrim"></div>
+            <div class="tline" id="tline" aria-live="polite"></div>
+            <div class="tsub" id="tsub"></div>
+            <div class="tap" id="tap" style="opacity:0">Tap to continue</div>
+
+            <div class="qtop" id="qtop" style="opacity:0;pointer-events:none">
+              <button class="back" id="back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+            </div>
+            <div class="callout center hide" id="callout"><div class="txt" id="calloutTxt"></div></div>
+            <div class="opts" id="opts" role="radiogroup"></div>
+            <div class="ponder" id="ponder"></div>
+
+            <div class="cta hide" id="cta"><button class="btn" id="ctaBtn"><span id="ctaLabel">Continue</span></button></div>
+            <canvas id="fx"></canvas>
+            <div class="endA" id="endA"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="side"></aside>
+  </div>
+
+  <script src="brain.js"></script>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

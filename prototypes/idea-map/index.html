@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex · Curiosity map prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <aside class="side">
+      <p class="eyebrow">Prototype · Work persona</p>
+      <h2>The curiosity map</h2>
+      <p>Sam, a product manager, asked: “Why do some products become habits?” Every bubble is a question, and every question is a small world.</p>
+      <div class="gesture"><span class="k">✋</span><span><b>Drag to explore</b>Bubbles grow as they reach the middle.</span></div>
+      <div class="gesture"><span class="k">👆</span><span><b>Tap a question to travel</b>It moves to the centre and its own links bloom around it.</span></div>
+      <div class="gesture"><span class="k">🔍</span><span><b>Tap the centre to dive in</b>Zoom into its world. Follow a thread out to the next one.</span></div>
+      <div class="gesture"><span class="k">🤏</span><span><b>Pinch or ⌘ + scroll</b>Zoom out to see the whole map.</span></div>
+      <button class="replay" id="replay">↻ Replay from the start</button>
+    </aside>
+
+    <main id="phoneHolder">
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone">
+          <div class="island"></div>
+          <div class="screen" id="screen">
+            <div class="statusbar"><span>9:41</span><span aria-hidden="true" style="display:flex;gap:6px;align-items:center">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+              <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="currentColor"/></svg>
+            </span></div>
+
+            <div id="map" aria-label="Curiosity map"><svg id="edges"></svg><div id="nodes"></div></div>
+            <div class="topfade"></div><div class="botfade"></div>
+
+            <div class="topbar">
+              <button class="circ" id="backBtn" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <h1>Your curiosity map</h1>
+              <button class="trail" id="trailBtn"><i></i><span id="trailN">1</span></button>
+            </div>
+
+            <div class="hint" id="hint">Drag to explore · tap a question to travel</div>
+
+            <div class="bottombar">
+              <button class="circ" aria-label="Search" id="searchBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
+              <div class="chips" id="chips" role="toolbar" aria-label="Filter by link"></div>
+              <button class="ask" aria-label="Ask your own question" id="askBtn"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c.6 4.8 2.7 6.9 9.5 9.5-6.8 2.6-8.9 4.7-9.5 9.5-.6-4.8-2.7-6.9-9.5-9.5 6.8-2.6 8.9-4.7 9.5-9.5z"/></svg></button>
+            </div>
+
+            <div id="world" aria-hidden="true">
+              <div class="w-bg"></div>
+              <div class="w-scroll" id="wScroll"></div>
+            </div>
+
+            <div id="intro">
+              <div class="ubub">Why do some products become habits?</div>
+              <div class="who">Sam · Product manager</div>
+              <div id="introBrain"><canvas id="brain" aria-label="Cortex brain. Touch it."></canvas></div>
+              <div class="cap" id="introCap"></div>
+              <button class="skip" id="skipIntro">Skip intro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="side"></aside>
+  </div>
+
+  <script src="brain.js"></script>
+  <script src="graph.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
