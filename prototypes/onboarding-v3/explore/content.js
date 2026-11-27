@@ -1,4 +1,4 @@
-// Exploration content for Part B. Owned by the Explore module.
+// Exploration content for the exploration. Owned by the Explore module.
 // Inline glowing terms use [[nodeId|shown text]] (or [[nodeId]] to show the term's own label).
 // Every term opens a node of the same id. Facts are attributed; nothing here is invented.
 window.CONTENT = (function () {

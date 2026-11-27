@@ -1,4 +1,4 @@
-// Tiny event bus shared by the Part B modules. See CONTRACT.md for the events.
+// Tiny event bus shared by the exploration modules. See CONTRACT.md for the events.
 window.Bus = (function () {
   const h = {};
   return {

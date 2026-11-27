@@ -147,7 +147,7 @@ button:focus-visible { outline: 2px solid var(--cobalt-500); outline-offset: 3px
 .porb.dive { z-index: 50; animation: none; transform: translate(-50%, -50%) scale(7.5); transition: transform 1100ms cubic-bezier(.6,0,.2,1), left 1100ms cubic-bezier(.6,0,.2,1), top 1100ms cubic-bezier(.6,0,.2,1); }
 .porb.dive span { opacity: 0; transition: opacity 250ms; }
 
-/* Part A ending card */
+/* Ending card (when a non-prototyped orb is picked) */
 .endA { position: absolute; inset: 0; z-index: 60; padding: 110px 24px 40px; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 600ms ease-out; background: linear-gradient(180deg, #F4F2F6, #ECEAEE); }
 .endA.on { opacity: 1; pointer-events: auto; }
 .endA .eb { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--cobalt-700); }

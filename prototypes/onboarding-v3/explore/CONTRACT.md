@@ -1,6 +1,6 @@
-# Part B · module contract
+# Exploration · module contract
 
-Part B is a single page: `partb/index.html`. It's plain HTML/CSS/JS, with no build step and no frameworks. It runs inside a phone frame, and the screen area is **368 × 822 px** (`#screen`, `overflow: hidden`, `border-radius: 46px`). Everything is mobile-first, at 1× CSS px.
+The exploration is a single page: `explore/index.html`. It's plain HTML/CSS/JS, with no build step and no frameworks. It runs inside a phone frame, and the screen area is **368 × 822 px** (`#screen`, `overflow: hidden`, `border-radius: 46px`). Everything is mobile-first, at 1× CSS px.
 
 ## Files and owners
 | File | Owner | What it is |
@@ -68,7 +68,7 @@ Each module must work on its own, even when the other modules' files are missing
 - **No emojis as icons.** Use `iconSVG` or inline SVG. No sound.
 - **Every visible control must work, or not exist.** No dead buttons. Tap targets ≥ 44px.
 
-## Images (lead generates into `partb/assets/`)
+## Images (lead generates into `explore/assets/`)
 Use exactly these paths. Until they exist, the `<img>` should still lay out at its fixed size, with a soft tint background.
 
 | Path | What it shows |

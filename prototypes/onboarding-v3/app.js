@@ -14,7 +14,7 @@
   let PS = 1, timers = [];
   const later = (fn, ms) => timers.push(setTimeout(fn, STILL ? Math.min(ms, 20) : ms));
   const auto = (fn, ms) => { if (!STILL) later(fn, ms); };
-  window.PARTB_READY = true;
+  window.EXPLORE_READY = true;
   const st = { i: 0, goal: null, role: null };
 
   // ---------- Brain placement ----------
@@ -253,12 +253,12 @@
     $('key').style.opacity = 0; place(orb.x, orb.y, orb.s, { hidden: true });
     qtop.style.opacity = 0;
     b.style.left = '184px'; b.style.top = '411px'; b.classList.add('dive');
-    if (/habits/.test(q) && window.PARTB_READY) { auto(() => { location.href = 'partb/'; }, 1150); }
+    if (/habits/.test(q) && window.EXPLORE_READY) { auto(() => { location.href = 'explore/'; }, 1150); }
     later(() => {
       endA.innerHTML = `<p class="eb">You chose to ponder</p><h1>${q}</h1>
-        <div class="note"><b>This prototype explores one question in full:</b> “Why do some products become habits?”. ${window.PARTB_READY ? 'Pick that orb to continue into Part B.' : 'Part B (the exploration) is being built and will open from here.'}</div>
-        ${window.PARTB_READY ? '<a class="btn" href="partb/" style="margin-top:14px;display:grid;place-items:center;text-decoration:none"><span>Open the habits exploration</span></a>' : ''}
-        <button class="btn" style="margin-top:10px;background:#EEECF0;color:#141211;box-shadow:none" id="againA"><span>↻ Replay Part A</span></button>`;
+        <div class="note"><b>This prototype explores one question in full:</b> “Why do some products become habits?”. Pick that orb to keep going.</div>
+        ${window.EXPLORE_READY ? '<a class="btn" href="explore/" style="margin-top:14px;display:grid;place-items:center;text-decoration:none"><span>Open the habits exploration</span></a>' : ''}
+        <button class="btn" style="margin-top:10px;background:#EEECF0;color:#141211;box-shadow:none" id="againA"><span>↻ Start again</span></button>`;
       endA.classList.add('on'); $('againA').addEventListener('click', replay);
       delete ponder.dataset.diving;
     }, 1050);
@@ -280,7 +280,8 @@
   });
 
   function renderJump() {
-    $('jump').innerHTML = SCENES.map((s, k) => `<button data-j="${k}" ${k === st.i ? 'aria-current="step"' : ''}><i>${k + 1}</i>${s.name}</button>`).join('');
+    $('jump').innerHTML = SCENES.map((s, k) => `<button data-j="${k}" ${k === st.i ? 'aria-current="step"' : ''}><i>${k + 1}</i>${s.name}</button>`).join('') +
+      [['Exploration', 'explore/'], ['Zoom out to your map', 'explore/?part=2'], ['Save to your brain', 'explore/?part=3']].map(([n, h], k) => `<button onclick="location.href='${h}'"><i>${SCENES.length + k + 1}</i>${n}</button>`).join('');
     $('jump').querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => {
       const k = +b.dataset.j; if (k >= 6 && !st.goal) st.goal = 'work'; if (k >= 7 && !st.role) st.role = 'Product manager'; go(k);
     }));

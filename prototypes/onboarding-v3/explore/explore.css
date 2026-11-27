@@ -1,4 +1,4 @@
-/* Explore: full-screen exploration (Part B). Everything is scoped under .ex-root. */
+/* Explore: full-screen exploration . Everything is scoped under .ex-root. */
 .ex-root {
   --ink: #141211; --ink-2: #57534F; --ink-3: #5C5854;
   --c3: #7FA3FF; --c5: #1F5BE0; --c7: #1A47B8; --c9: #0B2A66;

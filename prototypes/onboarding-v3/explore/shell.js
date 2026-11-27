@@ -15,10 +15,12 @@
   if (window.MapUI) MapUI.mount($('mapLayer'));
   if (window.Finale) Finale.mount($('finaleLayer'));
 
-  const PARTS = [['Exploration', () => Bus.emit('reset', {})], ['Zoom out to the map', () => window.MapUI && MapUI.demo && MapUI.demo()], ['Save to your brain', () => window.Finale && Finale.demo && Finale.demo()]];
+  const PARTS = [['Exploration', () => Bus.emit('reset', {})], ['Zoom out to your map', () => window.MapUI && MapUI.demo && MapUI.demo()], ['Save to your brain', () => window.Finale && Finale.demo && Finale.demo()]];
   let cur = 0;
   function renderJump() {
-    $('jump').innerHTML = PARTS.map((p, k) => `<button data-j="${k}" ${k === cur ? 'aria-current="step"' : ''}><i>${k + 1}</i>${p[0]}</button>`).join('');
+    const A = ["Your brain asks millions", "A world of questions", "What if…", "Welcome to Cortex", "A few quick questions", "Main learning goal", "What do you do?", "What to ponder"];
+    $('jump').innerHTML = A.map((n, k) => `<button onclick="location.href='../?s=${k + 1}'"><i>${k + 1}</i>${n}</button>`).join('') +
+      PARTS.map((p, k) => `<button data-j="${k}" ${k === cur ? 'aria-current="step"' : ''}><i>${A.length + k + 1}</i>${p[0]}</button>`).join('');
     $('jump').querySelectorAll('[data-j]').forEach((b) => b.addEventListener('click', () => { cur = +b.dataset.j; renderJump(); PARTS[cur][1](); }));
   }
   Bus.on('map:state', ({ open }) => { cur = open ? 1 : 0; renderJump(); });

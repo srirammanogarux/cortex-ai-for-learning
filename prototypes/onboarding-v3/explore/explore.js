@@ -1,4 +1,4 @@
-// Explore: the full-screen exploration for Part B. Mounts into #exploreLayer.
+// Explore: the full-screen exploration for the exploration. Mounts into #exploreLayer.
 // Content lives in content.js (window.CONTENT). Talks to other modules only through Bus (see CONTRACT.md).
 (function () {
   const C = window.CONTENT, N = C.nodes, ROOT = C.root;
