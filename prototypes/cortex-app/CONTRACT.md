@@ -136,3 +136,49 @@ The brain buddy. It is a sidekick, not the hero: it shows what the app is doing 
 **Topics**: `brain` (itself), `heart`, `planet`, `cat`, `crocodile`, `octopus`, `leaf`, `camera`, `atom`, `book`, `music`. The body morphs into the topic's silhouette and keeps its face. Map content to topics in your module (Ask keeps its map in `ask/content.js` → `mascot`).
 
 **Where it is used**: Ask home C (big hello, `curious` on focus, `listening` while typing or holding to talk), every Ask answer (48 px, docked by the status line: thinking → searching → reading → connecting ideas → ready, morphs to the answer's topic, then `aside`), and the side panel's `#mascotPanel` (state and topic chips plus a preview). Onboarding can use the same `Mascot.create` API.
+
+## v5 additions (course-first personalisation)
+**Build that matters:** `living/index.html` (Living Matter: Fraunces + Figtree, warm palette). The root `index.html` must not break.
+
+**Visual rules:**
+- **Particles** appear only in three places: onboarding, collectibles, and the central node of the Ask map and the Profile graph.
+- **Small illustrations** (roadmap stops, Ask map nodes, graph orbs) are **painted**: `OrbGlyphs.svg(id, 'ii', subject, size)` from `profile/orb-glyphs.js`, now loaded before `learn/`.
+- **The mascot lives only in the Ask tab** (main app). Directions: `A` Line (default), `F` Particle.
+- Never write "Touch it" anywhere.
+
+**Store additions:**
+- `profile`: `{ persona, topic, topicLabel, reason: 'work'|'exam'|'career'|'life', role, roleText, level, goal, goalText, daily, span }`
+- `justBuilt`: `true` right after onboarding. Learn shows the plan reveal, then sets it to `false`.
+- `asksUsed`
+- `variants.roadmap`: `'stack'|'timeline'|'chapters'|'path'`
+- `variants.paywall`: `'tab'|'hard'|'onboarding'|'soft'` (URL `?pw=`)
+- `variants.persona`: `'priya'|'arjun'|'maya'|'tom'|'lena'`
+- Defaults change: `mascot` is now `'A'`, `orbs` is now `'ii'`.
+
+**Course shape:** `COURSES[id]` may add:
+- `summary`: the one line on the plan, e.g. "Built for a product manager who wants to explain AI to the team."
+- `goalShort`: for the progress line, e.g. "explain AI to your team".
+- `persona`
+- `lessons[i].because`: the reason this stop is in *your* plan.
+- `lessons[i].glyph`: an OrbGlyphs id.
+- `lessons[i].forYou`: one "for you" line.
+- `lessons[i].added`: `true` if it was added adaptively.
+
+`window.buildCourse(profile)` (in `data/courses-catalog.js`) builds and registers a personalised course and returns its id. The shell calls it on `onboarding:done` when `d.profile` is present. Otherwise it falls back to the catalog.
+
+**`onboarding:done` payload:** adds `profile`.
+
+**`App.gate(moment, opts)` → `Promise<boolean>`** (may I continue?). The shell decides by `variants.paywall`, and Plus always passes.
+
+| moment | Who calls it | Behaviour |
+|---|---|---|
+| `'start'` | Learn, on "Start learning" in the plan reveal | `hard` → a non-dismissible paywall; continue only if upgraded |
+| `'lesson-done'` | Learn, after each lesson's finish screen | `soft` → a dismissible paywall; always resolves `true` |
+| `'next-course'` | Learn, on "Start your next course" at the end of a course | paywall; continue only if upgraded |
+| `'ask'` | Ask, **once per new question** | The first 4 are free (counts `Store.asksUsed`), then the paywall |
+| `'branch'`, `{ qid }` | Ask, **once per new branch** | 4 per question are free, then the paywall |
+| `'graph'` | Profile | paywall |
+
+`variants.paywall === 'onboarding'`: the shell opens a dismissible paywall about 2.6s after landing on the plan.
+
+**Personas:** `window.PERSONAS = { priya: { name, age, blurb, profile: {…} }, arjun, maya, tom, lena }`, defined in `data/personas.js` (owned by Onboarding). `?tab=…` uses `ensureDemo()`, which builds the course for `variants.persona` with `buildCourse`. Switching persona in the side panel while you're on a tab rebuilds that persona's course.
