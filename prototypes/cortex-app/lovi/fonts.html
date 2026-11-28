@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex × Lovi · Which free font is closest to ES Rebond Grotesque?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Gantari:wght@100..900&family=Figtree:wght@300..900&family=DM+Sans:opsz,wght@9..40,100..1000&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Red+Hat+Display:wght@300..900&family=Funnel+Display:wght@300..800&family=Onest:wght@100..900&family=Familjen+Grotesk:wght@400..700&family=Host+Grotesk:wght@300..800&family=Schibsted+Grotesk:wght@400..900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap" rel="stylesheet">
+  <style>
+    @font-face { font-family: 'Lovi Text'; src: url(https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-Variable.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+    :root { --bone: #F6ECE1; --shell: #FFF8F1; --humus: #2B1A12; --bark: #6A4636; --ink-3: #7A5444; --ember: #B83A1C; --ember-tint: #F8E2CF; --coral: #F07B5A; --saffron: #EFB43E;
+      --display: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; --text: 'Lovi Text', ui-sans-serif, system-ui, sans-serif;
+      --card: 0 1px 2px rgba(120, 60, 30, .04), 0 10px 28px -14px rgba(120, 60, 30, .22); }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--humus); font-family: var(--text); font-feature-settings: "ss01", "ss02", "ss06"; -webkit-font-smoothing: antialiased;
+      background: radial-gradient(70% 40% at 20% 0%, rgba(240, 123, 90, .16), transparent 70%), radial-gradient(60% 40% at 85% 6%, rgba(239, 180, 62, .16), transparent 70%), linear-gradient(180deg, #FFF5EA, #F7E8D8 40%, #EFDDCA); min-height: 100vh; }
+    main { max-width: 1120px; margin: 0 auto; padding: 56px 32px 80px; }
+    a { color: var(--ember); }
+    .eb { margin: 0 0 8px; font-size: 14px; font-weight: 500; color: var(--ember); }
+    h1, h2, h3 { font-family: var(--display); font-weight: 480; letter-spacing: -.022em; font-feature-settings: normal; margin: 0; }
+    h1 { font-size: 44px; line-height: 48px; max-width: 760px; }
+    h2 { font-size: 28px; line-height: 32px; margin: 56px 0 6px; }
+    p { font-size: 16px; line-height: 24px; color: var(--bark); max-width: 760px; }
+    .card { background: var(--shell); border-radius: 26px; box-shadow: var(--card); padding: 24px 26px; }
+    .verdict { margin-top: 28px; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start; }
+    .verdict .dot { width: 52px; height: 52px; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #fff, #FFF8F1 38%, #F0DCC8); box-shadow: inset -6px -8px 16px rgba(184, 58, 28, .1), 0 10px 22px -10px rgba(184, 58, 28, .45); display: grid; place-items: center; font: 500 22px var(--display); color: var(--ember); }
+    .verdict h3 { font-size: 22px; line-height: 27px; margin-bottom: 6px; }
+    .verdict p { margin: 0 0 8px; }
+    .verdict ul { margin: 8px 0 0; padding-left: 18px; color: var(--bark); line-height: 24px; }
+    code { font-size: 13.5px; background: rgba(246, 236, 225, .9); padding: 2px 6px; border-radius: 6px; }
+
+    /* Lovi in the wild: crops of the real app (Mobbin previews, so they are soft) */
+    .wild { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+    .wild figure { margin: 0; background: #fff; border-radius: 22px; box-shadow: var(--card); padding: 16px; overflow: hidden; }
+    .crop { background-repeat: no-repeat; zoom: 1.5; }
+    .wild figcaption { font-size: 13px; color: var(--ink-3); margin-top: 8px; }
+
+    /* The line-up */
+    .row { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: center; padding: 14px 22px; border-radius: 22px; }
+    .row + .row { margin-top: 8px; }
+    .row.ref { background: #fff; box-shadow: inset 0 0 0 1.5px var(--ember), var(--card); position: sticky; top: 8px; z-index: 2; }
+    .row.cand { background: rgba(255, 248, 241, .72); }
+    .row.pick { background: var(--shell); box-shadow: var(--card); }
+    .meta b { display: block; font-family: var(--display); font-weight: 520; font-size: 18px; letter-spacing: -.01em; }
+    .meta span { display: block; font-size: 13px; line-height: 18px; color: var(--ink-3); margin-top: 2px; }
+    .meta i { display: inline-flex; align-items: center; font-style: normal; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: var(--ember-tint); color: var(--ember); margin-top: 6px; }
+    .lines { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 40px; }
+    .lines div { font-size: 48px; line-height: 56px; white-space: nowrap; color: var(--humus); font-feature-settings: normal; }
+    .lines img { display: block; height: 76px; margin: -10px -20px; }
+    .score { display: inline-block; min-width: 46px; }
+    .bar { display: inline-block; vertical-align: middle; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--saffron), var(--ember)); margin-left: 8px; }
+
+    table { margin-top: 16px; border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(106, 70, 54, .1); }
+    th { font-weight: 500; color: var(--ink-3); }
+    .glyphs { font-size: 110px; line-height: 120px; letter-spacing: -.022em; white-space: nowrap; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eb">Cortex × Lovi · font study</p>
+  <h1>Which free font is closest to ES Rebond Grotesque?</h1>
+  <p>Lovi sets its headlines in <b>ES Rebond Grotesque</b> by Extraset (Regular and Medium, about 44–48px, −1px tracking) and its body in <b>Geist</b> with stylistic sets ss01, ss02 and ss06. Rebond is commercial, and its trial licence rules out our public site and repo. The rule: use a free lookalike only if it is about 99% the same.</p>
+
+  <div class="card verdict">
+    <div class="dot" aria-hidden="true">Aa</div>
+    <div>
+      <h3>Verdict: no free font is 99% Rebond. Hanken Grotesk is the closest, at about 85%.</h3>
+      <p>Hanken Grotesk on its variable weight axis (Regular ≈ 380, Medium ≈ 480, −0.022em) matches Rebond’s colour, x-height, width and its <code>t</code>, <code>y</code>, <code>g</code>, <code>R</code> and <code>C</code>. It scored best on ink overlap too. What gives it away up close:</p>
+      <ul>
+        <li>Rebond’s <code>?</code> and <code>2</code> have a calligraphic curl; Hanken’s are plain.</li>
+        <li>Rebond’s <code>a</code> has a smaller, tucked bowl, and its terminals are slightly flared.</li>
+        <li>Rebond’s spacing is a touch more even at large sizes.</li>
+      </ul>
+      <p style="margin-top:10px">So the public <a href="index.html">Lovi build</a> uses Hanken Grotesk as a stand-in, wired through one variable, <code>--lovi-display</code>. For the real look, put the Rebond trial files in <code>lovi/fonts/</code> (git-ignored) on a private deploy, uncomment the <code>@font-face</code> stub in <code>lovi/theme.css</code>, and point <code>--lovi-display</code> at it.</p>
+    </div>
+  </div>
+
+  <h2>Lovi’s headlines, in the app</h2>
+  <p>Crops of the real Lovi screens (from Mobbin’s previews, so they are soft).</p>
+  <div class="wild">
+    <figure><div class="crop" style="width:236px;height:66px;background-image:url(ref/sensitive.webp);background-position:-48px -112px"></div><figcaption>The question bubble</figcaption></figure>
+    <figure><div class="crop" style="width:280px;height:62px;background-image:url(ref/email.webp);background-position:-12px -72px"></div><figcaption>A sheet title</figcaption></figure>
+    <figure><div class="crop" style="width:184px;height:62px;background-image:url(ref/greatstart.webp);background-position:-58px -356px"></div><figcaption>A hero line</figcaption></figure>
+    <figure><div class="crop" style="width:282px;height:34px;background-image:url(ref/welcomeback.webp);background-position:-9px -359px"></div><figcaption>Welcome back</figcaption></figure>
+    <figure><div class="crop" style="width:240px;height:38px;background-image:url(ref/paywall.webp);background-position:-30px -187px"></div><figcaption>The paywall</figcaption></figure>
+    <figure><div class="crop" style="width:170px;height:36px;background-image:url(ref/precleanser.webp);background-position:-8px -255px"></div><figcaption>A section title</figcaption></figure>
+  </div>
+
+  <h2>Our headlines, side by side</h2>
+  <p>The top row is the real ES Rebond Grotesque Regular, rendered on Extraset’s own specimen page. Every candidate below is set at 48px in the weight and tracking that match Rebond best. Scores are ink overlap with Rebond, 0 to 1; even the closest is far from a match.</p>
+  <div id="lineup"></div>
+
+  <h2>Up close</h2>
+  <div class="card" style="overflow:hidden">
+    <div class="glyphs"><img src="ref/rebond-hamburgefonstiv.png" alt="Hamburgefonstiv agtyR 0123 in ES Rebond Grotesque" style="height:76px;display:block;margin:-10px -20px"></div>
+    <div class="glyphs" style="font-family:'Hanken Grotesk';font-weight:380;font-size:48px;line-height:56px;padding:0 0 0 0">Hamburgefonstiv agtyR 0123</div>
+    <p style="margin:6px 0 0;font-size:13px">Top: Rebond. Bottom: Hanken Grotesk 380. Look at the <code>a</code>, the <code>2</code> and the <code>3</code>.</p>
+  </div>
+
+  <h2>How it was scored</h2>
+  <p>Each candidate drew the same three lines (“Hi, I’m Cortex”, “What do you want to learn?” and “Hamburgefonstiv agtyR 0123”) in the browser. Each line was cropped to its ink, scaled to Rebond’s box, and compared pixel by pixel. The score is the average shared ink (intersection over union). A font that is the same would score above 0.9. Weight and tracking were tuned per font by eye first. Geist, Lovi’s body face, is included for scale.</p>
+  <table id="scores"><thead><tr><th>Font</th><th>Setting</th><th>Ink overlap</th><th>Width vs Rebond</th><th>Ink vs Rebond (relative; all renders run heavier)</th></tr></thead><tbody></tbody></table>
+</main>
+<script>
+  // [family, weight, tracking at 48px, score, width ratio, ink ratio, extra CSS, note]
+  const C = [
+    ['Hanken Grotesk', 380, '-1px', .513, 0.99, 1.20, '', 'The pick. Same colour, x-height and width; the t, y, g, R and C match.'],
+    ['Gantari', 350, '-1.2px', .462, 1.04, 1.07, '', 'Close weight, but wider, with rounder bowls.'],
+    ['Figtree', 380, '-1px', .442, 1.00, 1.20, '', 'Friendly and geometric; the a and e are rounder.'],
+    ['DM Sans', 380, '-1px', .435, 0.99, 1.19, "font-variation-settings:'opsz' 32", 'Geometric; a single-storey feel and a round e.'],
+    ['Instrument Sans', 400, '-1px', .426, 0.97, 1.17, '', 'Sharper terminals, condensed, more editorial.'],
+    ['Red Hat Display', 420, '-0.6px', .424, 0.98, 1.17, '', 'Good colour and slanted t, but the a, g and e are geometric.'],
+    ['Funnel Display', 380, '-1px', .418, 1.06, 1.31, '', 'Quirky, wide and heavier.'],
+    ['Onest', 380, '-1px', .413, 1.00, 1.22, '', 'The y has a curly tail; reads rounder.'],
+    ['Familjen Grotesk', 400, '-1px', .393, 0.99, 1.44, '', 'Too heavy and too characterful.'],
+    ['Host Grotesk', 380, '-1px', .349, 1.00, 1.22, '', 'Wide spacing; a different rhythm.'],
+    ['Schibsted Grotesk', 400, '-1px', .327, 0.98, 1.24, '', 'Newsy, with sharper joins.'],
+    ['Bricolage Grotesque', 400, '-1px', .304, 1.04, 1.34, "font-variation-settings:'opsz' 14,'wdth' 92", 'Even calmed (opsz 14, wdth 92) it is too ink-trapped.'],
+  ];
+  const max = .55;
+  document.getElementById('lineup').innerHTML =
+    `<div class="row ref"><div class="meta"><b>ES Rebond Grotesque</b><span>Regular · −1px · the real font</span></div><div class="lines"><img src="ref/rebond-hi-cortex.png" alt="Hi, I’m Cortex, in Rebond" style="width:320px;height:auto"><img src="ref/rebond-what-to-learn.png" alt="What do you want to learn?, in Rebond" style="width:596px;height:auto"></div></div>` +
+    C.map(([f, w, ls, s, , , x, note], k) => `<div class="row ${k ? 'cand' : 'pick'}"><div class="meta"><b>${f}</b><span>${w} · ${ls}</span><span>${note}</span><i><span class="score">${s.toFixed(2)}</span><span class="bar" style="width:${Math.round(s / max * 60)}px"></span></i></div>
+      <div class="lines" style="font-family:'${f}';font-weight:${w};letter-spacing:${ls};${x}"><div>Hi, I’m Cortex</div><div>What do you want to learn?</div></div></div>`).join('');
+  document.querySelector('#scores tbody').innerHTML = C.concat([['Geist', 400, '-1px', .371, 1.02, 1.35, '', '']]).map(([f, w, ls, s, wr, ir]) =>
+    `<tr><td>${f}</td><td>${w} · ${ls}</td><td>${s.toFixed(3)}</td><td>${Math.round(wr * 100)}%</td><td>${ir > 1 ? '+' : ''}${Math.round((ir - 1) * 100)}% ink</td></tr>`).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+/* Cortex × Lovi: type, components and spacing only. Loaded after ../living/theme.css, so every colour and token is
+   Living Matter's, unchanged. The shared module CSS stays untouched; this file overrides it.
+   Note: living/theme.js rewrites colours in this sheet too (they are already warm) and swaps one body-font name for
+   Figtree, so the body face is only ever called "Lovi Text" here (lovi.js loads it). */
+
+/* ---------- Fonts ----------
+   Display: ES Rebond Grotesque is what Lovi uses. Its trial licence rules out this public build, and no free face is
+   ~99% the same (see fonts.html), so --lovi-display uses the closest free stand-in, Hanken Grotesk (Regular ≈ 380, Medium ≈ 480 on its weight axis).
+   To try the Rebond trial on a private deploy: drop the files in lovi/fonts/ (git-ignored), uncomment the
+   @font-face rules below, and change --lovi-display to 'ES Rebond Grotesque'. Nothing else changes.
+
+@font-face { font-family: 'ES Rebond Grotesque'; src: url(fonts/ESRebondGrotesque-Regular.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'ES Rebond Grotesque'; src: url(fonts/ESRebondGrotesque-Medium.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+*/
+:root {
+  --lovi-display: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --lovi-medium: 480;               /* Rebond Medium; set to 500 when the real Rebond files are in */
+  --lovi-strong: 540;               /* the question bubble */
+  --lovi-text: 'Lovi Text', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --lovi-track: -.022em;            /* Rebond in Lovi: -1px at 44–48px */
+  --font: var(--lovi-text);
+  --display: var(--lovi-display);
+
+  /* Lovi's type scale (sizes and line heights). Display weight 500, text weight 400 (500 for titles in rows). */
+  --lv-hero: 34px; --lv-hero-lh: 38px;
+  --lv-title: 28px; --lv-title-lh: 32px;
+  --lv-q: 22px; --lv-q-lh: 27px;
+  --lv-sec: 20px; --lv-sec-lh: 25px;
+  --t-l: 17px; --lh-l: 24px;
+  --t-m: 15px; --lh-m: 21px;
+
+  /* Lovi's surfaces: flat white cards, a hairline and one soft, wide shadow. No carved insets. */
+  --lv-line: inset 0 0 0 1px rgba(106, 70, 54, .07);
+  --lv-card: 0 1px 2px rgba(120, 60, 30, .04), 0 10px 28px -14px rgba(120, 60, 30, .22);
+  --lv-card-sel: inset 0 0 0 1.5px var(--ember), 0 1px 2px rgba(120, 60, 30, .04), 0 12px 28px -14px rgba(184, 58, 28, .4);
+  --e-rest: var(--lv-line), var(--lv-card);
+  --e-raised: var(--lv-card);
+  --carved: var(--lv-line), var(--lv-card);
+  --card-shadow: var(--lv-card);
+  --r-card: 26px;
+  /* The glossy CTA: palette gradient, a top sheen and a wide coral glow underneath */
+  --lv-cta: radial-gradient(130% 120% at 50% -10%, rgba(255, 255, 255, .32), rgba(255, 255, 255, 0) 55%), linear-gradient(95deg, #F07B5A 0%, #D9553A 48%, #B83A1C 100%);
+  --lv-cta-shadow: inset 0 1px 1px rgba(255, 255, 255, .55), inset 0 -6px 14px rgba(255, 255, 255, .14), 0 12px 34px -4px rgba(240, 123, 90, .55), 0 4px 12px -4px rgba(184, 58, 28, .35);
+  --lit-bg: var(--lv-cta);
+  --lit-shadow: var(--lv-cta-shadow);
+}
+body.lv { font-family: var(--font); font-feature-settings: "ss01", "ss02", "ss06"; }
+.lv button, .lv input, .lv textarea, .lv select { font-family: var(--font); font-feature-settings: "ss01", "ss02", "ss06"; }
+
+/* ---------- Display type: every heading in the display face, Medium, tight ---------- */
+.side h2, .pw-title,
+.ob-tline, .ob-head, .ob-ctx, .ob-card h2, .ob-summary, .ob-num, .lv-say,
+.ln-h1, .ln-h2, .ln-h3, .ln-sh-t, .ln-qh, .ln-card-idea, .ln-done-t, .ln-track-t, .ln-ph-t, .ln-switch-t, .ln-pack-n, .ln-card-q, .ln-stepcard-t,
+.ak-title, .ak-c-title, .ak-c-heard, .ak-wonder-q, .ak-map-head h2, .ak-course .ak-h3, .ak-h2, .ak-h3, .ak-qz-q,
+.pf-name, .pf-atitle, .pf-v-title, .pf-gtitle h2, .pf-h2,
+.pf-stat b, .ln-stat b, .ln-done-stats b, .ak-stats b, .ak-mc-score b,
+.ln-root h1, .ln-root h2, .ak-root h1, .ak-root h2, .pf h1, .pf h2, .ln-sheetwrap h2, .sk-wd-num, .sk-mo-num, .sk-mo-t {
+  font-family: var(--display) !important; font-weight: var(--lovi-medium) !important; letter-spacing: var(--lovi-track) !important;
+  font-variation-settings: normal !important; font-feature-settings: normal !important; font-style: normal;
+}
+/* Eyebrows: Lovi has no shouting caps. Sentence case, small, the accent colour kept. */
+.ln-eyebrow, .ak-eyebrow, .pw-eyebrow, .ob-eyebrow, .ln-ph-eb, .ln-root [class*="-eb"], .ak-root [class*="eyebrow"], .pf [class*="eyebrow"] {
+  text-transform: none !important; letter-spacing: 0 !important; font-size: 14px !important; line-height: 19px !important; font-weight: 500 !important;
+}
+.ln-fy-k, .ln-cmp-k, .ln-rooms-k, .ln-card-fy b, .ln-card-k, .ln-tag, .ak-sug-k, .ak-cmp-k, .ak-tc-no, .ak-tc-bk, .pf-v-eb, .ob .ob-glabel,
+.ln-root [class$="-k"], .ak-root [class$="-k"], .pf [class$="-k"], .ln-root [class$="-eb"], .pf [class$="-eb"] {
+  text-transform: none !important; letter-spacing: 0 !important; font-weight: 500 !important;
+}
+.ln-fy-k, .ln-cmp-k, .ln-rooms-k, .ln-card-k, .ak-sug-k, .ak-cmp-k { font-size: 13.5px !important; }
+/* The paywall's eyebrow is written in capitals; Lovi would say it in words */
+.pw-eyebrow { font-size: 0 !important; }
+.pw-eyebrow::after { content: 'Cortex Plus'; font-size: 15px; line-height: 20px; }
+.side .eyebrow, .side h3 { text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 500; }
+.side h2 { font-size: 28px; line-height: 32px; }
+
+/* ---------- Shell: buttons, tab bar, paywall, toast ---------- */
+.btn-lit, .ob-btn { background: var(--lv-cta); box-shadow: var(--lv-cta-shadow); color: #FFF8F1; font-family: var(--font); font-weight: 500; font-size: 17px; letter-spacing: 0; }
+.btn-lit:disabled { background: var(--disabled); box-shadow: none; color: var(--bark); }
+.btn-carved { background: var(--shell); box-shadow: var(--lv-line), var(--lv-card); font-weight: 500; }
+@keyframes obGlow { 0%, 100% { box-shadow: var(--lv-cta-shadow); } 50% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, .55), 0 16px 44px 0 rgba(240, 123, 90, .6), 0 0 0 6px rgba(240, 123, 90, .12); } }
+
+/* The tab bar: a quiet white bar with thin line icons; the current tab is the accent colour, no filled pill */
+.tabbar { background: rgba(255, 248, 241, .94); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .8), 0 14px 34px -16px rgba(120, 60, 30, .45); }
+.tabbar button { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--bark); gap: 5px; }
+.tabbar button[aria-current="page"] { background: transparent; color: var(--ember); box-shadow: none; }
+.tabbar button[aria-current="page"] svg { filter: drop-shadow(0 4px 8px rgba(240, 123, 90, .45)); }
+
+.pw-sheet { background: var(--shell); box-shadow: 0 30px 70px rgba(43, 26, 18, .32); padding: 30px 20px 18px; gap: 14px; }
+.pw-title { font-size: var(--lv-title); line-height: var(--lv-title-lh); }
+.pw-sub { font-weight: 400; }
+.pw-perks { gap: 10px; margin: 6px 0 10px; }
+.pw-perk { font-weight: 400; font-size: 16px; line-height: 22px; padding: 12px 16px; border-radius: 20px; background: rgba(246, 236, 225, .7); }
+.pw-perk i { width: 30px; height: 30px; border-radius: 50%; background: var(--shell); box-shadow: var(--lv-line); }
+.pw-perk i svg { width: 14px; height: 14px; stroke-width: 2; }
+.pw-free { font-weight: 500; font-size: 16px; }
+.pw-fine { font-weight: 400; }
+.pw-x { background: transparent; }
+.toast { font-weight: 500; }
+
+/* Side panel */
+.restart { box-shadow: var(--lv-line), var(--lv-card); font-weight: 500; }
+.seg button { font-weight: 500; }
+.lv-link { display: block; }
+
+/* ---------- Cortex: the pearl that hosts onboarding and floats over the tabs ---------- */
+.lv-pearl { border-radius: 50%; background: radial-gradient(circle at 34% 26%, #FFFFFF 0%, #FFF8F1 36%, #F8EADC 74%, #F0DCC8 100%);
+  box-shadow: inset -8px -12px 26px rgba(184, 58, 28, .08), inset 6px 8px 16px rgba(255, 255, 255, .95), 0 22px 46px -18px rgba(184, 58, 28, .38); }
+.lv-host { position: absolute; left: 0; top: 0; width: 200px; height: 200px; z-index: 21; pointer-events: none; transform-origin: 50% 50%; opacity: 0;
+  transition: transform 900ms var(--glide), opacity 400ms ease-out; will-change: transform; }
+.lv-host.lv-snap { transition: opacity 400ms ease-out; }
+.lv-host::before { content: ''; position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(240, 123, 90, .26), rgba(239, 180, 62, .12) 42%, rgba(239, 180, 62, 0) 68%); filter: blur(8px); transition: opacity 600ms ease-out; }
+.ob.lv-q .lv-host::before, .ob.lv-s8 .lv-host::before { opacity: 0; }
+.lv-host .lv-pearl { position: absolute; inset: 0; display: grid; place-items: center; }
+.lv-ms { pointer-events: none; }
+.lv-pearl.lv-hop { animation: lvHop 620ms cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes lvHop { 0% { transform: scale(1); } 30% { transform: scale(1.08) translateY(-3%); } 100% { transform: scale(1); } }
+.lv-say { position: absolute; left: 60px; right: 16px; z-index: 20; margin: 0; padding: 14px 18px; border-radius: 22px; font-size: 20px; line-height: 25px; color: var(--humus);
+  background: linear-gradient(120deg, rgba(255, 248, 241, .96), rgba(248, 226, 207, .7)); box-shadow: var(--lv-card);
+  opacity: 0; transform: translateY(8px); transition: opacity 300ms ease-out, transform 500ms var(--out); pointer-events: none; }
+.lv-say.is-on { opacity: 1; transform: none; }
+
+.lv-fab { position: absolute; right: 18px; bottom: 104px; z-index: 32; width: 62px; height: 62px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 34% 26%, #FFFFFF 0%, #FFF8F1 40%, #F6E6D6 100%);
+  box-shadow: inset -5px -7px 14px rgba(184, 58, 28, .08), inset 4px 5px 10px rgba(255, 255, 255, .95), 0 14px 30px -10px rgba(184, 58, 28, .45), 0 0 0 1px rgba(255, 255, 255, .7);
+  opacity: 0; transform: scale(.6); pointer-events: none; transition: opacity 260ms ease-out, transform 420ms cubic-bezier(.34, 1.56, .64, 1); }
+.lv-fab.is-on { opacity: 1; transform: none; pointer-events: auto; }
+/* Learn's full-width CTA sits above the tab bar: the button floats above it instead of over it */
+#screen:has(#learnView:not([hidden]) .ln-dock:not([hidden])) .lv-fab { bottom: 176px; }
+/* Profile: over the graph card's empty corner, clear of the subject chips */
+#screen:has(#profileView:not([hidden])) .lv-fab { bottom: 196px; right: 30px; }
+.lv-fab:active { transform: scale(.94); }
+.lv-fab-ms { pointer-events: none; }
+
+/* ---------- Onboarding ---------- */
+/* Cortex replaces the particles on the welcome and the questions; the particles come back to form the topic at the build */
+.ob.lv-hosted:not(.lv-s8) .ob-brain { opacity: 0 !important; visibility: hidden; }
+#onboardingLayer .ob.lv-hosted:not(.lv-s8) canvas.ob-fx { display: none; }
+.ob.lv-hosted .lv-host { opacity: 1; }
+.ob-glow { background: radial-gradient(45% 50% at 30% 40%, rgba(240, 123, 90, .22), rgba(240, 123, 90, 0) 70%), radial-gradient(45% 50% at 72% 46%, rgba(239, 180, 62, .22), rgba(239, 180, 62, 0) 70%); filter: blur(12px); }
+.ob.lv-q .ob-glow { transform: translateY(-22%) scale(.9); opacity: .8; }
+
+/* Welcome: Cortex big and centred, the headline under it */
+.ob .ob-pane.ob-welcome { top: 432px; bottom: 170px; padding: 0 28px; }
+.ob-title { font-size: var(--lv-hero) !important; line-height: var(--lv-hero-lh) !important; margin: 0 0 12px; }
+.ob-lede { font-weight: 400; font-size: 17px; line-height: 24px; color: var(--bark); max-width: 300px; }
+.ob-link { font-weight: 500; }
+
+/* Question chrome: a bare back chevron and a hairline of progress */
+.ob-qtop { left: 12px; right: 20px; }
+.ob-back { background: transparent !important; box-shadow: none !important; color: var(--humus); }
+.ob-bar { height: 4px; margin-right: 8px; border-radius: 2px; overflow: hidden; background: rgba(106, 70, 54, .12); -webkit-mask: none; mask: none; }
+.ob-bar::before { display: none; }
+.ob-bar i { border-radius: 2px; background: var(--ember); }
+
+/* The question: a speech bubble, Cortex peeking in from the left edge beside it */
+.ob.lv-q .ob-pane { top: 120px; padding: 0 16px; }
+.ob.lv-q .ob-vis { display: none; }
+.ob.lv-q .ob-head { position: relative; margin: 0 0 22px 44px; padding: 16px 18px 17px 26px; text-align: left; text-wrap: pretty;
+  font-size: var(--lv-q); line-height: var(--lv-q-lh); color: var(--humus); border-radius: 24px;
+  background: linear-gradient(120deg, rgba(255, 248, 241, .97), rgba(248, 226, 207, .62)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), 0 10px 28px -18px rgba(120, 60, 30, .4); }
+.ob.lv-q .ob-head, .lv-say { font-weight: var(--lovi-strong) !important; }
+
+/* Option cards: white, roomy, a thin line icon, a title and a grey descriptor, a radio on the right */
+.ob-opts { gap: 12px; }
+.ob .ob-opt, .ob .ob-out { min-height: 76px; padding: 14px 18px 14px 20px; gap: 16px; border-radius: var(--r-card); background: var(--shell); box-shadow: var(--lv-card); color: var(--humus); }
+.ob .ob-opt::after, .ob .ob-out::after { width: 24px; height: 24px; box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .26); background: transparent; }
+.ob .ob-opt[aria-checked="true"], .ob .ob-out[aria-checked="true"] { background: var(--ember-tint, #F8E2CF); color: var(--humus); box-shadow: var(--lv-card-sel); }
+.ob .ob-opt[aria-checked="true"] small, .ob .ob-out[aria-checked="true"] small { color: var(--ink-3); }
+.ob .ob-opt[aria-checked="true"]::after, .ob .ob-out[aria-checked="true"]::after { box-shadow: none; background: var(--ember) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFF8F1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E") center / 14px no-repeat; }
+.lv-oic { width: 28px; height: 28px; flex: none; display: grid; place-items: center; color: var(--humus); }
+.ob-opt[aria-checked="true"] .lv-oic { color: var(--ember); }
+.ob .ob-ot { gap: 3px; }
+.ob .ob-ot b { font-size: 17px; line-height: 22px; font-weight: 500; letter-spacing: -.005em; }
+.ob .ob-ot small { font-size: 14.5px; line-height: 19px; font-weight: 400; color: var(--ink-3); }
+
+/* What to learn: a big white field, then tinted two-line suggestion chips with a small arrow */
+.ob .ob-field { border-radius: 24px; background: var(--shell); box-shadow: var(--lv-card); }
+.ob .ob-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--ember), 0 12px 30px -14px rgba(184, 58, 28, .4); }
+.ob .ob-field input { height: 60px; font-size: 17px; font-weight: 400; letter-spacing: 0; }
+.ob .ob-field input::placeholder { font-weight: 400; color: var(--ink-3); }
+.ob .ob-sugs { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ob .ob-sug { min-height: 78px; padding: 12px 12px 12px 15px; border-radius: 22px; display: flex; align-items: flex-end; gap: 6px; text-align: left;
+  background: color-mix(in srgb, var(--ember-tint) 46%, var(--shell)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .8); color: var(--humus);
+  font-size: 15px; line-height: 20px; font-weight: 400; letter-spacing: 0; }
+.ob .ob-sug:last-child:nth-child(odd) { grid-column: span 2; min-height: 56px; }
+.lv-sug-t { flex: 1; align-self: flex-start; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lv-arr { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: var(--ember); background: rgba(255, 248, 241, .85); }
+.ob .ob-sug[aria-checked="true"] { background: var(--shell); color: var(--humus); box-shadow: var(--lv-card-sel); }
+.ob .ob-sug[aria-checked="true"] .lv-arr { background: var(--ember); color: var(--shell); }
+
+/* Chips: white pills with a thin icon; chosen = an accent ring */
+.ob .ob-chips { gap: 10px; }
+.ob .ob-chip { height: 46px; padding: 0 18px 0 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: var(--r-pill); background: var(--shell); box-shadow: var(--lv-card); color: var(--humus); font-size: 15.5px; font-weight: 500; letter-spacing: 0; }
+.ob .ob-chip[aria-checked="true"] { background: var(--shell); color: var(--humus); box-shadow: var(--lv-card-sel); }
+.ob .ob-chip[aria-checked="true"] .lv-cic { color: var(--ember); }
+.lv-cic { display: grid; place-items: center; }
+.ob .ob-chips.ob-row .ob-chip { height: 54px; justify-content: center; }
+.ob .ob-field.ob-small { margin-top: 24px; padding: 12px 20px 4px; }
+.ob .ob-flabel { font-weight: 500; color: var(--bark); }
+.ob .ob-glabel { font-weight: 500; color: var(--bark); font-size: 14.5px; }
+.ob .ob-note { font-weight: 500; color: var(--ember); }
+
+/* CTA */
+.ob .ob-cta { left: 20px; right: 20px; }
+.ob .ob-btn { font-weight: 500; }
+.ob .ob-btn::before { background: var(--disabled); box-shadow: none; }
+.ob .ob-btn:disabled { box-shadow: none; color: var(--bark); }
+
+/* The build: Cortex at work beside a bubble, the topic forming below */
+.ob .ob-pane.ob-build .ob-eyebrow { color: var(--ember); }
+
+/* Trailer line */
+.ob-tline { font-weight: 450 !important; }
+
+/* ---------- Learn ---------- */
+.ln-root .ln-ph-t { font-size: 30px; line-height: 34px; }
+.ln-root .ln-ph-sum, .ln-root .ln-intro, .ln-root .ln-body, .ln-root .ln-lead { font-weight: 400; }
+.ln-root .ln-ph-meta, .ln-root .ln-meta { font-weight: 400; }
+.ln-switch, .ln-streak { background: var(--shell) !important; box-shadow: var(--lv-card) !important; }
+.ln-cur, .ln-float, .ln-reveal-card, .ln-roomcard, .ln-stepcard, .ln-card { border-radius: var(--r-card); box-shadow: var(--lv-card); }
+.ln-sk-c, .ln-tl-r, .ln-ch-i { border-radius: var(--r-card); }
+.ln-tag { text-transform: none !important; letter-spacing: 0 !important; font-weight: 500 !important; }
+.ln-opt { min-height: 64px; border-radius: 22px; background: var(--shell); box-shadow: var(--lv-card); font-weight: 400; }
+.ln-opt-t { font-weight: 500; }
+.ln-opt-l, .ln-opt-ic { border-radius: 50%; background: transparent; box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .22); font-weight: 500; }
+.ln-dock .btn-lit, .ln-cta { font-weight: 500; }
+
+/* ---------- Ask ---------- */
+.ak-c-title, .ak-title { font-size: var(--lv-title) !important; line-height: var(--lv-title-lh) !important; }
+.ak-c-sub, .ak-intro, .ak-body, .ak-note { font-weight: 400; }
+.ak-box, .ak-c-field, .ak-comp { border-radius: 24px; background: var(--shell); box-shadow: var(--lv-card); }
+.ak-c-pill, .ak-chip, .ak-sug { border-radius: 20px; background: color-mix(in srgb, var(--ember-tint) 46%, var(--shell)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .8); font-weight: 400; }
+.ak-c-pill b, .ak-chip b, .ak-sug b { font-weight: 500; }
+
+/* ---------- Profile ---------- */
+.pf-stat, .pf-gcard, .pf-ncard, .pf-card { border-radius: var(--r-card); box-shadow: var(--lv-card); }
+.pf-stat span, .pf-since, .pf-gtitle p { font-weight: 400; }
+.pf-chip { font-weight: 500; }
+
+/* ---------- Text weights: Lovi's body is Regular, titles in rows are Medium. Nothing heavier. ---------- */
+.ak-lead, .ln-answer, .ln-lead, .ln-fy-t, .ln-pa-why, .ak-cap, .ak-src, .pf-asub, .pf-anote, .ln-ph-prog p, .ln-ph-sum { font-weight: 400 !important; }
+.ln-root b, .ak-root b, .pf b, .ln-root strong, .ak-root strong,
+.ak-opt-t, .ak-term, .ak-status-t, .ak-lx-slow, .pf-ax-t, .pf-lab, .ln-opt-t, .ln-cur-t, .ln-pa-lab b, .ln-sk-tx b, .ln-tl-tx b, .pf-nc-title { font-weight: 500 !important; }
+.ak-h4, .ln-h4 { font-family: var(--display) !important; font-weight: var(--lovi-medium) !important; letter-spacing: -.01em !important; font-size: 18px; }
+.ln-ph-sum .em, .ln-root .ln-ph-sum .em { font-weight: 500; }
+
+/* ---------- Ask: the suggestion pills become Lovi's tinted chips with a small arrow ---------- */
+.ak-c-pill { background: color-mix(in srgb, var(--ember-tint) 46%, var(--shell)) !important; border-radius: 18px; height: 46px; padding: 0 8px 0 14px !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .85); font-weight: 400; font-size: 15px; }
+.ak-c-pill:not(.is-open)::after { content: ''; width: 24px; height: 24px; flex: none; margin-left: 6px; border-radius: 50%;
+  background: var(--shell) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B83A1C' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 16.5l9-9M9.5 7.5h7v7'/%3E%3C/svg%3E") center / 14px no-repeat; }
+.ak-c-pill.is-open { background: transparent !important; outline-color: rgba(106, 70, 54, .3); }
+.ak-c-pill em { font-weight: 400; }
+.ak-c-title { margin-bottom: 4px; }
+
+/* ---------- A soft colour wash behind the tab headers (Lovi's blurred glow), multiplied so text stays crisp ---------- */
+#screen::after { content: ''; position: absolute; left: -10%; right: -10%; top: -40px; height: 300px; z-index: 25; pointer-events: none;
+  background: radial-gradient(40% 50% at 18% 30%, rgba(240, 123, 90, .16), rgba(240, 123, 90, 0) 70%), radial-gradient(42% 48% at 82% 22%, rgba(239, 180, 62, .18), rgba(239, 180, 62, 0) 70%);
+  mix-blend-mode: multiply; filter: blur(6px); opacity: 0; transition: opacity 500ms ease-out; }
+#screen:has(#onboardingLayer[hidden])::after { opacity: 1; }
