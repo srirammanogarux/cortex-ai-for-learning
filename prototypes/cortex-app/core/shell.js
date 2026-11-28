@@ -146,9 +146,9 @@
     ['askHome', 'Ask home', [['A', 'Box + wonder'], ['B', 'Map home'], ['C', 'Character']]],
     ['lesson', 'Lesson style', [['1', 'Paced'], ['2', 'Cards'], ['3', 'By style']]],
     ['persona', 'Persona', [['priya', 'Priya'], ['arjun', 'Arjun'], ['maya', 'Maya'], ['tom', 'Tom'], ['lena', 'Lena']]],
-    ['roadmap', 'Roadmap', [['stack', 'Stack'], ['timeline', 'Timeline'], ['chapters', 'Chapters'], ['path', 'Path']]],
+    ['roadmap', 'Roadmap', [['path', 'Path'], ['stack', 'Stack'], ['timeline', 'Timeline'], ['chapters', 'Chapters']]],
     ['paywall', 'Paywall', [['tab', 'By tab'], ['hard', 'Hard'], ['onboarding', 'On landing'], ['soft', 'Soft']]],
-    ['mascot', 'Mascot (Ask)', [['A', 'Line'], ['F', 'Particle']]],
+    ['mascot', 'Mascot (Ask)', [['F', 'Particle'], ['A', 'Line']]],
     ['orbs', 'Graph orbs', [['i', 'Drawn'], ['ii', 'Painted'], ['iii', 'Duotone'], ['iv', 'Scenes']]],
   ];
   function renderSide() {
@@ -159,7 +159,6 @@
     $('jump').querySelectorAll('[data-ob]').forEach((b) => b.addEventListener('click', () => App.showOnboarding(+b.dataset.ob)));
     $('jump').querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => { ensureDemo(); App.showTab(b.dataset.t); }));
     $('variants').innerHTML = VARIANTS.map(([key, label, opts]) => `<h3>${label}</h3><div class="seg" role="group" aria-label="${label}">${opts.map(([v, l]) => `<button data-v="${key}:${v}" aria-pressed="${s.variants[key] === v}">${l}</button>`).join('')}</div>`).join('') +
-      `<h3>Learning style</h3><div class="seg">${[['quick', 'Quick'], ['connect', 'Connect'], ['roadmap', 'Roadmap']].map(([v, l]) => `<button data-style="${v}" aria-pressed="${s.style === v}">${l}</button>`).join('')}</div>` +
       `<h3>Plan</h3><div class="seg">${[['free', 'Free'], ['plus', 'Plus']].map(([v, l]) => `<button data-plan="${v}" aria-pressed="${s.plan === v}">${l}</button>`).join('')}</div><p class="seg-note">Prototype controls. Switch any time.</p>`;
     $('variants').querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => { const [k, v] = b.dataset.v.split(':'); Store.variant(k, v); renderSide(); }));
     $('variants').querySelectorAll('[data-style]').forEach((b) => b.addEventListener('click', () => { Store.set({ style: b.dataset.style }); renderSide(); }));

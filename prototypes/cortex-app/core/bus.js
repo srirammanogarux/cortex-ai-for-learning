@@ -25,8 +25,8 @@ window.Bus = (function () {
     justBuilt: false,                       // true right after onboarding: Learn shows the plan reveal
     asksUsed: 0,                            // free Ask questions used (limit in App.gate)
     variants: {
-      askHome: P.get('ask') || 'A', lesson: P.get('lesson') || '1', mascot: P.get('mascot') || 'A', orbs: P.get('orbs') || 'ii',
-      roadmap: P.get('roadmap') || 'stack', paywall: P.get('pw') || 'tab', persona: P.get('persona') || 'priya',
+      askHome: P.get('ask') || 'A', lesson: P.get('lesson') || '1', mascot: P.get('mascot') || 'F', orbs: P.get('orbs') || 'ii',
+      roadmap: P.get('roadmap') || 'path', paywall: P.get('pw') || 'tab', persona: P.get('persona') || 'priya',
     },
   };
   window.Store = {

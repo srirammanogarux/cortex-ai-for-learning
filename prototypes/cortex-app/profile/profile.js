@@ -90,7 +90,7 @@
     chev: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
     fit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>',
     replay: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>',
-    flame: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="pfFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB547"/><stop offset="1" stop-color="#E0462E"/></linearGradient></defs><path fill="url(#pfFlame)" d="M12.6 1.8c.4 3-1 4.8-2.6 6.6-1.5 1.7-3.2 3.5-3.2 6.5A5.2 5.2 0 0 0 12 20.2a5.2 5.2 0 0 0 5.2-5.3c0-2.2-1-3.7-1.9-4.9-.2 1.3-.8 2.3-1.8 2.8.5-3.9-.3-8-.9-11z"/><path fill="#fff" opacity=".85" d="M12 20.2a2.7 2.7 0 0 1-2.7-2.8c0-1.7 1.4-2.7 2.3-4 .4 1.4 1.6 1.9 2.4 3a2.7 2.7 0 0 1-2 3.8z"/></svg>',
+    flame: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="pfFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--saffron)"/><stop offset="1" style="stop-color:var(--ember)"/></linearGradient></defs><path fill="url(#pfFlame)" d="M12.6 1.8c.4 3-1 4.8-2.6 6.6-1.5 1.7-3.2 3.5-3.2 6.5A5.2 5.2 0 0 0 12 20.2a5.2 5.2 0 0 0 5.2-5.3c0-2.2-1-3.7-1.9-4.9-.2 1.3-.8 2.3-1.8 2.8.5-3.9-.3-8-.9-11z"/><path style="fill:var(--shell)" opacity=".85" d="M12 20.2a2.7 2.7 0 0 1-2.7-2.8c0-1.7 1.4-2.7 2.3-4 .4 1.4 1.6 1.9 2.4 3a2.7 2.7 0 0 1-2 3.8z"/></svg>',
   };
 
   // Static dot-glyph of a particle shape, coloured by subject. dark: light dots for a solid hub.
@@ -1105,7 +1105,7 @@
     viewer.setAttribute('role', 'dialog'); viewer.setAttribute('aria-modal', 'true'); viewer.setAttribute('aria-label', c.title);
     viewer.innerHTML = `<button class="pf-v-x" data-vx aria-label="Close">${ICON.x}</button>
       <div class="pf-v-stage"><div class="pf-v-glow" style="--g:${rgb(Brain.palette(c.palette || 'body')[0])}"></div><div class="pf-v-in" data-vin></div></div>
-      <p class="pf-v-eb">Collectible</p><h2 class="pf-v-title">${esc(c.title)}</h2><p class="pf-v-sub">Earned by finishing ${esc(from)}. Touch it.</p>`;
+      <p class="pf-v-eb">Collectible</p><h2 class="pf-v-title">${esc(c.title)}</h2><p class="pf-v-sub">Earned by finishing ${esc(from)}.</p>`;
     root.appendChild(viewer);
     if (window.App) App.setTabBar(false);
     const scr = document.getElementById('screen'); if (scr) scr.classList.add('is-dark');

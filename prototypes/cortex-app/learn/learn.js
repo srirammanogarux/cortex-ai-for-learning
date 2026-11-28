@@ -63,7 +63,7 @@
   const GOOGLE = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.6 12.23c0-.71-.06-1.4-.18-2.05H12v3.88h5.39a4.6 4.6 0 0 1-2 3.02v2.5h3.23c1.9-1.74 2.98-4.3 2.98-7.35zM12 22c2.7 0 4.96-.9 6.62-2.42l-3.23-2.5c-.9.6-2.04.95-3.39.95-2.6 0-4.81-1.76-5.6-4.12H3.07v2.6A10 10 0 0 0 12 22zM6.4 13.91a6 6 0 0 1 0-3.82v-2.6H3.07a10 10 0 0 0 0 9.02zM12 5.98c1.47 0 2.79.5 3.83 1.5l2.86-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.49l3.33 2.6C7.19 7.74 9.4 5.98 12 5.98z"/></svg>';
   function flameSVG(size = 20) {
     const id = 'lnf' + (++uid);
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E8590C"/></linearGradient></defs>
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--saffron, #EFB43E)"/><stop offset="1" style="stop-color:var(--ember, #B83A1C)"/></linearGradient></defs>
       <path d="M12 2c.7 3.3 2.5 5 4.1 6.7C17.8 10.5 19 12.5 19 15a7 7 0 0 1-14 0c0-2.4 1-4.2 2.5-5.5.3 1.6 1.1 2.8 2.4 3.4C9.4 9.1 10.4 5.2 12 2z" fill="url(#${id})"/>
       <path d="M12 13.3c1.5 1.3 2.5 2.4 2.5 3.9a2.5 2.5 0 0 1-5 0c0-1.4.9-2.6 2.5-3.9z" fill="#FFF0DC"/></svg>`;
   }
@@ -206,10 +206,12 @@
 
   // ═════════════════════════ HOME: YOUR LEARNING PLAN ═════════════════════════
   const RM_STYLES = ['stack', 'timeline', 'chapters', 'path'];
-  const rmStyle = () => { const v = S().variants && S().variants.roadmap; return RM_STYLES.includes(v) ? v : 'stack'; };
+  const rmStyle = () => { const v = S().variants && S().variants.roadmap; return RM_STYLES.includes(v) ? v : 'path'; };
   const isReveal = () => !!S().justBuilt;
 
   function renderHome(o = {}) {
+    if (BX) { if (!o.force && BX.key === buildKey()) return; endBuild(); } // a build in progress owns the screen
+    bxTok = 0; root.classList.remove('is-building', 'is-bx-meta', 'is-bx-end');
     clearT('home');
     const keep = o.keepScroll ? home.scrollTop : null;
     const c = P.has('empty') ? null : course();
@@ -220,15 +222,17 @@
     const ctx = { d, reveal, doneN, curI, changed: o.changed || [], arrive: o.added || null };
     const a = adapt(c);
     if (reveal && !revealRan) revealAt = performance.now();
-    root.classList.toggle('is-reveal', reveal && !calm() && performance.now() - revealAt < 400);
+    const build = reveal && !revealRan && !calm() && !P.has('nobuild'); // first sight of a new plan: the particles build it
+    root.classList.toggle('is-reveal', !build && reveal && !calm() && performance.now() - revealAt < 400);
+    if (build) root.classList.add('is-building'); // before the plan exists, so nothing paints and then hides
     root.classList.toggle('is-planview', reveal);
     root.dataset.rm = v;
     home.innerHTML = `
       <header class="ln-ph">
-        <div class="ln-ph-top"><p class="ln-ph-eb">Your learning plan</p>${reveal ? '' : `<button type="button" class="ln-streak" data-act="streak" aria-label="${S().streak}-day streak">${flameSVG(18)}<b>${S().streak}</b></button>`}</div>
+        <div class="ln-ph-top"><p class="ln-ph-eb">${build ? 'Building your course' : 'Your learning plan'}</p>${reveal ? '' : `<button type="button" class="ln-streak" data-act="streak" aria-label="${S().streak}-day streak">${flameSVG(18)}<b>${S().streak}</b></button>`}</div>
         ${reveal ? `<h1 class="ln-ph-t">${esc(c.title || d.title)}</h1>`
           : `<button type="button" class="ln-ph-t ln-ph-sw" data-act="switch" aria-haspopup="dialog" aria-label="Switch course. Now: ${esc(c.title || d.title)}"><span>${esc(c.title || d.title)}</span><i>${ic('caret', 18, 2.6)}</i></button>`}
-        ${reveal ? `<p class="ln-ph-sum">${esc(summaryOf(d))}</p><p class="ln-ph-meta">${list.length} stops · about ${list.reduce((n, x) => n + minutes(x), 0)} min · ${esc(dailyText())}</p>`
+        ${reveal ? `<p class="ln-ph-sum">${build ? summaryWords(d) : esc(summaryOf(d))}</p><p class="ln-ph-meta">${list.length} stops · about ${list.reduce((n, x) => n + minutes(x), 0)} min · ${esc(dailyText())}</p>`
           : `<div class="ln-ph-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${doneN}" aria-label="${doneN} of ${total} stops done"><p><b>${doneN} of ${total}</b><span aria-hidden="true"> · </span>${esc(goalShortOf(d))}</p><div class="ln-meter"><i style="width:${Math.round(doneN / total * 100)}%"></i></div></div>`}
       </header>
       ${!reveal && a.note ? `<div class="ln-adnote${o.noteIn ? ' is-in' : ''}" role="status"><span class="ln-adnote-ic">${ic(a.pace === 'hard' ? 'slow' : a.pace === 'easy' ? 'zap' : 'check', 16, 2.4)}</span><p>${esc(a.note)}</p><button type="button" class="ln-adnote-x" data-act="note-x" aria-label="Dismiss">${ic('x', 15, 2.6)}</button></div>` : ''}
@@ -236,6 +240,7 @@
     if (reveal) { tabBar(false); revealRan = true; }
     const cur = curI >= 0 ? list[curI] : null;
     setDock(reveal ? 'reveal' : cur ? (doneN ? 'continue' : 'start') : 'complete', cur, list.length);
+    if (build) { home.scrollTop = 0; startBuild(d); return; }
     if (o.justDone) celebrateStop(o.justDone, o.added);
     else if (keep != null) home.scrollTop = keep;
     else if (reveal) home.scrollTop = 0;
@@ -267,7 +272,7 @@
     const tg = tagOf(x); if (tg) t.push(`<span class="ln-tag is-for${ctx.changed.includes(x.id) || ctx.arrive === x.id ? ' is-pop' : ''}">${ic(x.added ? 'plus' : 'sparkle', 11, 2.8)}${esc(tg)}</span>`);
     return t.length ? `<span class="ln-tags">${t.join('')}</span>` : '';
   };
-  const showWhy = (x, s, ctx) => ctx.reveal || x.added || s === 'current' || !!adapt().tags[x.id];
+  const showWhy = (x, s) => s === 'current'; // the reason shows on the current stop only: the plan stays light
   const whyHTML = (x, list, ctx, cls = '') => `<span class="ln-why ${cls}">${esc(becauseOf(x, list, ctx.d))}</span>`;
   const stateWord = (s) => ({ done: 'Done', current: 'Start here', locked: 'Later' }[s]);
   const kindCls = (x) => (x.kind === 'review' ? ' is-review' : x.kind === 'final' ? ' is-final' : x.kind === 'recap' ? ' is-recap' : '') + (x.added ? ' is-added' : '');
@@ -296,7 +301,7 @@
         <button type="button" class="ln-tl-r" ${rowAttrs(x, s, i, ctx, list)}>
           <span class="ln-tl-dot" aria-hidden="true">${s === 'done' ? ic('check', 13, 3.2) : i + 1}</span>
           ${artBox(x, ctx.d, 40, 'ln-tl-art')}
-          <span class="ln-tl-tx">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal || x.added ? whyHTML(x, list, ctx) : ''}</span>
+          <span class="ln-tl-tx">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${showWhy(x, s) ? whyHTML(x, list, ctx) : ''}</span>
           ${s === 'current' && !ctx.reveal ? `<span class="ln-tl-go" aria-hidden="true">${ic('chev', 16, 2.6)}</span>` : ''}
         </button></li>`;
     }).join('')}</ol>`;
@@ -342,37 +347,268 @@
           const x = list[i], s = st[i];
           return `<li class="ln-ch-r is-${s}${kindCls(x)}${arriveCls(x, ctx)}"><button type="button" class="ln-ch-rb" ${rowAttrs(x, s, i, ctx, list)}>
             <span class="ln-ch-dot" aria-hidden="true">${s === 'done' ? ic('check', 12, 3.4) : ''}</span>
-            <span class="ln-ch-rt">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal || x.added ? whyHTML(x, list, ctx) : ''}</span>
+            <span class="ln-ch-rt">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${showWhy(x, s) ? whyHTML(x, list, ctx) : ''}</span>
             ${s === 'current' && !ctx.reveal ? '<span class="ln-ch-go">Start</span>' : ''}
           </button></li>`;
         }).join('')}</ol></div></li>`;
     }).join('')}</ol>`;
   }
 
-  // Style 4 · Path: the winding path, quiet, with painted stops
-  function rmPath(list, st, ctx) {
-    const top = 52, last = list.length - 1;
-    // room for each label: a tag line, a long title, the reason in the reveal
-    const need = list.map((x, i) => 104 + (ctx.reveal ? 34 : 0) + ((tagOf(x) || st[i] === 'current') ? 16 : 0) + (x.title.length > 34 ? 14 : 0));
-    let y = top; const pos = list.map((x, i) => { const p = { x: i % 2 ? 254 : 74, y }; y += Math.max(need[i], need[i + 1] || 0); return p; });
-    pos[last] = { x: 164, y: pos[last].y + 18 };
-    const H = pos[last].y + (ctx.reveal ? 150 : 120);
-    let paths = '';
-    for (let i = 0; i < last; i++) {
-      const a = pos[i], b = pos[i + 1], dy = b.y - a.y;
-      paths += `<path class="ln-pa-ln${st[i] === 'done' ? ' is-lit' : ''}" d="M${a.x} ${a.y}C${a.x} ${a.y + dy * 0.62} ${b.x} ${b.y - dy * 0.62} ${b.x} ${b.y}"/>`;
+  // Style 4 · Path: a winding path of painted stops. Each stop shows its title and minutes; only the current stop says why.
+  // The connector never touches a stop: each segment is a cubic trimmed to end a few px outside both circles,
+  // and the gap between stops grows until the curve clears both labels.
+  const PA = { w: 328, r: 32, trim: 45, xs: [76, 252], mid: 164, top: 14, lab: 172, labGap: 16, c: 0.78 };
+  const paCtrl = (a, b) => { const dy = b.y - a.y; return [[a.x, a.y], [a.x, a.y + dy * PA.c], [b.x, b.y - dy * PA.c], [b.x, b.y]]; };
+  const bez = (p, t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * p[0][k] + 3 * u * u * t * p[1][k] + 3 * u * t * t * p[2][k] + t * t * t * p[3][k]); };
+  function splitBez(p, t) {
+    const L = (a, b) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    const a = L(p[0], p[1]), b = L(p[1], p[2]), c = L(p[2], p[3]), d = L(a, b), e = L(b, c), f = L(d, e);
+    return [[p[0], a, d, f], [f, e, c, p[3]]];
+  }
+  // The t where the curve leaves a circle of radius R around one end (bisection; distance grows monotonically there)
+  function exitT(p, R, fromEnd) {
+    const c = fromEnd ? p[3] : p[0]; let lo = fromEnd ? 0.5 : 0, hi = fromEnd ? 1 : 0.5;
+    for (let k = 0; k < 24; k++) { const m = (lo + hi) / 2, q = bez(p, m), out = Math.hypot(q[0] - c[0], q[1] - c[1]) > R; if (out === !fromEnd) hi = m; else lo = m; }
+    return (lo + hi) / 2;
+  }
+  function trimmedD(a, b) {
+    const p = paCtrl(a, b);
+    const t0 = exitT(p, PA.trim, false), t1 = exitT(p, PA.trim, true);
+    const seg = splitBez(splitBez(p, t1)[0], t0 / t1)[1], f = (v) => v.toFixed(1);
+    return `M${f(seg[0][0])} ${f(seg[0][1])}C${f(seg[1][0])} ${f(seg[1][1])} ${f(seg[2][0])} ${f(seg[2][1])} ${f(seg[3][0])} ${f(seg[3][1])}`;
+  }
+  // Label boxes, estimated from the text (title wraps at ~21 characters in 172px)
+  function paLabelH(x, s) {
+    const lines = Math.min(2, Math.ceil(x.title.length / 21)), tag = s === 'current' || tagOf(x);
+    return (tag ? 28 : 0) + lines * 21 + 2 + 18 + (s === 'current' ? 6 + 2 * 18 : 0);
+  }
+  function paLabelBox(p, side, h) {
+    if (side === 'is-r') return { x0: p.x + PA.r + PA.labGap, x1: p.x + PA.r + PA.labGap + PA.lab, y0: p.y - h / 2, y1: p.y + h / 2 };
+    if (side === 'is-l') return { x0: p.x - PA.r - PA.labGap - PA.lab, x1: p.x - PA.r - PA.labGap, y0: p.y - h / 2, y1: p.y + h / 2 };
+    return { x0: p.x - 125, x1: p.x + 125, y0: p.y + PA.r + 14, y1: p.y + PA.r + 14 + h };
+  }
+  function clears(a, b, boxes) {
+    const p = paCtrl(a, b), pad = 10;
+    for (let k = 1; k < 40; k++) {
+      const q = bez(p, k / 40);
+      if (boxes.some((r) => q[0] > r.x0 - pad && q[0] < r.x1 + pad && q[1] > r.y0 - pad && q[1] < r.y1 + pad)) return false;
     }
+    return true;
+  }
+  function pathLayout(list, st) {
+    const last = list.length - 1, side = (i) => (i === last ? 'is-c' : i % 2 ? 'is-l' : 'is-r');
+    const h = list.map((x, i) => paLabelH(x, st[i]));
+    const pos = [{ x: PA.xs[0], y: PA.top + Math.max(PA.r, h[0] / 2) }];
+    for (let i = 1; i <= last; i++) {
+      const a = pos[i - 1], x = i === last ? PA.mid : PA.xs[i % 2];
+      let dy = Math.max(100, (h[i - 1] + (i === last ? 0 : h[i])) / 2 + 14);
+      for (let k = 0; k < 30; k++) {
+        const b = { x, y: a.y + dy }, boxes = [paLabelBox(a, side(i - 1), h[i - 1]), paLabelBox(b, side(i), h[i])];
+        if (clears(a, b, boxes)) break;
+        dy += 6;
+      }
+      pos.push({ x, y: a.y + dy });
+    }
+    return { pos, side, H: pos[last].y + PA.r + 14 + h[last] + 40 };
+  }
+  function rmPath(list, st, ctx) {
+    const { pos, side, H } = pathLayout(list, st), last = list.length - 1;
+    let paths = '';
+    for (let i = 0; i < last; i++) paths += `<path class="ln-pa-ln${st[i] === 'done' ? ' is-lit' : ''}" data-b="${i + 1}" d="${trimmedD(pos[i], pos[i + 1])}"/>`;
     const nodes = list.map((x, i) => {
-      const p = pos[i], s = st[i], side = i === last ? 'is-c' : i % 2 ? 'is-l' : 'is-r';
+      const p = pos[i], s = st[i];
       const tag = tagOf(x) ? `<span class="ln-tags"><span class="ln-tag is-for${ctx.arrive === x.id || ctx.changed.includes(x.id) ? ' is-pop' : ''}">${ic(x.added ? 'plus' : 'sparkle', 11, 2.8)}${esc(tagOf(x))}</span></span>` : s === 'current' ? `<span class="ln-tags"><span class="ln-tag is-dark">${ctx.doneN && !ctx.reveal ? 'Up next' : 'Start here'}</span></span>` : '';
       return `<button type="button" class="ln-pa-s is-${s}${kindCls(x)}${arriveCls(x, ctx)} ln-in" style="left:${p.x}px;top:${p.y}px;--i:${i}" ${rowAttrs(x, s, i, ctx, list)}>
         <span class="ln-pa-art">${artBox(x, ctx.d, 64)}${s === 'done' ? doneMark() : ''}</span>
-        <span class="ln-pa-lab ${side}">${tag}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal ? whyHTML(x, list, ctx) : ''}</span>
+        <span class="ln-pa-lab ${side(i)}">${tag}<b>${esc(x.title)}</b><span class="ln-meta">${minutes(x)} min</span>${s === 'current' ? `<span class="ln-pa-why">${esc(becauseOf(x, list, ctx.d))}</span>` : ''}</span>
       </button>`;
     }).join('');
-    return `<div class="ln-pa" style="height:${H}px"><svg class="ln-pa-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true">${paths}</svg>${nodes}</div>`;
+    return `<div class="ln-pa" style="height:${Math.round(H)}px"><svg class="ln-pa-svg" width="${PA.w}" height="${Math.round(H)}" viewBox="0 0 ${PA.w} ${Math.round(H)}" aria-hidden="true">${paths}</svg>${nodes}</div>`;
   }
   const RM = { stack: rmStack, timeline: rmTimeline, chapters: rmChapters, path: rmPath };
+
+
+  // ═════════════════════════ THE BUILD: the course emerges from the particles ═════════════════════════
+  // Onboarding forms your topic in the shared Brain, emits 'build:handoff' { rect } and leaves without a fade. Learn snapshots
+  // the very same particles (Brain.points) onto its own full-screen layer (.ln-bx) and streams them into the plan that is
+  // already laid out underneath: one node per stop, top to bottom, the path line drawn between them; then each node
+  // crossfades into its painted stop and the particle line into the real connector. With no hand-off (?reveal=1) the
+  // particles first gather from the course's shape. Tap to skip. .still / reduced motion: the final plan, no build.
+  let BX = null, handoff = null, bxCv = null;
+  const BX_SPR = new Map();
+  const buildKey = () => (S().activeCourse || '') + '|' + rmStyle();
+  // The Brain's light-mode cell: soft membrane, darker nucleus (same recipe as living/brain.js)
+  function bxSprite(r, g2, b) {
+    const key = ((r >> 3) << 10) | ((g2 >> 3) << 5) | (b >> 3);
+    let c = BX_SPR.get(key); if (c) return c;
+    c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'), S2 = 32;
+    const m = x.createRadialGradient(S2 / 2, S2 / 2, 0, S2 / 2, S2 / 2, S2 / 2);
+    m.addColorStop(0, `rgba(${r},${g2},${b},0.30)`); m.addColorStop(0.6, `rgba(${r},${g2},${b},0.45)`);
+    m.addColorStop(0.84, `rgba(${r},${g2},${b},0.95)`); m.addColorStop(1, `rgba(${r},${g2},${b},0)`);
+    x.fillStyle = m; x.fillRect(0, 0, S2, S2);
+    x.fillStyle = `rgba(${r * 0.55 | 0},${g2 * 0.4 | 0},${b * 0.4 | 0},0.7)`; x.beginPath(); x.arc(S2 * 0.46, S2 * 0.46, S2 * 0.14, 0, 6.283); x.fill();
+    BX_SPR.set(key, c); return c;
+  }
+  let BX_HALO = null;
+  function bxHalo() {
+    if (BX_HALO) return BX_HALO;
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const m = x.createRadialGradient(32, 32, 0, 32, 32, 32); m.addColorStop(0, 'rgba(255,179,122,0.55)'); m.addColorStop(1, 'rgba(255,179,122,0)');
+    x.fillStyle = m; x.fillRect(0, 0, 64, 64); return (BX_HALO = c);
+  }
+  function takeHandoff(h) {
+    const B = brain();
+    handoff = B && B.points && h && h.rect ? { rect: h.rect, p: B.points(), at: performance.now() } : null;
+  }
+  // Where the particles start: the hand-off snapshot, or the course's shape sampled at the same spot
+  function bxSource(d) {
+    const h = handoff; handoff = null;
+    if (h && performance.now() - h.at < 4000 && !h.p.dark) {
+      const k = h.rect.w / 320, p = h.p, n = p.n, o = { n, x: new Float32Array(n), y: new Float32Array(n), r: new Float32Array(n), a: new Float32Array(n), c: p.c, cx: h.rect.x + h.rect.w / 2, cy: h.rect.y + h.rect.h / 2, k, fadeIn: false };
+      for (let i = 0; i < n; i++) { o.x[i] = h.rect.x + p.x[i] * k; o.y[i] = h.rect.y + p.y[i] * k; o.r[i] = p.r[i] * k; o.a[i] = p.a[i]; }
+      return o;
+    }
+    const B = brain(), name = B && d.shape && B.has(d.shape) ? d.shape : 'brain', n = 2600, k = 0.9, sc = 320 * 0.37 * k;
+    const pts = B ? B.sample(name, n) : Array.from({ length: n }, () => { const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * 0.8; return [Math.cos(a) * r, Math.sin(a) * r, Math.random()]; });
+    const pal = B ? B.palette(d.palette || 'cobalt') : [[244, 160, 96], [184, 58, 28]];
+    const m = pts.length, o = { n: m, x: new Float32Array(m), y: new Float32Array(m), r: new Float32Array(m), a: new Float32Array(m), c: new Uint8Array(m * 3), cx: 184, cy: 420, k, fadeIn: true };
+    pts.forEach((q, i) => {
+      o.x[i] = 184 + q[0] * sc; o.y[i] = 420 + q[1] * sc; o.r[i] = (0.9 + 1.6 * q[2]) * (0.7 + 0.6 * Math.random()) * 1.25 * k; o.a[i] = 0.14 + 0.5 * q[2];
+      for (let j = 0; j < 3; j++) o.c[i * 3 + j] = pal[0][j] + (pal[1][j] - pal[0][j]) * q[2];
+    });
+    return o;
+  }
+  // Every stop's painted tile, and the path's connector segments, in layer coordinates
+  function bxTargets() {
+    const rr = root.getBoundingClientRect(), k = rr.width / root.offsetWidth || 1;
+    const nodes = [...home.querySelectorAll('[data-map] .ln-in')].map((el) => {
+      const art = el.querySelector('.ln-art') || el, r = art.getBoundingClientRect();
+      return { el, x: (r.left + r.width / 2 - rr.left) / k, y: (r.top + r.height / 2 - rr.top) / k, R: Math.min(art.offsetWidth, art.offsetHeight) / 2 || 24 };
+    });
+    const segs = [...home.querySelectorAll('[data-map] .ln-pa-ln')].map((el) => {
+      const sr = el.ownerSVGElement.getBoundingClientRect(), L = el.getTotalLength(), m = Math.max(10, Math.round(L / 2.6)), pts = [];
+      for (let j = 0; j < m; j++) { const u = (j + Math.random()) / m, q = el.getPointAtLength(u * L); pts.push([(sr.left - rr.left) / k + q.x, (sr.top - rr.top) / k + q.y, u]); }
+      return { el, b: +el.dataset.b || 0, pts };
+    });
+    return { nodes, segs };
+  }
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const easeIO = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  function startBuild(d) {
+    const { nodes, segs } = bxTargets(), n = nodes.length;
+    if (!n || !bxCv) { root.classList.remove('is-building'); return; }
+    const src = bxSource(d), N = src.n;
+    // Beat 1: the particles build the path, one node per stop, top to bottom (GAP apart), while the topic drains away.
+    // Beat 2: once the topic has cleared, the particle path resolves into the real stops in a quick wave, top to bottom.
+    const GAP = Math.max(150, Math.min(220, 1400 / Math.max(1, n - 1))), T0 = src.fadeIn ? 700 : 100;
+    const landAt = (k) => Math.max(T0 + 1450 + k * 110, T0 + k * GAP + 1150), segAt = (b) => landAt(b) - 40;
+    const F = (len) => new Float32Array(len);
+    const P = { sx: src.x, sy: src.y, tx: F(N), ty: F(N), mx: F(N), my: F(N), t0: F(N), dur: F(N), r: src.r, a: src.a, ex: F(N), ey: F(N), fade0: F(N), absorb: new Uint8Array(N), spr: new Array(N) };
+    for (let i = 0; i < N; i++) P.spr[i] = bxSprite(src.c[i * 3], src.c[i * 3 + 1], src.c[i * 3 + 2]);
+    // Hand the particles out at random, so the topic thins evenly as the plan takes them
+    const order = Array.from({ length: N }, (_, i) => i);
+    for (let i = N - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [order[i], order[j]] = [order[j], order[i]]; }
+    let q = 0;
+    const fly = (i, tx, ty, t0, dur, ex, ey, fade0) => {
+      P.tx[i] = tx; P.ty[i] = ty; P.t0[i] = t0; P.dur[i] = dur; P.ex[i] = ex; P.ey[i] = ey; P.fade0[i] = Math.max(t0 + dur, fade0);
+      const dx = tx - P.sx[i], dy = ty - P.sy[i], bend = rand(-0.32, 0.32);
+      P.mx[i] = (P.sx[i] + tx) / 2 - dy * bend; P.my[i] = (P.sy[i] + ty) / 2 + dx * bend - Math.abs(dx) * 0.08;
+    };
+    // Nodes: a disc of cells where each painted stop will be
+    nodes.forEach((nd, k) => {
+      const m = Math.max(60, Math.min(300, Math.round(nd.R * nd.R * 0.24)));
+      for (let j = 0; j < m && q < N; j++, q++) {
+        const i = order[q], ang = Math.random() * 6.283, rr = nd.R * 0.94 * Math.sqrt(Math.random());
+        fly(i, nd.x + Math.cos(ang) * rr, nd.y + Math.sin(ang) * rr, T0 + k * GAP + rand(0, 360), rand(620, 880), nd.x, nd.y, landAt(k) + 160);
+        P.r[i] *= 0.82;
+      }
+    });
+    // The path: cells line up along each connector, drawn from the stop above toward the one below
+    segs.forEach((sg) => sg.pts.forEach(([x, y, u]) => {
+      if (q >= N) return; const i = order[q++];
+      fly(i, x + rand(-0.8, 0.8), y + rand(-0.8, 0.8), T0 + (sg.b - 1) * GAP + 260 + u * GAP * 1.5 + rand(0, 90), rand(560, 780), x, y, segAt(sg.b) + 120);
+      P.r[i] = Math.max(1.6, P.r[i] * 0.8); P.a[i] = Math.max(P.a[i], 0.8);
+    }));
+    // The rest are absorbed: they fly into the stops and melt as they arrive
+    for (let k = 0; q < N; q++, k++) {
+      const i = order[q], nd = nodes[k % n], kk = k % n, ang = Math.random() * 6.283, rr = nd.R * 0.6 * Math.sqrt(Math.random());
+      fly(i, nd.x + Math.cos(ang) * rr, nd.y + Math.sin(ang) * rr, T0 + rand(0, 520) + kk * 60, rand(700, 1050), nd.x, nd.y, 0);
+      P.absorb[i] = 1;
+    }
+    const end = landAt(n - 1) + 750;
+    // Start learning comes in once the stops you can see have resolved (the rest land below the fold)
+    const vis = nodes.reduce((m, nd, k) => (nd.y - nd.R < root.offsetHeight - 120 ? k : m), 0), dockAt = Math.min(end, landAt(vis) + 500);
+    const ev = [];
+    nodes.forEach((nd, k) => ev.push([landAt(k), () => nd.el.classList.add('is-landed')]));
+    segs.forEach((sg) => ev.push([segAt(sg.b), () => sg.el.classList.add('is-landed')]));
+    const words = [...home.querySelectorAll('.ln-ph-sum .w')];
+    words.forEach((w, k) => ev.push([T0 + 180 + k * 55, () => w.classList.add('on')]));
+    ev.push([dockAt - 420, () => root.classList.add('is-bx-meta')]);
+    ev.push([dockAt, () => { root.classList.add('is-bx-end'); const eb = root.querySelector('.ln-ph-eb'); if (eb && eb.textContent !== 'Your learning plan') { eb.textContent = 'Your learning plan'; eb.classList.add('is-swap'); } }]);
+    ev.sort((a, b) => a[0] - b[0]);
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = root.offsetWidth, H = root.offsetHeight;
+    bxCv.width = Math.round(W * dpr); bxCv.height = Math.round(H * dpr); bxCv.hidden = false;
+    const g = bxCv.getContext('2d');
+    root.classList.remove('is-bx-meta', 'is-bx-end'); root.classList.add('is-building');
+    BX = { key: buildKey(), P, N, src, ev, end, g, dpr, W, H, start: performance.now(), raf: 0, nodes, segs }; bxTok = BX.start;
+    BX.raf = requestAnimationFrame(bxFrame);
+  }
+  function bxFrame(now) {
+    const X = BX; if (!X) return;
+    const t = now - X.start, { P, N, g, src } = X;
+    while (X.ev.length && X.ev[0][0] <= t) X.ev.shift()[1]();
+    if (t >= X.end) { endBuild(); return; }
+    X.raf = requestAnimationFrame(bxFrame);
+    g.setTransform(X.dpr, 0, 0, X.dpr, 0, 0); g.clearRect(0, 0, X.W, X.H);
+    const fin = src.fadeIn ? Math.min(1, t / 500) : 1;
+    // the backlight the Brain draws behind the colony, fading as the colony leaves
+    const hk = Math.max(0, 1 - t / 1100) * fin;
+    if (hk > 0.01) { const hr = 140.8 * src.k; g.globalAlpha = 0.42 * hk; g.drawImage(bxHalo(), src.cx - hr, src.cy - hr, hr * 2, hr * 2); }
+    const br = 1 + 0.014 * Math.sin(now / 1000 * 1.7);
+    for (let i = 0; i < N; i++) {
+      let x, y, al = P.a[i] * fin;
+      const lt = t - P.t0[i];
+      if (lt <= 0) { x = src.cx + (P.sx[i] - src.cx) * br; y = src.cy + (P.sy[i] - src.cy) * br; }
+      else {
+        const k = Math.min(1, lt / P.dur[i]);
+        if (P.absorb[i] && k >= 1) continue;
+        const e = easeIO(k), u = 1 - e;
+        x = u * u * P.sx[i] + 2 * u * e * P.mx[i] + e * e * P.tx[i]; y = u * u * P.sy[i] + 2 * u * e * P.my[i] + e * e * P.ty[i];
+        if (P.absorb[i]) al *= 1 - k * k;
+        else if (k >= 1) al = Math.max(al, 0.55);
+      }
+      if (!P.absorb[i] && t > P.fade0[i]) {
+        const f = Math.min(1, (t - P.fade0[i]) / 420); if (f >= 1) continue;
+        al *= 1 - f; x += (P.ex[i] - x) * f * 0.3; y += (P.ey[i] - y) * f * 0.3;
+      }
+      if (al < 0.01) continue;
+      const r = P.r[i];
+      g.globalAlpha = al > 1 ? 1 : al; g.drawImage(P.spr[i], x - r, y - r, r * 2, r * 2);
+    }
+    g.globalAlpha = 1;
+  }
+  // Finish (or skip): every stop and segment in place, the header settled, Start learning in
+  function endBuild() {
+    const X = BX; if (!X) return;
+    BX = null; cancelAnimationFrame(X.raf);
+    X.ev.forEach((e) => e[1]()); X.ev = [];
+    X.g.setTransform(1, 0, 0, 1, 0, 0); X.g.clearRect(0, 0, bxCv.width, bxCv.height); bxCv.hidden = true;
+    root.classList.add('is-bx-meta', 'is-bx-end');
+    // let the last stops finish settling, then drop the build state (nothing visible changes)
+    const tok = X.start; X.tidy = setTimeout(() => { if (!BX && bxTok === tok) root.classList.remove('is-building', 'is-bx-meta', 'is-bx-end'); }, 700);
+  }
+  let bxTok = 0;
+  // The summary, word by word, with the words you said lit up
+  function summaryWords(d) {
+    const text = summaryOf(d), marks = [];
+    (d.summaryKeys || []).forEach((k) => { const at = k ? text.indexOf(k) : -1; if (at >= 0) marks.push([at, at + k.length]); });
+    let html = '', pos = 0;
+    text.split(/(\s+)/).forEach((tok) => {
+      const st0 = pos; pos += tok.length; if (!tok.trim()) { html += ' '; return; }
+      html += `<span class="w${marks.some(([a, b]) => st0 >= a && st0 < b) ? ' em' : ''}">${esc(tok)}</span>`;
+    });
+    return html;
+  }
 
   // After a stop: it fills, the next one is current, a new stop slides in if one was added
   function celebrateStop(id, addedId) {
@@ -1342,6 +1578,7 @@
     root.innerHTML = `
       <div class="ln-home" data-home></div>
       <div class="ln-topfade" aria-hidden="true"></div>
+      <canvas class="ln-bx" aria-hidden="true" hidden></canvas>
       <div class="ln-dock" hidden><button type="button" class="btn-lit ln-go" data-act="go">Start learning</button></div>
       <div class="ln-play" hidden>
         <div class="ln-stage" data-stage></div>
@@ -1361,6 +1598,11 @@
     bar = root.querySelector('.ln-pbar'); cta = root.querySelector('.ln-cta'); cta2 = root.querySelector('.ln-cta2');
     tagline = root.querySelector('.ln-tagline'); panel = root.querySelector('.ln-panel'); confetti = root.querySelector('.ln-confetti');
     root.addEventListener('click', onClick);
+    bxCv = root.querySelector('.ln-bx');
+    // A tap during the build skips to the finished plan (and doesn't open anything)
+    let skipAt = 0;
+    root.addEventListener('pointerdown', (e) => { if (BX) { e.preventDefault(); skipAt = performance.now(); endBuild(); } }, true);
+    root.addEventListener('click', (e) => { if (performance.now() - skipAt < 600) { e.stopPropagation(); e.preventDefault(); } }, true);
     stage.addEventListener('scroll', () => { if (popEl) closePop(); }, { passive: true, capture: true });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || viewEl.hidden) return;
@@ -1368,6 +1610,7 @@
     });
 
     const B = window.Bus;
+    B.on('build:handoff', takeHandoff);
     B.on('variant:change', ({ key }) => {
       if (key === 'roadmap') { chOpen = null; if (shown && !PL) renderHome(); return; }
       if (key !== 'lesson' || !PL || PL.kind !== 'lesson' || PL.completed) return;
@@ -1400,7 +1643,7 @@
     if (!hooksRan) { hooksRan = true; setTimeout(testHooks, 60); }
   }
   function hide() {
-    shown = false; closePop();
+    shown = false; closePop(); endBuild();
     if (sheet) { if (sheet._finish) sheet._finish(null); else closeSheet(true); }
   }
 

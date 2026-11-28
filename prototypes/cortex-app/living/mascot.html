@@ -50,16 +50,16 @@
     .grid .gl button:hover { color: var(--ember); }
     .uses { display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 14px; margin-top: 14px; }
     .ans { display: flex; flex-direction: column; align-items: center; margin-top: 10px; }
-    .ans .q { align-self: flex-end; margin: 0 0 6px; padding: 10px 15px; border-radius: 20px 20px 6px 20px; background: var(--ember); color: var(--shell); font-weight: 600; font-size: 15px; }
+    .ans .q { align-self: flex-end; margin: 0 0 8px; padding: 10px 16px; border-radius: 20px 20px 12px 20px; background: var(--ember); color: var(--shell); font-weight: 600; font-size: 15px; line-height: 21px; }
     .ans .stg { width: 236px; height: 236px; display: grid; place-items: center; }
     .ans .stg > div { transition: transform 900ms cubic-bezier(0.32, 0.72, 0, 1); transform: scale(.6); }
     .ans .stg.is-big > div { transform: none; }
-    .ans .st { margin: 4px 0 0; font-size: 15px; font-weight: 650; color: var(--bark); min-height: 20px; }
+    .ans .st { margin: 4px 0 0; font-size: 15px; font-weight: 600; color: var(--bark); min-height: 20px; }
     .his { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
     .use { border-radius: 28px; background: var(--shell); box-shadow: var(--carved); padding: 22px; min-height: 300px; position: relative; overflow: hidden; }
     .use h4 { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); }
     .use .hi { display: flex; flex-direction: column; align-items: center; margin-top: 12px; text-align: center; }
-    .use .hi h5 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; font-size: 30px; margin: 16px 0 4px; }
+    .use .hi h5 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; font-size: 28px; line-height: 32px; margin: 16px 0 4px; }
     .use .hi p { margin: 0; color: var(--bark); font-weight: 500; }
     .status { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 15px; font-weight: 650; color: var(--bark); }
     @media (max-width: 1000px) { .heroes { grid-template-columns: repeat(2, 1fr); } .uses { grid-template-columns: 1fr; } .grid { grid-template-columns: 90px repeat(6, 1fr); } }

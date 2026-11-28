@@ -8,7 +8,72 @@ How the theme is built: `core/shell.css` sets the shared tokens and shell compon
 
 The screen is 368 × 822 (phone 390 × 844, screen radius 46).
 
+> **Snapshot note.** Onboarding and Learn were being rebuilt by other agents while this was extracted. The onboarding values below are the newer pass (text-only option rows, wrap chips, 29px questions). Earlier icon-tile options (`.ob-ic` pebble + `fillSVG`) are kept in section 7 because Learn/paywall still use the same pebble tile. Re-extract after those agents land.
+
 ---
+
+## 0. Tightened system v2 (THE STANDARD; this overrides sections 1–7 where they differ)
+On 28 Nov 2026 the user decided to tighten the system before the toolkit is built on it. Sections 1–7 record what the app rendered *before* this change. **Everything new, and every fix, uses only the values below.**
+
+**Colour (one of each):**
+| Role | Token | Hex | Use |
+|---|---|---|---|
+| Ground | `--canvas` | radial gradient (unchanged) | behind every screen |
+| Surface | `--shell` | `#FFF8F1` | cards, options, fields, sheets |
+| Ground solid | `--bone` | `#F6ECE1` | board ground, inset areas |
+| Disabled | `--disabled` | `#EADBCB` | disabled CTA |
+| Ink | `--humus` | `#2B1A12` | primary text |
+| Secondary text | `--bark` | `#6A4636` | sub text and meta; nothing lighter than `#7A5444` |
+| Accent | `--ember` | `#B83A1C` | the single accent: selected fills, active tab, eyebrows, links |
+| Accent pressed | `--ember-700` | `#9A2F15` | |
+| Accent tint | `--ember-tint` | `#F8E2CF` | for-you callout, chips at rest |
+| Support | `--coral` `#F07B5A`, `--saffron` `#EFB43E` | | glows and highlights only, **never text** |
+| Right | `--right` | `#2F7A52` | fill and icon; text on shell `#2F7A52` |
+| Wrong | `--wrong` | `#C8402A` | fill and icon; text on shell `#A34027` |
+
+The subject hues (OrbGlyphs) are only for illustrations and the graph. **No teal or blue anywhere in the UI.**
+
+**Type: 8 steps only.** Display is Fraunces 560 with SOFT 100 and −0.03em. Text is Figtree.
+| Step | Size/line | Font, weight | Use |
+|---|---|---|---|
+| `display-xl` | 32/36 | Fraunces 560 | hero moments, plan title |
+| `display-l` | 28/32 | Fraunces 560 | screen titles, onboarding questions, lesson titles |
+| `display-m` | 24/28 | Fraunces 560 | sheet titles, callout titles, finish titles |
+| `display-s` | 20/25 | Fraunces 560 | section titles inside a screen, quiz question |
+| `text-l` | 17/24 | Figtree 500 (600 for titles in rows) | lesson body, option titles, buttons (600) |
+| `text-m` | 15/21 | Figtree 500 | secondary body, explanations, callout body, sub lines |
+| `text-s` | 13/18 | Figtree 600 | meta, labels, chip text, tab labels |
+| `text-xs` | 12/16 | Figtree 600, +0.09em, uppercase | **eyebrows and tags only** (the one eyebrow style: ember) |
+
+Italic `text-m` is used only for "because" lines. Weights are only 500, 600 and 700.
+
+**Spacing:** 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40.
+- Screen side margin **20**.
+- Tap target ≥ 44.
+- Primary CTA **58** tall and never shrinks.
+- Gap between option rows **10**.
+
+**Radii:** **12** (small tiles: icon, letter and glyph tiles under 48px) · **20** (option rows, cards, callouts, fields, toasts) · **28** (large cards: plan cards, lesson panels, hero cards) · **40** (sheets) · **pill** (buttons, chips, tab bar, segmented).
+
+**Elevation (3 only):**
+1. **Rest:** the carved inset, for surfaces you can select.
+2. **Raised:** cards (the current `Card` shadow).
+3. **Float:** sheets, the tab bar and toasts.
+
+Selected uses the ember fill plus the existing Selected shadow. Lit CTA: `--lit` gradient `#C8482A→#B23718` plus the onboarding glow; there are no white inner rings.
+
+**One component per job:**
+- **Option row:** shell fill, rest elevation, radius 20, min-height 60, padding 14×18. Title `text-l` 600, optional sub `text-m` bark. Trailing 24 circle (empty / check on selected).
+  - **Selected:** ember fill, shell text, white check.
+  - **Right:** right fill plus check.
+  - **Wrong:** wrong fill plus cross.
+  - **Disabled:** 50% opacity, no shadow.
+  - **Leading slot:** optional 36 tile with radius 12, holding a letter, line icon or painted glyph. The quiz uses letters; Ask uses icons.
+- **Chip:** pill, height 40, padding 0×16, `text-s`. Rest is shell on rest elevation; selected is an ember fill.
+- **Card:** shell, radius 20 (small) or 28 (large), raised, padding 16 or 20.
+- **Callout:** ember-tint fill, radius 20, padding 16, an eyebrow, then `text-m`.
+- **Eyebrow:** `text-xs`, ember.
+- **Buttons:** Lit primary (58, pill), Carved secondary (52, pill, shell + rest), Text button (44 tall, `text-l` 600, bark).
 
 ## 1. Colour
 
@@ -94,7 +159,9 @@ Every display class renders at **weight 560, letter-spacing −0.03em, `font-var
 | Hero (lesson done) | `.ln-done-t` | 32 / 36 |
 | Plan title | `.ln-ph-t` | 31 / 35 |
 | Screen title | `.ln-h1`, `.ak-title`, `.pw-title` (31), `.ob-tline` (33) | 28 / 32 |
-| Onboarding question | `.ob-head` | 27 / 31 |
+| Welcome title | `.ob-head.ob-title` | 36 / 40 |
+| Onboarding question | `.ob-head` | 29 / 32.5 |
+| Plan summary | `.ob-summary` (tracking −0.025em; emphasis *italic* in ember-700) | 26 / 31.7 |
 | Sheet title | `.ln-sh-t` | 24 / 28 |
 | Callout / card title | `.ob-ctx`, `.ob-card h2`, `.pf-atitle` | 23 / 26–27 |
 | Quiz question | `.ln-qh` (`.ln-h2`) | 22 / 27 |
@@ -108,14 +175,17 @@ Every display class renders at **weight 560, letter-spacing −0.03em, `font-var
 ### Figtree (text)
 | Role | Example class | Size / lh · weight · tracking |
 |---|---|---|
-| Field input | `.ob-field textarea` | 21 / 28 · 600 (placeholder 500) · −0.02em |
+| Field input | `.ob-field input` | 18 · 600 (placeholder 500 ink-3) · −0.015em |
+| Welcome lede | `.ob-lede` | 17 / 24 · 500 · bark |
+| Onboarding option title | `.ob-ot b` | 17 / 22 · 600 · −0.015em |
 | Lesson body | `.ln-answer` | 19 / 28 · 500 · −0.012em |
 | Ask lead | `.ak-lead` | 18.5 / 27 · 500 · −0.012em |
 | Card title | `.ln-sk-tx b` (current) | 18 / 23 · 650 · −0.015em |
 | Button label | `.btn-lit`, `.ob-btn` | 17 · 650 · −0.01em |
 | Section label | `.ak-h2` | 17 / 22 · 600 · −0.02em |
 | Quiz option | `.ln-opt` | 16.5 / 21 · 600 |
-| Option title | `.ob-ot b` | 16 / 20 · 600 · −0.015em |
+| Option subtitle (onboarding) | `.ob-ot small` | 14.5 / 19 · 500 · bark |
+| Suggestion row | `.ob-sug` | 15.5 / 20 · 550 · −0.01em |
 | Body / sub-headline | `.ob-tsub` | 16 / 22 · 500 |
 | Callout body | `.ln-fy-t` | 15.5 / 22 · 550 |
 | Feedback body | `.ln-reveal-card .ln-body` | 15.5 / 22.5 · 500 |
@@ -138,7 +208,7 @@ Weights in use: 450 (italic only), 500 body, 550 meta, 560 display, 600 labels, 
 
 ## 3. Spacing
 4-based with half steps. Values that recur:
-- **Screen gutter**: onboarding 18, Learn 20, Ask 16, Profile 12 (see Inconsistencies).
+- **Screen gutter**: onboarding 22 (`.ob-pane` padding; the CTA still sits at 18), Learn 20, Ask 16, Profile 12 (see Inconsistencies).
 - **Stack gaps**: options 10 · course rows / chips 8 · plan list 14 · perks 10 · sheet content 12.
 - **Option padding**: onboarding `10 18 10 12` (icon tile 46) · quiz `8 14 8 10` (letter tile 40) · Ask option `8 14 8 9`.
 - **Card padding**: 16 (feedback, plan row), 16 18 14 (wonder), 18 16 (Ask section), 13 16 15 (callouts).
@@ -151,8 +221,8 @@ Weights in use: 450 (italic only), 500 body, 550 meta, 560 display, 600 labels, 
 ## 4. Radii
 | Token | px | Used by |
 |---|---|---|
-| `--radius-lm-dot` | 50% | Round buttons (44), marks, badges, avatar |
-| `--radius-lm-pebble` | `48% 52% 46% 54% / 54% 46% 52% 48%` | Icon tiles in onboarding options, paywall perks (not a Paper token: use the CSS value) |
+| (50%, no token) | 50% | Round buttons (44), marks, badges, avatar |
+| (pebble, no token) | `48% 52% 46% 54% / 54% 46% 52% 48%` | Pebble icon tiles: paywall perks, earlier onboarding options. Use the CSS value |
 | `--radius-lm-tile-sm` | 12 | Ask option icon, point icon |
 | `--radius-lm-letter` | 13 | Quiz letter tile (40) |
 | `--radius-lm-art` | 18 | Painted art at 60 px (16 at 52, 34 at 120, 42 at 160) |
@@ -225,7 +295,7 @@ Animate transform and opacity. Support `.still` on `<html>` (`?still=1`) and `pr
 
 **Secondary · carved** (`.btn-carved`): 52 tall, radius 999, shell, Carved shadow, Figtree 15/650 humus.
 
-**Text button** (`.pw-free`): 44 tall, transparent, Figtree 15/600 bark. Link style (`.ak-link`): 15/600, colour `#9E3216`.
+**Text button** (`.pw-free` 15/600, `.ob-link` "I have an account" 16/600): 44 tall, transparent, bark. Link style (`.ak-link`): 15/600, colour `#9E3216`.
 
 **Icon button · round** (`.ln-round`, `.ak-round`, `.ob-back`): 44 × 44 circle, carved fill `#F8EEE4` + Carved shadow (onboarding back: shell + Back shadow). Icon 18–20, line, stroke 2.4, humus.
 
@@ -234,7 +304,8 @@ Animate transform and opacity. Support `.still` on `<html>` (`?still=1`) and `pr
 **Send** (`.ak-send`): 44 circle; disabled `#F4E7DA` with `#B17E64` icon; enabled is ember.
 
 ### Chips and pills
-- **Choice chip** (`.ob-chip`): 60 tall, flex 1, radius 999, shell + Carved, Figtree 16/600 −0.015em. Selected = ember fill + shell text + Selected shadow.
+- **Choice chip** (`.ob-chip`, time): 52 tall, flex 1 (4-up), padding `0 6`, radius 999, shell + Carved, Figtree 16/600 −0.01em. Selected = ember fill + shell text + Selected shadow.
+- **Wrap chip** (`.ob-chip`, role): 46 tall, padding `0 18`, hugs its label, wraps with gap 8. Same states.
 - **Legend chip** (`.pf-chip`): 40 tall, padding `0 13 0 11`, `rgba(255,248,241,.78)`, `inset 0 0 0 1px rgba(255,248,241,.9), 0 1px 2px rgba(44,27,18,.05)`, 13.5/600, 11px subject dot.
 - **Streak pill** (`.ln-streak`): 44 tall, padding `0 15 0 12`, Soft pill, flame icon 18 + count 15/700.
 - **Tag** (`.ln-tag.is-dark`): 22 tall, padding `0 9`, humus, shell text 10.5/750 +0.08em uppercase.
@@ -247,12 +318,17 @@ Animate transform and opacity. Support `.still` on `<html>` (`?still=1`) and `pr
 No toggle/switch exists in the app.
 
 ### Fields
-**Question field** (`.ob-field`): 62 tall, padding `17 20`, radius 24, shell, Field shadow; focus = Field focus. Text 21/28 600 −0.02em humus, placeholder 500 bark, caret ember.
+**Topic field** (`.ob-field`): 58 tall, radius 22, shell, Field shadow; input padding `0 20`, 18/600 −0.015em humus, placeholder 18/500 ink-3, caret ember; focus = Field focus.
+**Labelled field** (`.ob-field.ob-small`): 70 tall, padding `12 18 2`, radius 20, Field shadow; label 13/16 600 bark + "optional" 13/500 ink-3; input 17/600.
+**Suggestion row** (`.ob-sug`): 46 tall, padding `8 18`, radius 16, `rgba(255,248,241,.42)`, no shadow, 15.5/20 550 humus. Gap 6.
+(Earlier pass: `.ob-field` 62 tall, radius 24, 21/28 text. Superseded.)
 **Ask box** (`.ak-box`): 60 tall, padding `0 8 0 20`, radius 30, shell, `inset 0 0 0 1px rgba(44,27,18,.05), 0 1px 2px rgba(44,27,18,.05), 0 10px 28px rgba(44,27,18,.09)`; input 16/500, placeholder ink-3; trailing 44 send.
 **Follow-up bar** (`.ak-comp`): 58 tall, radius 999, `rgba(255,248,241,.9)` + blur 12.
 
 ### Selection
-**Onboarding option** (`.ob-opt`; outcome `.ob-out` is the same at 62 tall with a 44 tile)
+**Onboarding option, text** (`.ob-opt`, current): min-height 60, padding `10 18 10 20`, gap 14, radius 28, shell + Carved. Title 17/22 600 −0.015em; optional subtitle 14.5/19 500 bark (on ember: `#FFE4D6`). Trailing 26 check circle. Selected = ember fill + Selected shadow + shell circle with an ember check.
+
+**Onboarding option, with icon tile** (`.ob-opt` earlier pass; outcome `.ob-out` is the same at 62 tall with a 44 tile)
 - Default: min-height 68, padding `10 18 10 12`, gap 14, radius 28, shell, Carved. Icon tile 46 pebble `#F8E2CF` holding a solid gradient icon (`fillSVG`, 28) or a Fraunces 20/600 ember number. Title 16/20 600 humus, subtitle 14/18 500 bark. Trailing check circle 26 with `inset 0 0 0 1.5px rgba(106,70,54,.3)`.
 - **Selected = fill**: ember, shell text, subtitle `#FFE4D6`, Selected shadow, tile `rgba(255,248,241,.92)`, `scale(1.06) rotate(-4deg)`, check circle filled shell with an ember check (stroke 3).
 - Onboarding has no disabled option state.
@@ -344,7 +420,9 @@ Ask recent (`.ak-tree`): 66 tall, padding 10, gap 12, inside a card with 6 inset
 |---|---|---|
 | **Two embers.** Theme ember `#B83A1C` vs warmed cobalt `#C13C1B` (and `#9E3216` for 700) | Ask (question bubble, crumb, segmented thumb, term chips, links), lesson segments, `lnGlow`, course-row shadow | Use `#B83A1C` / `#9A2F15` everywhere; point those rules at `var(--ember)` |
 | **Two carved fills.** Shell `#FFF8F1` (onboarding options, chips) vs `#F8EEE4` (quiz options, round buttons, Ask options) | onboarding vs learn/ask | Pick shell for all selectable rows; keep `#F8EEE4` for round icon buttons only |
-| **Option radius** 28 (onboarding) vs 22 (quiz) vs 20 (Ask) | | One option radius: 22 for rows ≤ 68 tall |
+| **Option radius** 28 (onboarding) vs 22 (quiz) vs 20 (Ask); option title 17 (onboarding) vs 16.5 (quiz) vs 16 (Ask) | | One option row spec: radius 22, title 16.5/21 |
+| **Display tracking** `.ob-summary` renders −0.025em while every other Fraunces title is −0.03em | onboarding | −0.03em |
+| **Field radius** 22 (topic field) vs 20 (labelled field) vs 24 (old) vs 30 (Ask box) | | 24 for fields, pill for the Ask box |
 | **Card radius** spread: 18, 20, 22, 24, 26, 28 | | Collapse to 20 (small), 24 (cards), 28 (hero cards), 40 (sheets) |
 | **Eyebrow** has 5 variants: 12/600/.09em ember · 12/700/.11em bark (plan) · 12/600/.06em `#943B25` (title card) · 12/700/.1em ember (paywall) · 11.5/600/.08em ink-3 (profile) | | One eyebrow: 12/16 600 +0.09em ember |
 | **Right/wrong shadows** are unwarmed `rgba(18,165,138,.3)` (old teal) and `rgba(222,89,55,.28)`; "That's right" text is teal `#0B7A66` while the fill is `#2F7A52` | `.ln-opt.is-right`, `.ln-reveal-k` | Derive both from `--right` / `--wrong` |
@@ -352,5 +430,33 @@ Ask recent (`.ak-tree`): 66 tall, padding 10, gap 12, inside a card with 6 inset
 | **Glyph palette** uses bone `#F3E3CF` and humus `#3E2317`, not the theme's `#F6ECE1` / `#2B1A12` | `profile/orb-glyphs.js` | Fine for the painting; don't reuse these as UI colours |
 | **Streak flame** uses `#FFC078 → #E8590C` (old orange), not saffron/ember | `.ln-streak` | Use saffron → ember |
 | **Build stop dots** use the old pink accent warmed to `#F28B6E/#C74C2D` | `.ob-dot` | Use ember/coral spheres like the roadmap |
-| **Screen gutters** 18 / 20 / 16 / 12 | ob / ln / ak / pf | One gutter: 20 (16 for edge-to-edge cards) |
+| **Screen gutters** 22 / 20 / 16 / 12 | ob / ln / ak / pf | One gutter: 20 (16 for edge-to-edge cards) |
 | `.ob-hint` still contains "Touch it" (hidden, opacity 0) | onboarding | Remove the string |
+
+---
+
+## 10. Paper components (file "Cortex AI", page "Design system · Living Matter")
+These follow the **tightened system v2** (section 0). Tokens use the `lm2-` prefix (`--color-lm2-*`, `--font-lm2-*`, `--text-lm2-*` / `--leading-lm2-*` for the 8 steps, `--radius-lm2-sm/md/lg/sheet/pill`, `--spacing-lm2-4…40`). The v1 `lm-` tokens were removed. Clone with `<x-paper-clone node-id="…">`. Boards: 1 Foundations · 2 Buttons & controls · 3 Selection · 4 Surfaces · 5 Illustration & iconography · 6 Feedback pattern (all marked v2).
+
+| Layer | Node |
+|---|---|
+| Button / Lit / Default · Ready · Disabled · Pressed | `88Y-0` · `890-0` · `892-0` · `895-0` |
+| Button / Carved · Button / Text | `897-0` · `899-0` |
+| Icon button / Close · Back · Send · Send / Disabled | `89G-0` · `89K-0` · `89N-0` · `89R-0` |
+| Chip / Rest · Chip / Selected · Segmented | `89W-0` · `89Y-0` · `8A1-0` |
+| Field / Default · Focus · Labelled | `8A9-0` · `8AB-0` · `8AE-0` |
+| Option / Default · Selected · Right · Wrong · Disabled | `8AR-0` · `8AU-0` · `8AZ-0` · `8B4-0` · `8BA-0` |
+| Option / With sub / Default · Selected | `8BI-0` · `8BN-0` |
+| Option / Letter / Default · Right · Wrong | `8BU-0` · `8BZ-0` · `8C6-0` |
+| Option / Icon / Default · Selected | `8CE-0` · `8CK-0` |
+| Option / Glyph / Default · Selected | `8CS-0` · `8D5-0` |
+| Plan stop / Done · Current · Locked (path roadmap) | `8DT-0` · `8EB-0` · `8EU-0` |
+| Card / Small (r20) · Card / Large (r28) · Callout · List row | `8FE-0` · `8FI-0` · `8FO-0` · `8FR-0` |
+| Lesson top bar · Progress / Segments · Progress / Meter | `8GD-0` · `8GI-0` · `8GO-0` |
+| Toast · Tab bar · Sheet | `8GS-0` · `8GU-0` · `8HE-0` |
+| Feedback / Right · Feedback / Wrong · Flow / Quiz answered wrong | `8I7-0` · `8IE-0` · `8IN-0` |
+| Elevation / Rest · Raised · Float · Selected | `88E-0` · `88H-0` · `88K-0` · `88N-0` |
+| Glyph / Painted / Body · Mind · Space · Tech · Nature · Arts · Society · History | `7K4-0` · `7KH-0` · `7KU-0` · `7LB-0` · `7M6-0` · `7ML-0` · `7N0-0` · `7NH-0` |
+| Glyph tile / 52 · 60 · 120 · 160 | `7NX-0` · `7O8-0` · `7OJ-0` · `7OU-0` |
+| Icons / Line (25, `Icon / Line / <name>`) | `7P9-0` |
+| Mascot / Particle / idle · thinking · happy (PNG, brand mascot) · Mascot / Line / alternative | `8OS-0` · `8OV-0` · `8OY-0` · `8OB-0` |

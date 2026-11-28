@@ -1,5 +1,5 @@
 // Onboarding v5 · trailer → welcome → what to learn → why now → what you do (work and career only) → where you are
-// → what would make it worth it → time → the course builds → hand off to Learn's plan reveal. Owner: A · Onboarding.
+// → what would make it worth it → time → the topic forms → hand off to Learn, whose particles build the plan. Owner: A · Onboarding.
 // One question per screen. The particles (Brain) take the shape of the topic and react to each answer.
 // Data: data/courses-catalog.js (topics, outcomes, buildCourse) and data/personas.js. Talks to the app through Bus, Store and Brain.
 (function () {
@@ -112,8 +112,6 @@
     $.brain.style.opacity = o.hidden ? 0 : 1;
   }
   const Q_SPOT = [184, 172, 0.36], T_SPOT = [184, 152, 0.3]; // questions; "What do you want to learn?" (more answers, smaller mark)
-  // The seed the course condenses into at the end of the build, in the topic's colours
-  const seedShape = (grad) => { Brain.defineIcon('ob-seed', (x, S) => { x.beginPath(); x.arc(S / 2, S / 2, S * 0.42, 0, 6.283); x.fill(); }, { scale: 0.34, grad }); return 'ob-seed'; };
   // Unknown topics: the particles spell the word you typed (two slots so it can morph word to word)
   let wordKey = '', wordSlot = 0;
   function wordShape(word) {
@@ -372,55 +370,51 @@
   }
   function qScene() { dark(false); chrome({ q: true, cta: true }); Brain.setSpin(false); Brain.setMode('idle'); showTopic(); }
 
-  SCENES[BUILD] = { // The particles form the topic, then condense into your course. One line says who it's for.
+  // The build, part 1. The particles form your topic, then hand off to Learn, which takes over the very same particles
+  // (Brain.points) and streams them out into your plan: nodes, the path, then the real stops. See CONTRACT.md "Course build hand-off".
+  const BUILD_AT = [184, 420, 0.9]; // where the topic forms; Learn's plan header sits above it
+  SCENES[BUILD] = {
     enter() {
       dark(false); chrome({}); Brain.setSpin(false);
       const p = prof(), i = info(), shape = topicShape(i), pal = i.palette || 'cobalt';
       st.courseId = window.buildCourse ? buildCourse(p) : null;
-      const c = st.courseId && window.COURSES ? COURSES[st.courseId] : null;
-      pane(`<p class="ob-eyebrow">Building your course</p><p class="ob-summary" aria-live="polite"></p>`, 'ob-build');
-      place(184, 318, 1); Brain.setMode('think');
+      pane('<p class="ob-eyebrow">Building your course</p>', 'ob-build');
+      place(...BUILD_AT); Brain.setMode('think');
       Brain.setShape('scatter', pal, 700);
       later(() => { Brain.setShape(shape, pal, 1600); Brain.pulse(); }, 650);
-      later(() => { Brain.setMode('idle'); Brain.setShape(seedShape(i.color || ['#F07B5A', '#B83A1C']), pal, 1100); place(184, 286, 0.7); $.pane.classList.add('built'); }, 2900);
-      const line = c ? c.summary : 'Built for you.', words = line.split(/\s+/).length;
-      later(() => writeSummary(line, c ? c.summaryKeys : []), 3300);
-      // Hand off once the line has been written and there's been time to read it
-      if (STILL) { $.cta.classList.remove('hide'); setCta('See my plan', true); } else later(finish, 3300 + words * 55 + 600 + Math.max(1700, words * 150));
+      if (STILL) { $.cta.classList.remove('hide'); setCta('See my plan', true); return; }
+      later(() => { Brain.setMode('idle'); root.classList.add('ob-handoff'); }, 1950);
+      later(handoff, 2450);
     },
     next() { finish(); },
   };
-  // The line, word by word, with the words you said lit up
-  function writeSummary(text, keys) {
-    const el = $.pane.querySelector('.ob-summary'); if (!el) return;
-    const marks = []; (keys || []).forEach((k) => { const at = text.indexOf(k); if (k && at >= 0) marks.push([at, at + k.length]); });
-    let html = '', pos = 0;
-    text.split(/(\s+)/).forEach((tok) => {
-      const start = pos; pos += tok.length; if (!tok.trim()) { html += ' '; return; }
-      const em = marks.some(([a, b]) => start >= a && start < b);
-      html += `<span class="w${em ? ' em' : ''}">${esc(tok)}</span>`;
-    });
-    el.innerHTML = html;
-    [...el.querySelectorAll('.w')].forEach((w, k) => setTimeout(() => w.classList.add('on'), STILL ? 0 : 60 + k * 55));
-  }
-  function finish() {
+  // Tell Learn where the particles are on screen, then leave without a fade: Learn draws them in the same place
+  function handoff() {
     if (st.step !== BUILD || st.done) return;
-    st.done = true; root.classList.add('ob-leave');
+    const cv = $.brain.querySelector('canvas');
+    if (cv && window.Bus) Bus.emit('build:handoff', { rect: relRect(cv), courseId: st.courseId });
+    finish(true);
+  }
+  function finish(seamless) {
+    if (st.step !== BUILD || st.done) return;
+    st.done = true; if (!seamless) root.classList.add('ob-leave');
     const p = prof();
     const payload = { style: 'roadmap', topic: (st.courseId && COURSES[st.courseId] ? COURSES[st.courseId].title : p.topicLabel), goal: p.goal, span: p.span,
       daily: p.daily + ' min a day', courseId: p.topic, profile: p };
-    setTimeout(() => {
+    const done = () => {
       timers.forEach(clearTimeout); timers = []; parts = []; st.done = false;
+      root.classList.remove('ob-handoff');
       Brain.setMode('idle'); Brain.setSpin(false); Brain.setDark(false);
       Bus.emit('onboarding:done', payload);
-    }, INSTANT ? 0 : 320);
+    };
+    if (seamless || INSTANT) done(); else setTimeout(done, 320);
   }
 
   // ---------- Engine ----------
   function go(i) {
     if (i < 0 || i >= SCENES.length) return;
     timers.forEach(clearTimeout); timers = []; st.busy = false; st.done = false;
-    root.classList.remove('ob-leave');
+    root.classList.remove('ob-leave', 'ob-handoff');
     const scr = document.getElementById('screen'); if (scr) scr.scrollTop = 0;
     st.step = i; SCENES[i].enter();
     if (window.Bus) Bus.emit('onboarding:step', { index: i });

@@ -54,7 +54,7 @@
   }
   function storeDir() {
     const v = window.Store && Store.get && Store.get().variants && Store.get().variants.mascot;
-    return DIRS[v] ? v : 'A';
+    return DIRS[v] ? v : 'F';
   }
 
   // ───────── Shapes: every topic is one closed outline in a 100 × 100 box ─────────

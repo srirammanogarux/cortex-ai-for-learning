@@ -1,0 +1,54 @@
+/* Learn · the course build (part 2) and the light plan. The particles (canvas .ln-bx) stream out of the topic into the plan,
+   then each node resolves into its painted stop. Values from DESIGN_SYSTEM.md §0 only. Scoped under .ln-root. */
+
+/* The particle layer: over the plan, under nothing interactive */
+.ln-root .ln-bx { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; pointer-events: none; }
+.ln-root .ln-bx[hidden] { display: none; }
+
+/* Eyebrow (text-xs, ember). Onboarding's "Building your course" sits on exactly this spot. */
+.ln-root .ln-ph-eb { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ember, var(--ln-acc)); }
+.ln-root .ln-ph-eb.is-swap { animation: lnFade 420ms ease-out both; }
+
+/* Header while building: the title arrives, the summary writes itself word by word, the numbers come last */
+.ln-root.is-building .ln-home { overflow: hidden; }
+.ln-root.is-building .ln-ph-t { animation: lnFade 520ms ease-out 60ms both; }
+.ln-root .ln-ph-sum .w { display: inline-block; }
+.ln-root.is-building .ln-ph-sum .w { opacity: 0; filter: blur(6px); transform: translateY(6px); transition: opacity 560ms ease-out, filter 560ms ease-out, transform 640ms var(--out); }
+.ln-root.is-building .ln-ph-sum .w.on { opacity: 1; filter: none; transform: none; }
+.ln-root .ln-ph-sum .em { color: var(--ember-700, #9A2F15); font-weight: 600; }
+.ln-root.is-building .ln-ph-meta { opacity: 0; transition: opacity 400ms ease-out; }
+.ln-root.is-building.is-bx-meta .ln-ph-meta { opacity: 1; }
+
+/* Path stops: hidden until their particles land, then the painted tile grows out of the cells and the label follows */
+.ln-root.is-building .ln-pa-s .ln-pa-art { opacity: 0; transform: scale(.72); }
+.ln-root.is-building .ln-pa-s .ln-pa-lab { opacity: 0; }
+.ln-root.is-building .ln-pa-s .ln-pa-lab.is-r { translate: -8px 0; }
+.ln-root.is-building .ln-pa-s .ln-pa-lab.is-l { translate: 8px 0; }
+.ln-root.is-building .ln-pa-s .ln-pa-lab.is-c { translate: 0 -6px; }
+.ln-root.is-building .ln-pa-s.is-landed .ln-pa-art { opacity: 1; transform: none; transition: opacity 460ms ease-out, transform 620ms var(--out); }
+.ln-root.is-building .ln-pa-s.is-landed .ln-pa-lab { opacity: 1; translate: none; transition: opacity 420ms ease-out 140ms, translate 520ms var(--out) 140ms; }
+/* The particle line becomes the real connector */
+.ln-root.is-building .ln-pa-ln { opacity: 0; }
+.ln-root.is-building .ln-pa-ln.is-landed { opacity: 1; transition: opacity 520ms ease-out; }
+
+/* Stack, timeline, chapters: each stop fades in as its particles land on its tile */
+.ln-root.is-building .ln-in:not(.ln-pa-s) { opacity: 0; }
+.ln-root.is-building .ln-in.is-landed:not(.ln-pa-s) { opacity: 1; transition: opacity 480ms ease-out; }
+
+/* Start learning arrives once the plan is whole */
+.ln-root.is-building .ln-dock { opacity: 0; transform: translateY(16px); }
+.ln-root.is-building:not(.is-bx-end) .ln-dock .btn-lit { pointer-events: none; }
+.ln-root.is-building.is-bx-end .ln-dock { opacity: 1; transform: none; transition: opacity 420ms ease-out, transform 560ms var(--out); }
+
+/* The light path: title and minutes; the reason only on the current stop, plain (not italic) */
+.ln-root .ln-pa-lab { gap: 2px; }
+.ln-root .ln-pa-lab b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15px; line-height: 21px; font-weight: 600; letter-spacing: -.01em; color: var(--humus, var(--ln-ink)); }
+.ln-root .ln-pa-s.is-locked .ln-pa-lab b { color: var(--bark, var(--ln-ink2)); }
+.ln-root .ln-pa-lab .ln-meta { font-size: 13px; line-height: 18px; font-weight: 600; color: var(--bark, var(--ln-ink2)); }
+.ln-root .ln-pa-why { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 6px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--humus, var(--ln-ink)); text-wrap: pretty; }
+
+.still .ln-root .ln-bx { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ln-root .ln-bx { display: none; }
+  .ln-root .ln-ph-eb.is-swap { animation: none; }
+}

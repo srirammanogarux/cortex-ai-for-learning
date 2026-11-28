@@ -152,6 +152,8 @@
   let ripples = [];
   const ptr = { x: 0, y: 0, on: false };
   const ox = new Float32Array(N), oy = new Float32Array(N);
+  // What was last drawn, per particle (CSS px in the 320 box): for hand-offs to other particle layers
+  const lx = new Float32Array(N), ly = new Float32Array(N), lr = new Float32Array(N), la = new Float32Array(N), lc = new Uint8Array(N * 3);
   let fadeIn = 1, formStart = 0;
   let dark = false, darkK = 0, spin = false, spinA = 0, lastT = 0;
   const ICONS = new Set();
@@ -198,6 +200,7 @@
   function frame(now) {
     requestAnimationFrame(frame);
     if (!g) return;
+    if (!canvas.isConnected || canvas.offsetParent === null) return; // not on screen (e.g. a hidden view): don't spend the frame
     const t = now / 1000;
     if (morphT < 1) morphT = Math.min(1, (now - morphStart) / morphDur);
     if (fadeIn < 1) fadeIn = Math.min(1, (now - formStart) / 900);
@@ -290,6 +293,7 @@
       const cr = Math.max(0, Math.min(255, c[0])) | 0, cg = Math.max(0, Math.min(255, c[1])) | 0, cb = Math.max(0, Math.min(255, c[2])) | 0;
       g.globalAlpha = Math.min(1, a);
       const rr = r * (isDark ? 1.5 : 1.25);
+      lx[i] = sx[i] / DPR; ly[i] = sy[i] / DPR; lr[i] = rr / DPR; la[i] = Math.min(1, a); lc[i * 3] = cr; lc[i * 3 + 1] = cg; lc[i * 3 + 2] = cb;
       g.drawImage(isDark ? glowSprite(cr, cg, cb) : cellSprite(cr, cg, cb), sx[i] - rr, sy[i] - rr, rr * 2, rr * 2);
     }
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
@@ -389,6 +393,9 @@
       return out.sort((a, c) => a[2] - c[2]);
     },
     palette(name) { return PALETTES[name] || PALETTES.cobalt; },
+    // The particles exactly as last drawn: { n, x, y, r, a, c } in CSS px of the 320 box (c is rgb triples).
+    // Lets another layer take over the same particles with no jump (Learn's course build).
+    points() { return { n: N, x: lx.slice(), y: ly.slice(), r: lr.slice(), a: la.slice(), c: lc.slice(), dark: darkK > 0.5 }; },
     moveTo(el) { if (canvas && el && canvas.parentElement !== el) el.appendChild(canvas); },
     // Debug: draw without requestAnimationFrame (headless screenshots)
     snap() { morphT = 1; fadeIn = 1; lobesP = lobesTarget; frame(performance.now()); },

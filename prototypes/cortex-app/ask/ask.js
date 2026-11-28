@@ -1788,6 +1788,7 @@
     const W = 296, H = 64, dpr = Math.min(3, window.devicePixelRatio || 1);
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
     const x = cv.getContext('2d'), N = 37, bw = 4, step = W / N;
+    const ink = getComputedStyle(cv).getPropertyValue('--ember').trim() || '#1F5BE0';
     let lv = 0;
     const tick = (t) => {
       if (!ct.on || !cv.isConnected) { ct.raf = 0; return; }
@@ -1802,7 +1803,7 @@
       for (let i = 0; i < N; i++) {
         const v = ct.hist[ct.hist.length - N + i]; const h = v == null ? 4 : 4 + v * (H - 8);
         const cx = i * step + (step - bw) / 2, a = 0.25 + 0.75 * smooth(0, N * 0.35, i);
-        x.globalAlpha = a; x.fillStyle = '#1F5BE0';
+        x.globalAlpha = a; x.fillStyle = ink;
         x.beginPath(); x.roundRect ? x.roundRect(cx, (H - h) / 2, bw, h, 2) : x.rect(cx, (H - h) / 2, bw, h); x.fill();
       }
       x.globalAlpha = 1;

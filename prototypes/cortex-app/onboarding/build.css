@@ -1,0 +1,15 @@
+/* Onboarding · the build, part 1 (step 8). The topic forms in the particles, then Learn takes over the same particles
+   and builds the plan (learn/build.css). Values from DESIGN_SYSTEM.md §0 only. */
+
+/* "Building your course" sits exactly where Learn's plan eyebrow is, so it stays put across the hand-off */
+.ob .ob-pane.ob-build { top: 74px; bottom: auto; left: 22px; right: 22px; padding: 0; text-align: left; }
+.ob .ob-pane.ob-build .ob-eyebrow { margin: 0; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ember, #B83A1C); }
+
+/* Just before the hand-off the warm glow and halo settle, so the plan screen behind them is the same ground */
+.ob.ob-handoff .ob-glow, .ob.ob-handoff .ob-halo { opacity: 0; transition: opacity 450ms ease-out; }
+
+.still .ob.ob-handoff .ob-glow, .still .ob.ob-handoff .ob-halo { transition: none; }
+@media (prefers-reduced-motion: reduce) { .ob.ob-handoff .ob-glow, .ob.ob-handoff .ob-halo { transition: none; } }
+
+/* The scatter that gathers into the topic: soft edges, never the square of the canvas */
+.ob.ob-building .ob-brain canvas { -webkit-mask-image: radial-gradient(circle, #000 60%, transparent 76%); mask-image: radial-gradient(circle, #000 60%, transparent 76%); }

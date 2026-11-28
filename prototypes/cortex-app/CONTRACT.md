@@ -194,3 +194,21 @@ The brain buddy. It is a sidekick, not the hero: it shows what the app is doing 
   - New `sun` topic and `m.setLit(0..1)`.
   - In Ask answers the mascot itself is the explainer: it works small, then grows to about 220px and draws the topic. One character per answer.
 - **Streak:** `streak/streak.js` exposes `window.Streak.flame / chip / widget / moment`. Lab: `living/streak.html`. It's not wired into the app yet.
+- **Decisions on 28 Nov:** the mascot is **F · Particle** (the default; Line is the alternative), and the roadmap is **path** (the default; the other styles are kept as alternatives).
+
+## Course build hand-off (onboarding → Learn)
+The course is built in one continuous particle moment that is split across two modules.
+1. **Onboarding, step 8:** the particles scatter, then form the topic (centre 184, 420 at scale 0.9). After about 2.45s Onboarding emits **`build:handoff` `{ rect, courseId }`** (`rect` is the Brain canvas in screen px), then `onboarding:done` straight away, with **no fade**.
+2. **Learn:** it listens for `build:handoff` and calls **`Brain.points()`**, which returns every particle exactly as last drawn. It copies them onto its own full-screen layer (`canvas.ln-bx`), so the topic stays put across the switch.
+   - **The reveal:** the plan is laid out underneath, hidden. Each stop's tile and the path's connector segments are measured, and the particles stream into them: one node per stop, top to bottom, with the line drawn between the nodes.
+   - **Resolving:** once the topic has cleared, the nodes resolve into the painted stops in a wave. The particle line becomes the real connector, the summary writes itself, then Start learning comes in.
+   - **Timing:** about 3s. A tap skips to the end. The work lives in `learn/learn.js` ("THE BUILD") and `learn/build.css`.
+3. **No hand-off** (e.g. `?reveal=1`, or the root build, whose `brain.js` has no `points()`): the particles first gather from the course's shape.
+   - **`.still` and reduced motion:** no build; the final plan shows.
+   - **`?nobuild`:** skips the build.
+
+**Brain additions** (only in `living/brain.js`; backward compatible):
+- **`Brain.points()`:** `{ n, x, y, r, a, c, dark }` in CSS px of the 320 box.
+- **Hidden canvas:** the Brain no longer draws while its canvas isn't rendered (`offsetParent === null`).
+
+**Plan text:** every stop shows its title and minutes only. The because-line appears only on the current stop, in all four styles. Path connectors are cubics trimmed to end 45px from each stop centre, so the line never touches a circle. The gap between stops grows until the curve clears both labels.
