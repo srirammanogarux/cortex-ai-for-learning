@@ -1,0 +1,154 @@
+/* Cortex × Living Matter: a restyle of the whole app. Loaded last; the shared module CSS stays untouched.
+   theme.js has already warmed every hardcoded colour; this file sets the brand tokens and hand-styles the components.
+   Bone #F6ECE1 · Shell #FFF8F1 · Humus #2B1A12 · Bark #6A4636 · Ember #B83A1C · Coral #F07B5A · Saffron #EFB43E */
+:root {
+  --bone: #F6ECE1; --shell: #FFF8F1; --humus: #2B1A12; --bark: #6A4636; --ember: #B83A1C; --coral: #F07B5A; --saffron: #EFB43E;
+  --ember-tint: #F8E2CF;
+  --ink: #2B1A12; --ink-2: #6A4636; --ink-3: #7A5444;
+  --cobalt-300: #F07B5A; --cobalt-500: #B83A1C; --cobalt-700: #9A2F15; --cobalt-900: #5A1D0C;
+  --right: #2F7A52; --wrong: #C8402A;
+  --font: 'Figtree', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --display: 'Fraunces', Georgia, serif;
+  --canvas: radial-gradient(120% 70% at 50% 26%, #FFF5EA 0%, #F7E8D8 55%, #EFDDCA 100%);
+  --card-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(120, 60, 30, .06), 0 10px 24px -14px rgba(120, 60, 30, .5);
+  --carved: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(106, 70, 54, .08), 0 8px 20px -14px rgba(120, 60, 30, .55);
+  --lit-bg: linear-gradient(180deg, #C8482A, #B23718);
+  --lit-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 12px 26px -10px rgba(178, 55, 24, .7);
+  --dark-bg: linear-gradient(180deg, #3A2519, #2B1A12);
+  --dark-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 12px 26px -12px rgba(43, 26, 18, .6);
+  --pebble: 48% 52% 46% 54% / 54% 46% 52% 48%;
+}
+body { background: radial-gradient(90% 70% at 50% 40%, #F3E6D6, #EADCCB 70%, #E3D2BE); color: var(--ink); font-family: var(--font); }
+button, input, textarea, select { font-family: var(--font); }
+button:focus-visible { outline-color: var(--ember); }
+
+/* ---------- Display type: Fraunces for titles ---------- */
+.side h2, .pw-title,
+.ob-tline, .ob-head, .ob-ctx, .ob-card h2,
+.ln-h1, .ln-h2, .ln-sh-t, .ln-qh, .ln-card-idea, .ln-done-t, .ln-track-t,
+.ak-title, .ak-c-title, .ak-c-heard, .ak-wonder-q, .ak-map-head h2, .ak-course .ak-h3,
+.pf-name, .pf-atitle, .pf-v-title,
+.ln-switch-t, .ln-pack-n, .ln-h3, .ln-card-q, .ak-h3, .ak-qz-q, .pf-gtitle h2, .pf-h2,
+.pf-stat b, .ln-stat b, .ln-done-stats b, .ak-stats b, .ak-mc-score b {
+  font-family: var(--display) !important; font-weight: 560 !important; letter-spacing: -.03em !important;
+  font-variation-settings: "SOFT" 100, "opsz" 72;
+}
+
+/* ---------- Shell: buttons, tab bar, paywall, toast ---------- */
+.btn-lit { background: var(--lit-bg); box-shadow: var(--lit-shadow); color: var(--shell); font-weight: 650; font-size: 17px; }
+.btn-lit:disabled { background: #EADBCB; color: #6A4636; box-shadow: inset 0 0 0 1px rgba(106, 70, 54, .12); }
+.btn-carved { background: var(--shell); box-shadow: var(--carved); color: var(--humus); font-weight: 650; }
+.chip-fill[aria-pressed="true"] { background: var(--ember) !important; color: var(--shell) !important; }
+
+.tabbar { background: rgba(255, 248, 241, .9); box-shadow: inset 0 1px 0 #fff, 0 16px 34px -16px rgba(120, 60, 30, .55); }
+.tabbar button { color: var(--bark); font-size: 12.5px; font-weight: 650; border-radius: 28px; }
+.tabbar button[aria-current="page"] { background: var(--ember); color: var(--shell); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 18px -8px rgba(184, 58, 28, .7); }
+
+.pw-backdrop { background: rgba(43, 26, 18, .42); }
+.pw-sheet { background: linear-gradient(180deg, #FFF8F1, #F8EDE1); box-shadow: inset 0 1px 0 #fff, 0 30px 70px rgba(43, 26, 18, .38); }
+.pw-eyebrow { color: var(--ember); font-weight: 700; }
+.pw-title { font-size: 28px; line-height: 31px; }
+.pw-perk i { background: var(--ember-tint); color: var(--ember); border-radius: var(--pebble); }
+.pw-x { background: rgba(106, 70, 54, .08); }
+.toast { background: var(--humus); color: var(--shell); }
+
+/* ---------- Side panel ---------- */
+.side h2 { font-size: 28px; }
+.jump button[aria-current="step"] { background: var(--shell); }
+.jump button:hover { background: rgba(255, 248, 241, .6); }
+.seg { background: rgba(255, 248, 241, .55); }
+.seg button[aria-pressed="true"] { background: var(--ember); color: var(--shell); }
+.restart { background: var(--shell); box-shadow: var(--carved); }
+.lv-chip { margin-top: 22px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: var(--shell); box-shadow: var(--carved); color: var(--humus); font-size: 13px; font-weight: 500; text-decoration: none; line-height: 18px; }
+.lv-chip b { color: var(--ember); font-weight: 650; }
+.lv-chip:hover b { text-decoration: underline; }
+.lv-chip-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #B83A1C); box-shadow: 0 0 10px rgba(240, 123, 90, .6); }
+.lv-link { margin-top: 12px; padding-left: 4px; font-size: 13px; font-weight: 600; color: var(--ember); text-decoration: none; }
+
+/* ---------- Onboarding ---------- */
+.ob { --ob-ink: #9A2F15; }
+/* Trailer: a deep humus/ember night instead of navy */
+.ob-night { background: radial-gradient(70% 45% at 50% 42%, #3B1A0D 0%, rgba(59, 26, 13, 0) 70%), radial-gradient(60% 40% at 15% 85%, rgba(150, 46, 28, .42), transparent 70%), radial-gradient(50% 35% at 90% 10%, rgba(190, 96, 34, .28), transparent 70%), #120A06; }
+.ob-night::after { filter: sepia(1) saturate(2.4) hue-rotate(-12deg); opacity: .5; }
+.ob-halo { background: radial-gradient(circle, rgba(240, 123, 90, .38), transparent 68%); }
+.ob-skip { background: rgba(255, 248, 241, .1); color: var(--shell); box-shadow: inset 0 0 0 1px rgba(255, 228, 200, .28); }
+.ob-pill { color: #FFF1E4; background: rgba(255, 236, 214, .08); box-shadow: inset 0 0 0 1px rgba(255, 220, 190, .18); }
+.ob-hint { color: rgba(255, 236, 214, .78); }
+.ob.ob-dark .ob-tline { color: #FFF1E4; }
+/* Day: the bone canvas with a warm glow, no cool blobs */
+.ob-aurora .a1 { background: #FFC9A0; }
+.ob-aurora .a2 { background: #F7A884; }
+.ob-aurora .a3 { background: #FFDDB0; }
+.ob-aurora .a4 { background: #F6CD7E; opacity: .4; }
+.ob-aurora::after { background: linear-gradient(0deg, #EFDDCA 30%, rgba(239, 221, 202, 0)); }
+.ob-aurora.build .a1 { background: #FFC1A4; }
+.ob-aurora.build .a2 { background: #FFD6A6; }
+.ob-aurora.build .a3 { background: #FFD3BE; }
+.ob-aurora.build .a4 { background: #F8DDA8; }
+.ob-tline { font-family: var(--display); font-weight: 560; }
+/* Progress: ember dashes */
+.ob-bar { height: 10px; background: transparent; border-radius: 0; overflow: visible; position: relative;
+  --dash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='10'%3E%3Crect width='25' height='10' rx='5'/%3E%3C/svg%3E");
+  -webkit-mask: var(--dash) left center / 32px 10px repeat-x; mask: var(--dash) left center / 32px 10px repeat-x; -webkit-mask-repeat: space no-repeat; mask-repeat: space no-repeat; }
+.ob-bar::before { content: ''; position: absolute; inset: 0; background: rgba(106, 70, 54, .2); }
+.ob-bar i { position: relative; border-radius: 0; background: var(--ember); box-shadow: none; }
+.ob-back { background: var(--shell); box-shadow: 0 6px 16px -8px rgba(120, 60, 30, .45), inset 0 1px 0 #fff; }
+/* Pebble options with a check circle on the right */
+.ob-opt, .ob-out { background: var(--shell); box-shadow: var(--carved); border-radius: 28px; }
+.ob-opt::after, .ob-out::after { content: ''; width: 26px; height: 26px; flex: none; margin-left: auto; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .3); transition: background-color 220ms ease-out, box-shadow 220ms ease-out; }
+.ob-opt[aria-checked="true"], .ob-out[aria-checked="true"] { background: var(--ember); color: var(--shell); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 12px 26px -12px rgba(184, 58, 28, .75); }
+.ob-opt[aria-checked="true"] small, .ob-out[aria-checked="true"] small { color: #FFE4D6; }
+.ob-opt[aria-checked="true"]::after, .ob-out[aria-checked="true"]::after { box-shadow: none; background: var(--shell) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B83A1C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 15px no-repeat; }
+.ob-ic, .ob-oic { background: #F8E2CF; border-radius: var(--pebble); box-shadow: none; }
+.ob-opt[aria-checked="true"] .ob-ic, .ob-out[aria-checked="true"] .ob-oic { background: rgba(255, 248, 241, .92); }
+.ob-chip { background: var(--shell); box-shadow: var(--carved); border-radius: 999px; }
+.ob-chip[aria-checked="true"] { background: var(--ember); color: var(--shell); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 12px 26px -12px rgba(184, 58, 28, .75); }
+.ob-num { font-family: var(--display); font-weight: 600; background: none; color: var(--ember); -webkit-text-fill-color: currentColor; }
+.ob-explain.strong { color: var(--ember); }
+.ob-field { background: var(--shell); box-shadow: inset 0 1px 0 #fff, 0 12px 30px -16px rgba(120, 60, 30, .55); }
+.ob-field:focus-within { box-shadow: 0 0 0 2px var(--ember), 0 0 0 7px rgba(184, 58, 28, .12), 0 14px 36px -16px rgba(184, 58, 28, .5); }
+.ob-field textarea { caret-color: var(--ember); }
+.ob-field textarea::placeholder { color: var(--bark); }
+.ob-card { background: rgba(255, 248, 241, .94); }
+/* The CTA: ember when there is something to do, a soft pebble while it waits */
+.ob-btn { background: var(--lit-bg); box-shadow: var(--lit-shadow); color: var(--shell); font-weight: 650; font-size: 17px; }
+.ob-btn::before { background: #EADBCB; box-shadow: inset 0 0 0 1px rgba(106, 70, 54, .1); }
+.ob-btn:disabled { color: var(--bark); }
+@keyframes obGlow { 0%, 100% { box-shadow: var(--lit-shadow); } 50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 14px 40px -6px rgba(184, 58, 28, .65), 0 0 0 6px rgba(240, 123, 90, .16); } }
+/* The build */
+.ob-np { height: 8px; border-radius: 4px; background: rgba(106, 70, 54, .15); }
+.ob-np i { border-radius: 4px; background: linear-gradient(90deg, var(--saffron), #C9472B); }
+.ob-k-review .ob-dot { color: var(--ember); box-shadow: inset 0 0 0 1.5px rgba(184, 58, 28, .4), 0 4px 12px rgba(120, 60, 30, .12); }
+.ob-k-review.lit .ob-dot { background: radial-gradient(circle at 34% 30%, #E46A44, #B83A1C 70%); }
+.ob-k-final.lit .ob-dot { background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #C9472B); }
+.ob-chiplab { background: rgba(255, 248, 241, .94); }
+
+/* ---------- Learn ---------- */
+.ln-root { --pink-1: #F07B5A; --pink-5: #C9472B; --pink-7: #9A2F15; --pink-t: #F8E2CF; --tint: #FBE6D6; }
+.ln-topfade { background: linear-gradient(180deg, rgba(251, 240, 228, .97) 58%, rgba(251, 240, 228, 0)); }
+.ln-eyebrow { color: var(--ember); }
+.ln-switch, .ln-streak { background: rgba(255, 248, 241, .92) !important; box-shadow: inset 0 1px 0 #fff, 0 8px 20px -14px rgba(120, 60, 30, .55); }
+.ln-switch-t { font-size: 18px; font-weight: 560; }
+.ln-bar { height: 8px; border-radius: 4px; background: rgba(106, 70, 54, .15); }
+.ln-bar i { border-radius: 4px; background: linear-gradient(90deg, var(--saffron), #C9472B); }
+/* Roadmap: ember cells for done, a glowing coral sphere for now, shell pebbles for later */
+.ln-tile { border-radius: 50%; }
+.ln-tile.is-done, .ln-tile-review.is-done { background: radial-gradient(circle at 34% 30%, #E46A44, #B83A1C 70%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 18px -8px rgba(184, 58, 28, .7); }
+.ln-tile.is-current { background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #D9553A); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 0 0 7px rgba(240, 123, 90, .14), 0 10px 24px -8px rgba(222, 90, 60, .7); }
+.ln-tile.is-locked { background: var(--shell); box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .18), 0 6px 16px -10px rgba(120, 60, 30, .4); }
+.ln-tile-final, .ln-tile-final.is-current, .ln-tile-final.is-locked { border-radius: 50%; background: var(--shell); }
+.ln-tile-final.is-current { box-shadow: 0 0 0 6px rgba(240, 123, 90, .16), 0 14px 30px -10px rgba(222, 90, 60, .5); }
+.ln-tile-final.is-done { background: radial-gradient(circle at 34% 30%, #FFF1E0, #FFD6B8); }
+.ln-halo, .ln-tile-final .ln-halo { border-radius: 50%; border-color: rgba(240, 123, 90, .55); }
+.ln-badge { background: var(--shell); box-shadow: 0 2px 6px rgba(120, 60, 30, .2); }
+.ln-badge.is-done, .ln-tile-review .ln-badge.is-done { color: var(--ember); }
+.ln-badge.is-lock { color: var(--bark); background: var(--shell); }
+.ln-cur { background: var(--shell); box-shadow: inset 0 1px 0 #fff, 0 12px 28px -14px rgba(120, 60, 30, .6); border-radius: 24px; }
+.ln-cur-t { font-weight: 650; }
+.ln-trk { stroke: rgba(255, 248, 241, .75); }
+.ln-seg.is-dim, .ln-branch.is-locked { stroke: rgba(106, 70, 54, .4); }
+.ln-seg-glow { stroke: rgba(201, 71, 43, .14); }
+.ln-glow { background: radial-gradient(circle, rgba(255, 179, 122, .38), rgba(255, 179, 122, 0) 68%); }
+.ln-float { background: rgba(255, 248, 241, .94) !important; box-shadow: inset 0 1px 0 #fff, 0 14px 30px -14px rgba(120, 60, 30, .55); }
+.ln-fl-ic { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 14px -6px rgba(184, 58, 28, .6); }
+.ln-added { background: rgba(239, 180, 62, .16); color: #FFD27A; }

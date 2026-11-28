@@ -54,8 +54,9 @@
 
   // Finish onboarding → land on Learn → paywall
   Bus.on('onboarding:done', (d) => {
-    addCourse('heart'); Store.set({ style: d.style || Store.get().style || 'connect', topic: d.topic, goal: d.goal, span: d.span, daily: d.daily });
-    Bus.emit('course:created', { id: 'heart' });
+    const id = registerCatalogCourse(d.courseId);
+    addCourse(id); Store.set({ style: d.style || Store.get().style || 'connect', topic: d.topic, goal: d.goal, span: d.span, daily: d.daily, activeCourse: id });
+    Bus.emit('course:created', { id });
     App.showTab('learn');
     setTimeout(() => { if (!Store.get().paywallSeen) paywall('onboarding'); }, P.has('still') ? 50 : 2200);
   });
@@ -64,6 +65,25 @@
     const c = COURSES[id]; s.courses.push({ id, title: c.title, progress: {} }); Store.set({ courses: s.courses, activeCourse: id });
   }
   window.addCourse = addCourse;
+  // A course picked from the catalog becomes a real course for Learn: heart's structure, the catalog's titles.
+  function registerCatalogCourse(cid) {
+    const cat = window.CATALOG && CATALOG[cid];
+    if (!cid || cid === 'heart' || !cat || !cat.lessons) return 'heart';
+    if (COURSES[cid]) return cid;
+    const H = COURSES.heart, shapes = ['heart', 'grid', 'spike', 'split', 'wave', 'spike', 'burst', 'bars', 'ring'];
+    const lessons = [];
+    cat.lessons.forEach((l, i) => {
+      lessons.push({ id: cid + '-l' + (i + 1), kind: 'lesson', title: l.title, hook: l.hook, shape: cat.shape || shapes[i % shapes.length] });
+      if (i === 3) lessons.push({ id: cid + '-review1', kind: 'review', title: 'Quick review', hook: 'Five fast questions on what you’ve covered.' });
+    });
+    lessons.push({ id: cid + '-final', kind: 'final', title: 'Final challenge', hook: 'Put it all together, and earn your collectible.' });
+    COURSES[cid] = Object.assign({}, H, {
+      id: cid, title: cat.title, topic: cat.outcome, subject: cat.subject, palette: cat.palette, color: cat.color, shape: cat.shape,
+      goals: (cat.goals || H.goals).map((g, i) => Object.assign({}, g, { id: H.goals[i] ? H.goals[i].id : g.id })),
+      lessons, gift: Object.assign({}, H.gift, { title: 'The ' + cat.title.toLowerCase() + ' badge', shape: cat.shape, palette: cat.palette }),
+    });
+    return cid;
+  }
   Bus.on('ask:open', () => { if (current !== 'ask') App.showTab('ask'); });
 
   // ---------- Paywall (shell-owned, any module can open it) ----------

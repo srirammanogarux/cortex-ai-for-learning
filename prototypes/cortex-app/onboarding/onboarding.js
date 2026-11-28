@@ -1,5 +1,6 @@
-// Onboarding v4 · trailer → welcome → learning style → what to learn → goal → time → the course builds itself.
-// Owner: A · Onboarding. See CONTRACT.md. Talks to the app only through Bus, Store and Brain.
+// Onboarding v4 · trailer → welcome → learning style → what brings you → your level → what to learn (outcomes)
+// → goal → time → the course builds itself. Owner: A · Onboarding. See CONTRACT.md.
+// Talks to the app only through Bus, Store and Brain. Course outcomes come from data/courses-catalog.js (optional).
 (function () {
   const W = 368, H = 822;
   const P = new URLSearchParams(location.search);
@@ -12,9 +13,13 @@
   const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return A.map((v, i) => Math.round(v + (B[i] - v) * t)); };
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-  const STEPS = ['Trailer', 'Welcome', 'Learning style', 'What to learn', 'Your goal', 'Your time', 'Building your course'];
-  const SCENE_OF_STEP = [0, 3, 4, 5, 6, 7, 8];
-  const STEP_OF_SCENE = [0, 0, 0, 1, 2, 3, 4, 5, 6];
+  const STEPS = ['Trailer', 'Welcome', 'Learning style', 'What brings you', 'Where you’re starting', 'What to learn', 'Your goal', 'Your time', 'Building your course'];
+  const SCENE_OF_STEP = [0, 3, 4, 5, 6, 7, 8, 9, 10];
+  const STEP_OF_SCENE = [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+  // Scene numbers, so the flow reads by name
+  const S_WELCOME = 3, S_STYLE = 4, S_INTENT = 5, S_LEVEL = 6, S_TOPIC = 7, S_GOAL = 8, S_TIME = 9, S_BUILD = 10;
+  // Progress bar per question scene
+  const BAR = { [S_STYLE]: 17, [S_INTENT]: 33, [S_LEVEL]: 50, [S_TOPIC]: 67, [S_GOAL]: 83, [S_TIME]: 100 };
 
   // ---------- Learning styles: each one is a particle shape ----------
   const STYLES = [
@@ -63,6 +68,67 @@
   const gradColour = (g) => (x, y) => mixHex(g[0], g[1], Math.max(0, Math.min(1, (x + y + 1.72) / 3.44)));
   const bodyColour = (x, y, d) => mixHex('#F59BB3', '#A3264F', Math.max(0, Math.min(1, 0.25 + d * 0.75)));
 
+  // A solid colour-gradient tile icon from SVG paths (same look as fillSVG)
+  let svgId = 0;
+  function solidSVG(paths, c, size = 28) {
+    const id = 'obg' + (++svgId);
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs>${paths.replace(/FILL/g, `url(#${id})`)}</svg>`;
+  }
+  const ficon = (name, size = 28) => (window.FICONS && FICONS[name] && window.fillSVG ? fillSVG(name, size) : '');
+  // Particle shape → a tile icon: f-* icons use the solid set, other shapes a dot glyph in the course colours
+  const tileFor = (shape, colour) => (/^f-/.test(shape) ? ficon(shape.slice(2)) : glyph(shape, colour));
+
+  // ---------- Who you are: what brings you here, and where you're starting from ----------
+  const HEART_PATH = 'M12 21s-7.5-4.6-9.6-9.4C.9 8 3 4.5 6.6 4.5c2.2 0 3.8 1.2 5.4 3.1 1.6-1.9 3.2-3.1 5.4-3.1 3.6 0 5.7 3.5 4.2 7.1C19.5 16.4 12 21 12 21z';
+  const INTENTS = [
+    { id: 'career', label: 'Grow in my career', sub: 'Skills that help at work', shape: 'f-work', icon: () => ficon('work'), line: 'Got it. We’ll keep it practical.', for: 'For your career', ask: 'What do you want to get better at?' },
+    { id: 'exam', label: 'Prepare for an exam', sub: 'School, college or a test', shape: 'f-exam', icon: () => ficon('exam'), line: 'Got it. We’ll focus on what gets marks.', for: 'For your exam', ask: 'What’s your exam on?' },
+    { id: 'skill', label: 'Pick up a skill or hobby', sub: 'Something hands-on', shape: 'f-sharpen', icon: () => ficon('sharpen'), line: 'Nice. Lots of doing, not just reading.', for: 'Skills people love', ask: 'What do you want to pick up?' },
+    { id: 'life', label: 'Understand my health or life', sub: 'Body, mind, money, the world', shape: 'heart', palette: 'body', icon: () => solidSVG(`<path d="${HEART_PATH}" fill="FILL"/>`, ['#F783AC', '#D6336C']), line: 'Good. Plain answers you can use.', for: 'For your health and life', ask: 'What do you want to understand?' },
+    { id: 'curious', label: 'Just curious', sub: 'Follow whatever grabs me', shape: 'f-fun', icon: () => ficon('fun'), line: 'The best reason. We’ll follow the fun parts.', for: 'Popular right now', ask: 'What do you want to learn?' },
+  ];
+  const LEVELS = [
+    { id: 'new', label: 'New to it', sub: 'Start from zero', n: 1, line: 'We’ll start from the very first idea.', word: 'from scratch' },
+    { id: 'basics', label: 'I know the basics', sub: 'Skip the intro bits', n: 2, line: 'We’ll skip what you already know.', word: 'past the basics' },
+    { id: 'confident', label: 'Fairly confident', sub: 'Go deeper, faster', n: 3, line: 'We’ll go deeper, faster.', word: 'in depth' },
+  ];
+  const LVL_GRAD = ['#7FA3FF', '#1F5BE0'];
+  const LVL_BARS = [[22, 132, 46, 64], [88, 88, 46, 108], [154, 36, 46, 160]];
+  [1, 2, 3].forEach((n) => Brain.defineIcon('ob-lvl-' + n, (x, S) => {
+    const k = sc(S);
+    LVL_BARS.forEach(([X, Y, w, h], i) => {
+      x.beginPath(); x.roundRect ? x.roundRect(k(X), k(Y), k(w), k(h), k(12)) : x.rect(k(X), k(Y), k(w), k(h));
+      if (i < n) x.fill(); else { x.lineWidth = k(7); x.stroke(); }
+    });
+  }, { grad: LVL_GRAD }));
+  const levelSVG = (n) => solidSVG(LVL_BARS.map(([X, Y, w, h], i) => {
+    const s = 24 / 220, a = `x="${(X * s + 1).toFixed(2)}" y="${(Y * s).toFixed(2)}" width="${(w * s).toFixed(2)}" height="${(h * s).toFixed(2)}" rx="1.4"`;
+    return i < n ? `<rect ${a} fill="FILL"/>` : `<rect ${a} fill="none" stroke="FILL" stroke-width="1.3" opacity=".55"/>`;
+  }).join(''), LVL_GRAD);
+  const intentOf = () => INTENTS.find((i) => i.id === st.intent);
+  const levelOf = () => LEVELS.find((l) => l.id === st.level);
+
+  // ---------- Courses: the catalog (optional) on top of the heart demo ----------
+  const HEART_GOALS = ['how', 'condition', 'healthy', 'exam'];
+  const HEART_FALLBACK = { id: 'heart', outcome: 'Understand your heart health', level: 'Beginner', palette: 'body', shape: 'heart', color: BODY, ink: '#A3264F', span: '2 weeks', goals: null, lessons: null };
+  const catalog = () => window.CATALOG || { heart: HEART_FALLBACK };
+  const courseOf = (id) => {
+    const C = catalog(), c = C[id || st.courseId] || C.heart || HEART_FALLBACK;
+    return { ...c, title: c.title || COURSES.heart.title };
+  };
+  const goalsOf = (c) => (c.goals || COURSES.heart.goals.map((g) => ({ ...g, shape: GOAL_SHAPE[g.id] })));
+  const heartGoal = (c, gid) => { if (!c.goals) return gid || 'how'; const i = c.goals.findIndex((g) => g.id === gid); return HEART_GOALS[Math.max(0, i)]; };
+  const colourOf = (c) => (c.id === 'heart' ? bodyColour : gradColour(c.color));
+  const courseTile = (c, size = 28) => (window.catalogTile && catalogTile(c.id, size)) || glyph(c.shape, colourOf(c), 32, 200);
+  const courseForText = (t) => (window.courseFor ? courseFor(t) : 'heart');
+  // Did the topic clearly match a prepared course? (else the build says it's a sample)
+  const matched = () => !!st.pick || st.courseId !== 'heart' || (catalog().heart && catalog().heart.match ? catalog().heart.match.test(st.topic) : /heart|cardi|pulse|blood|beat/i.test(st.topic));
+  function setTheme(c) {
+    const [a, b] = c.color || BODY;
+    root.style.setProperty('--ob-c1', a); root.style.setProperty('--ob-c2', b); root.style.setProperty('--ob-ink', c.ink || b);
+    root.style.setProperty('--ob-c1-rgb', hex(a).join(',')); root.style.setProperty('--ob-c2-rgb', hex(b).join(','));
+  }
+
   // ---------- Trailer field: thought orbs + question pills showing range ----------
   const ORBS = ['rocket', 'whale', 'coffee', 'city', 'bulb', 'hourglass', 'brain', 'chart'];
   const PILLS = ['How do black holes bend light?', 'Why does bread rise?', 'How do I take sharper photos?', 'Why did Rome fall?', 'Why do we dream?',
@@ -70,7 +136,7 @@
     'Why is the Mona Lisa famous?', 'Who built the pyramids?', 'How does my heart keep time?', 'Where does money come from?'];
 
   // ---------- State ----------
-  const st = { scene: 0, style: null, topic: '', goal: null, span: null, daily: '10 min a day', busy: false };
+  const st = { scene: 0, style: null, intent: null, level: null, topic: '', pick: null, courseId: 'heart', goal: null, span: null, daily: '10 min a day', busy: false };
   let root, $, timers = [], orb = { x: 184, y: 350, s: 0.95 }, mounted = false;
   const later = (fn, ms) => { timers.push(setTimeout(fn, STILL ? Math.min(ms, 20) : ms)); };
   const auto = (fn, ms) => { if (!STILL) later(fn, ms); };
@@ -99,9 +165,9 @@
     <div class="ob-opts" role="radiogroup"></div>
     <p class="ob-explain" aria-live="polite"></p>
     <div class="ob-ask">
-      <label class="ob-field"><textarea rows="3" placeholder="Anything. A topic, a skill, a question" aria-label="What do you want to learn?" spellcheck="false" autocomplete="off"></textarea></label>
-      <p class="ob-try">Or try one</p>
-      <div class="ob-suggs"></div>
+      <label class="ob-field"><textarea rows="1" placeholder="Type a topic or a skill" aria-label="What do you want to learn?" spellcheck="false" autocomplete="off"></textarea></label>
+      <p class="ob-try"></p>
+      <div class="ob-outs" role="radiogroup" aria-label="Suggested courses"></div>
     </div>
     <div class="ob-daily"><p class="ob-dl">Each day</p><div class="ob-chips" role="radiogroup" aria-label="Minutes a day"></div></div>
     <div class="ob-narr" aria-live="polite"><p></p><div class="ob-np"><i></i></div></div>
@@ -118,7 +184,7 @@
       space: q('.ob-space'), map: q('.ob-map'), stops: q('.ob-stops'), card: q('.ob-card'), brain: q('.ob-brain'), hint: q('.ob-hint'),
       scrim: q('.ob-scrim'), tline: q('.ob-tline'), tsub: q('.ob-tsub'), tap: q('.ob-tap'), skip: q('.ob-skip'), qtop: q('.ob-qtop'),
       back: q('.ob-back'), bar: q('.ob-bar'), barFill: q('.ob-bar i'), head: q('.ob-head'), callout: q('.ob-callout'), ceb: q('.ob-ceb'), ctx: q('.ob-ctx'),
-      opts: q('.ob-opts'), explain: q('.ob-explain'), ask: q('.ob-ask'), field: q('.ob-field'), input: q('.ob-field textarea'), suggs: q('.ob-suggs'),
+      opts: q('.ob-opts'), explain: q('.ob-explain'), ask: q('.ob-ask'), field: q('.ob-field'), input: q('.ob-field textarea'), outs: q('.ob-outs'), tryl: q('.ob-try'),
       daily: q('.ob-daily'), chips: q('.ob-chips'), narr: q('.ob-narr'), narrTxt: q('.ob-narr p'), narrFill: q('.ob-np i'), fine: q('.ob-fine'),
       cta: q('.ob-cta'), btn: q('.ob-btn'), btnLabel: q('.ob-btn span'), fx: q('.ob-fx'), aurora: q('.ob-aurora'),
     };
@@ -128,7 +194,7 @@
     if (scr) scr.addEventListener('scroll', () => { if (scr.scrollTop && root.offsetParent) scr.scrollTop = 0; });
     $.btn.addEventListener('click', () => { if ($.btn.disabled || st.busy) return; const s = SCENES[st.scene]; if (s.next) s.next(); });
     $.back.addEventListener('click', () => { if (st.busy) return; const s = SCENES[st.scene]; if (s.back) s.back(); });
-    $.skip.addEventListener('click', (e) => { e.stopPropagation(); go(3); });
+    $.skip.addEventListener('click', (e) => { e.stopPropagation(); go(S_WELCOME); });
     root.addEventListener('click', (e) => {
       if (st.scene > 2 || e.target.closest('button') || e.target.closest('canvas')) return;
       go(st.scene + 1);
@@ -233,7 +299,8 @@
   // A stream of particles from the character to a point; onLand fires as the bulk settles
   function stream(to, k, onLand) {
     const n = 120, t0 = performance.now(); let arrived = 0, fired = false;
-    const cols = ['247,131,172', '214,51,108', '255,158,187', '127,163,255', '31,91,224', '247,131,172'];
+    const c1 = B ? rgb(B.col[0]) : '247,131,172', c2 = B ? rgb(B.col[1]) : '214,51,108';
+    const cols = [c1, c2, c1, '127,163,255', '31,91,224', c2];
     const bend = (k % 2 ? 1 : -1) * rnd(40, 90);
     const fire = () => { if (!fired) { fired = true; onLand(); } };
     for (let i = 0; i < n; i++) {
@@ -310,8 +377,8 @@
   }
   function renderOpts(list, key, onPick) {
     $.opts.classList.remove('leave'); $.opts.dataset.key = key;
-    $.opts.setAttribute('aria-label', { style: 'How you like to learn', goal: 'What you want from this', span: 'How much time you have' }[key]);
-    $.opts.innerHTML = list.map((o, k) => `<button type="button" class="ob-opt" role="radio" data-v="${o.id}" aria-checked="${st[key] === o.id}" style="animation-delay:${80 + k * 50}ms">
+    $.opts.setAttribute('aria-label', { style: 'How you like to learn', intent: 'What brings you here', level: 'Where you’re starting from', goal: 'What you want from this', span: 'How much time you have' }[key]);
+    $.opts.innerHTML = list.map((o, k) => `<button type="button" class="ob-opt" role="radio" data-v="${o.id}" aria-checked="${st[key] === o.id}" style="animation-delay:${80 + k * 45}ms">
       <span class="ob-ic">${o.icon}</span><span class="ob-ot"><b>${esc(o.label)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ''}</span></button>`).join('');
     $.opts.querySelectorAll('.ob-opt').forEach((b) => b.addEventListener('click', () => {
       if (st.busy) return;
@@ -320,10 +387,20 @@
       st[key] = b.dataset.v; onPick(b.dataset.v, b);
     }));
   }
-  const topicLabel = () => (st.topic || 'How the human heart works').trim();
-  const isHeart = (t) => /heart|cardi|pulse|blood|beat/i.test(t || '');
-  const stopsFor = (goal, span) => courseRoadmap(COURSES.heart, goal || 'how', span || 'twoweeks');
+  const topicLabel = () => (st.topic || courseOf().outcome || 'How the human heart works').trim();
+  // The roadmap: the heart course's structure, with the picked course's lesson titles swapped in
+  function stopsFor(goal, span) {
+    const c = courseOf(), base = courseRoadmap(COURSES.heart, heartGoal(c, goal), span || 'twoweeks');
+    if (!c.lessons) return base;
+    let i = 0;
+    return base.map((s) => {
+      if (s.kind !== 'lesson') return s;
+      const l = c.lessons[i] || {}; i++;
+      return { ...s, id: `${c.id}-${i}`, title: l.title || s.title, hook: l.hook || s.hook };
+    });
+  }
   const lessonCount = (stops) => stops.filter((s) => s.kind === 'lesson').length;
+  const store = (patch) => { if (window.Store) Store.set(patch); };
 
   // ---------- Scenes ----------
   function dark(on) {
@@ -349,6 +426,12 @@
     if (!o.line) { setLine(''); setSub(''); }
     if (!o.ask) $.input.blur();
     root.classList.toggle('ob-trailer', st.scene <= 2);
+    if (BAR[st.scene]) bar(BAR[st.scene]);
+  }
+  // The small character beside a speech bubble, for the one-tap questions
+  function askScene(o) {
+    dark(false); ui({ q: true, callout: true, opts: true, explain: !!o.explain, daily: !!o.daily, cta: true }); Brain.setSpin(false); Brain.setMode('idle');
+    place(70, 158, 0.36);
   }
 
   const SCENES = [
@@ -378,7 +461,7 @@
         later(() => { place(184, 350, 0.95); Brain.form(); }, 380);
         later(() => setLine('What if you could capture, learn and play with every question?', 548), 220);
         later(() => $.hint.classList.add('on'), 2000);
-        auto(() => go(3), 5400);
+        auto(() => go(S_WELCOME), 5400);
       },
     },
     { // 3 · Welcome to Cortex
@@ -390,12 +473,12 @@
         setCta('Get started', false);
         later(() => setCta('Get started', true), 800);
       },
-      next() { go(4); },
+      next() { go(S_STYLE); },
     },
     { // 4 · How do you like to learn?
       enter() {
         dark(false); ui({ q: true, head: true, opts: true, explain: true, cta: true }); Brain.setSpin(false); Brain.setMode('idle');
-        place(184, 290, 0.9); bar(25);
+        place(184, 290, 0.9);
         const s = STYLES.find((x) => x.id === st.style);
         Brain.setShape(s ? s.shape : 'brain', 'cobalt', 1100);
         setHead('How do you like to learn?', 116);
@@ -403,59 +486,98 @@
         later(() => renderOpts(STYLES.map((x) => ({ ...x, icon: glyph(x.shape, gradColour(x.grad)) })), 'style', (v, b) => {
           const sty = STYLES.find((x) => x.id === v);
           setExplain(sty.line, true); setCta('Continue', true);
-          if (window.Store) Store.set({ style: v });
+          store({ style: v });
           burst(relRect(b), sty.grad, () => { Brain.setShape(sty.shape, 'cobalt', 1000); Brain.pulse(); });
         }), 260);
         setCta('Continue', !!st.style);
       },
-      next() { go(5); }, back() { go(3); },
+      next() { go(S_INTENT); }, back() { go(S_WELCOME); },
     },
-    { // 5 · What do you want to learn?
+    { // 5 · What brings you here?
+      enter() {
+        askScene({ explain: true });
+        const it = intentOf();
+        Brain.setShape(it ? it.shape : 'qmark', it ? it.palette || 'cobalt' : 'cobalt', 1100);
+        setCallout('Two quick questions first', 'What brings you here?');
+        setExplain(it ? it.line : 'So your course fits you.', !!it);
+        later(() => renderOpts(INTENTS.map((x) => ({ ...x, icon: x.icon() })), 'intent', (v, b) => {
+          const x = INTENTS.find((i) => i.id === v);
+          setExplain(x.line, true); setCta('Continue', true); store({ intent: v });
+          const c = x.shape === 'heart' ? BODY : (window.FICONS && FICONS[x.shape.slice(2)] ? FICONS[x.shape.slice(2)].c : LVL_GRAD);
+          burst(relRect(b), c, () => { Brain.setShape(x.shape, x.palette || 'cobalt', 1000); Brain.pulse(); });
+        }), 220);
+        setCta('Continue', !!st.intent);
+      },
+      next() { go(S_LEVEL); }, back() { go(S_STYLE); },
+    },
+    { // 6 · Where are you starting from?
+      enter() {
+        askScene({ explain: true });
+        const lv = levelOf(), it = intentOf();
+        Brain.setShape(lv ? 'ob-lvl-' + lv.n : (it ? it.shape : 'qmark'), it && it.palette ? it.palette : 'cobalt', 1100);
+        setCallout(it ? it.for : 'One more', 'Where are you starting from?');
+        setExplain(lv ? lv.line : 'No wrong answer. It sets where we begin.', !!lv);
+        later(() => renderOpts(LEVELS.map((x) => ({ ...x, icon: levelSVG(x.n) })), 'level', (v, b) => {
+          const x = LEVELS.find((l) => l.id === v);
+          setExplain(x.line, true); setCta('Continue', true); store({ level: v });
+          burst(relRect(b), LVL_GRAD, () => { Brain.setShape('ob-lvl-' + x.n, 'cobalt', 900); Brain.pulse(); });
+        }), 220);
+        setCta('Continue', !!st.level);
+      },
+      next() { go(S_TOPIC); }, back() { go(S_INTENT); },
+    },
+    { // 7 · What do you want to learn? Type anything, or pick an outcome
       enter() {
         dark(false); ui({ q: true, head: true, ask: true, cta: true }); Brain.setSpin(false);
-        place(184, 178, 0.48); Brain.setShape('brain', 'cobalt', 1100); bar(50);
-        setHead('What do you want to learn?', 258);
-        $.input.value = st.topic || ''; renderSuggs();
-        const has = !!$.input.value.trim(); setCta('Build my course', has);
-        Brain.setMode(has ? 'listen' : 'idle');
-        later(() => { if (st.scene === 5) $.input.focus({ preventScroll: true }); }, INSTANT ? 0 : 520);
+        place(184, 152, 0.4);
+        const it = intentOf(), picked = st.pick && courseOf(st.pick);
+        if (picked) { setTheme(picked); Brain.setShape(picked.shape, picked.palette, 1100); } else Brain.setShape('brain', 'cobalt', 1100);
+        setHead(it ? it.ask : 'What do you want to learn?', 216);
+        if ($.head.offsetHeight < 44) $.head.style.top = '236px'; // one line: sit closer to the box
+        $.input.value = st.pick ? '' : st.topic || ''; renderOuts();
+        const has = !!(st.pick || $.input.value.trim()); setCta('Build my course', has);
+        Brain.setMode($.input.value.trim() ? 'listen' : 'idle');
       },
-      next() { commitTopic(); }, back() { Brain.setMode('idle'); go(4); },
+      next() { commitTopic(); }, back() { Brain.setMode('idle'); go(S_LEVEL); },
     },
-    { // 6 · Goal
+    { // 8 · Goal
       enter() {
-        dark(false); ui({ q: true, callout: true, opts: true, cta: true }); Brain.setSpin(false); Brain.setMode('idle');
-        place(70, 158, 0.36); bar(75);
-        Brain.setShape(GOAL_SHAPE[st.goal] || 'heart', 'body', 1100);
+        askScene({});
+        const c = courseOf(), goals = goalsOf(c), g = goals.find((x) => x.id === st.goal);
+        setTheme(c);
+        Brain.setShape(g ? g.shape : c.shape, c.palette, 1100);
         setCallout(`For “${topicLabel()}”`, 'What do you most want from this?');
-        later(() => renderOpts(COURSES.heart.goals.map((g) => ({ ...g, icon: glyph(GOAL_SHAPE[g.id], bodyColour) })), 'goal', (v, b) => {
+        later(() => renderOpts(goals.map((x) => ({ ...x, icon: x.shape === c.shape && c.id !== 'heart' ? courseTile(c) : tileFor(x.shape, colourOf(c)) })), 'goal', (v, b) => {
+          const x = goals.find((y) => y.id === v);
           setCta('Continue', true);
-          burst(relRect(b), BODY, () => { Brain.setShape(GOAL_SHAPE[v], 'body', 1000); Brain.pulse(); });
+          burst(relRect(b), c.color || BODY, () => { Brain.setShape(x.shape, c.palette, 1000); Brain.pulse(); });
         }), 260);
         setCta('Continue', !!st.goal);
       },
-      next() { go(7); }, back() { go(5); },
+      next() { go(S_TIME); }, back() { go(S_TOPIC); },
     },
-    { // 7 · Time
+    { // 9 · Time
       enter() {
-        dark(false); ui({ q: true, callout: true, opts: true, daily: true, cta: true }); Brain.setSpin(false); Brain.setMode('idle');
-        place(70, 158, 0.36); bar(100);
-        Brain.setShape('heart', 'body', 1100);
+        askScene({ daily: true });
+        const c = courseOf(); setTheme(c);
+        Brain.setShape(c.shape, c.palette, 1100);
         setCallout(`For “${topicLabel()}”`, 'How much time do you have?');
         later(() => renderOpts(COURSES.heart.spans.map((s) => {
           const n = lessonCount(stopsFor(st.goal, s.id));
           return { id: s.id, label: s.label, sub: `${n} lessons, then a final challenge`, icon: `<span class="ob-num">${n}</span>` };
         }), 'span', (v, b) => {
-          timeValid(); burst(relRect(b), BODY, () => { Brain.setShape('heart', 'body', 600); Brain.pulse(); });
+          timeValid(); burst(relRect(b), c.color || BODY, () => { Brain.setShape(c.shape, c.palette, 600); Brain.pulse(); });
         }), 260);
         renderDaily(); timeValid();
       },
-      next() { go(8); }, back() { go(6); },
+      next() { go(S_BUILD); }, back() { go(S_GOAL); },
     },
-    { // 8 · The course builds itself
+    { // 10 · The course builds itself
       enter() {
         dark(false); ui({ aurora: true, build: true }); Brain.setSpin(false);
-        runBuild();
+        // The map is laid out under the title card, so measure it with the real font
+        if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => { if (st.scene === S_BUILD) runBuild(); });
+        else runBuild();
       },
       next() { finish(); },
     },
@@ -467,46 +589,51 @@
   function wireTopic() {
     $.input.addEventListener('input', () => {
       st.topic = $.input.value;
-      const has = !!$.input.value.trim();
+      if (st.pick && $.input.value.trim()) { st.pick = null; $.outs.querySelectorAll('.ob-out').forEach((x) => x.setAttribute('aria-checked', 'false')); }
+      const has = !!(st.pick || $.input.value.trim());
       setCta('Build my course', has);
       Brain.setMode('listen'); Brain.pulse();
-      clearTimeout(listenT); listenT = setTimeout(() => { if (st.scene === 5 && !$.input.value.trim()) Brain.setMode('idle'); }, 1200);
+      clearTimeout(listenT); listenT = setTimeout(() => { if (st.scene === S_TOPIC && !$.input.value.trim()) Brain.setMode('idle'); }, 1200);
     });
     $.input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if ($.input.value.trim() && !st.busy) commitTopic(); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if ((st.pick || $.input.value.trim()) && !st.busy) commitTopic(); }
     });
-    $.input.addEventListener('focus', () => { if (st.scene === 5) Brain.setMode('listen'); });
+    $.input.addEventListener('focus', () => { if (st.scene === S_TOPIC) Brain.setMode('listen'); });
   }
-  function renderSuggs() {
-    const list = window.TOPIC_SUGGESTIONS || [];
-    $.suggs.innerHTML = list.map((t, k) => `<button type="button" class="ob-sugg" style="animation-delay:${200 + k * 40}ms">${esc(t)}</button>`).join('');
-    packChips(); if (document.fonts) document.fonts.ready.then(packChips);
-    $.suggs.querySelectorAll('.ob-sugg').forEach((b) => b.addEventListener('click', () => {
+  // Outcome courses, filtered and ordered by what brought you here, with a meta line shaped by your level
+  function renderOuts() {
+    const C = catalog(), it = intentOf(), lv = levelOf();
+    const order = ((window.CATALOG_ORDER && CATALOG_ORDER[st.intent]) || (window.CATALOG_ORDER && CATALOG_ORDER.curious) || Object.keys(C)).filter((id) => C[id]).slice(0, 4);
+    $.tryl.textContent = `${it ? it.for : 'Popular right now'} · or pick one`;
+    $.outs.innerHTML = order.map((id, k) => {
+      const c = courseOf(id);
+      return `<button type="button" class="ob-out" role="radio" data-id="${id}" aria-checked="${st.pick === id}" style="animation-delay:${160 + k * 50}ms">
+        <span class="ob-oic">${courseTile(c, 28)}</span><span class="ob-ot"><b>${esc(c.outcome)}</b><small>${esc(c.span || '2 weeks')} · ${esc(lv ? lv.word : (c.level || 'beginner').toLowerCase())}</small></span></button>`;
+    }).join('');
+    $.outs.querySelectorAll('.ob-out').forEach((b) => b.addEventListener('click', () => {
       if (st.busy) return;
-      $.input.value = b.textContent; st.topic = b.textContent;
-      $.input.dispatchEvent(new Event('input')); $.input.focus({ preventScroll: true });
-      $.field.classList.remove('flare'); void $.field.offsetWidth; $.field.classList.add('flare');
+      const c = courseOf(b.dataset.id);
+      st.pick = c.id; st.topic = c.outcome; $.input.value = ''; $.input.blur();
+      $.outs.querySelectorAll('.ob-out').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+      b.classList.remove('flare'); void b.offsetWidth; b.classList.add('flare');
+      setCta('Build my course', true); setTheme(c); Brain.setMode('idle');
+      burst(relRect(b), c.color || BODY, () => { Brain.setShape(c.shape, c.palette, 1000); Brain.pulse(); });
     }));
   }
-  // Pack the suggestion chips into as few rows as possible (first fit, widest first)
-  function packChips() {
-    const chips = [...$.suggs.children], cap = $.suggs.clientWidth || W - 36, gap = 8;
-    if (!chips.length || !cap) return;
-    const rows = [];
-    chips.map((c) => ({ c, w: c.offsetWidth })).sort((a, b) => b.w - a.w).forEach((it) => {
-      const row = rows.find((r) => r.w + gap + it.w <= cap);
-      if (row) { row.items.push(it); row.w += gap + it.w; } else rows.push({ w: it.w, items: [it] });
-    });
-    let o = 0; rows.forEach((r) => r.items.forEach((it) => { it.c.style.order = o; it.c.style.animationDelay = 200 + o * 40 + 'ms'; o++; }));
-  }
   function commitTopic() {
-    const t = $.input.value.trim(); if (!t) return;
-    st.topic = t; st.busy = true; setCta('Build my course', false); $.btn.classList.add('busy');
+    const typed = $.input.value.trim(); if (!typed && !st.pick) return;
+    const fromRow = st.pick && !typed;
+    if (!fromRow) { st.pick = null; st.topic = typed; }
+    const id = fromRow ? st.pick : courseForText(typed), c = courseOf(id);
+    if (st.courseId !== id) st.goal = null; // goals differ per course
+    st.courseId = id; setTheme(c);
+    st.busy = true; setCta('Build my course', false); $.btn.classList.add('busy');
+    const src = fromRow ? $.outs.querySelector('.ob-out[aria-checked="true"]') : $.field;
     $.input.blur(); $.ask.classList.add('sent');
-    setHead('Got it. Let’s shape it.', 258);
+    setHead('Got it. Let’s shape it.');
     Brain.setMode('idle');
-    burst(relRect($.field), ['#7FA3FF', '#1F5BE0', ...BODY], () => { Brain.setShape('heart', 'body', 1300); Brain.pulse(); });
-    later(() => { st.busy = false; $.btn.classList.remove('busy'); go(6); }, INSTANT ? 0 : 1500);
+    burst(relRect(src || $.field), ['#7FA3FF', '#1F5BE0', ...(c.color || BODY)], () => { Brain.setShape(c.shape, c.palette, 1300); Brain.pulse(); });
+    later(() => { st.busy = false; $.btn.classList.remove('busy'); go(S_GOAL); }, INSTANT ? 0 : 1500);
   }
 
   // ---------- Daily minutes ----------
@@ -520,7 +647,7 @@
   }
 
   // ---------- THE BUILD: particles stream out and settle into the roadmap ----------
-  const Y0 = 258, Y1 = 664;
+  let Y0 = 258; const Y1 = 664;
   const LAYOUTS = {
     // One long winding path, labels to the open side
     roadmap(stops) {
@@ -572,6 +699,7 @@
   function line(a, b) { return `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`; }
 
   const ICON_CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const ICON_STAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></svg>';
   const ICON_HEART = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3 4.5 6.6 4.5c2.2 0 3.8 1.2 5.4 3.1 1.6-1.9 3.2-3.1 5.4-3.1 3.6 0 5.7 3.5 4.2 7.1C19.5 16.4 12 21 12 21z"/></svg>';
 
   let B = null; // the current build
@@ -583,39 +711,47 @@
   }
   function runBuild() {
     clearBuild(); parts = [];
-    const style = st.style || 'connect', stops = stopsFor(st.goal, st.span), n = stops.length, L = LAYOUTS[style](stops);
-    const nLessons = lessonCount(stops);
-    B = { style, stops, L, n, landed: 0 };
+    const style = st.style || 'connect', stops = stopsFor(st.goal, st.span), n = stops.length;
+    const nLessons = lessonCount(stops), c = courseOf(), col = c.color || BODY;
+    setTheme(c);
+    const span = COURSES.heart.spans.find((s) => s.id === st.span) || COURSES.heart.spans[1];
+    const goal = goalsOf(c).find((g) => g.id === st.goal) || goalsOf(c)[0];
+    // The title card: the course, the outcome they picked (or their own words), and its size
+    const out = st.pick ? c.outcome : `From “${topicLabel()}”`;
+    $.card.innerHTML = `<p class="ob-card-eb">Your course</p><h2>${esc(c.title)}</h2><p class="ob-card-out">${esc(out)} · ${nLessons} lessons</p><p class="ob-card-meta">${esc(span.label)} · ${esc(st.daily || '10 min a day')}</p>`;
+    const lv = levelOf();
+    $.fine.textContent = matched() ? `Made for you · ${goal.label.toLowerCase()}${lv ? ' · ' + lv.word : ''}` : 'Here’s a sample course while we’re in prototype';
+    // The map starts below the title card, however tall it is
+    Y0 = Math.max(258, 64 + $.card.offsetHeight + 36);
+    const L = LAYOUTS[style](stops);
+    B = { style, stops, L, n, landed: 0, col };
     root.classList.add('ob-building'); root.dataset.style = style;
 
     // Edges: a faint base that draws as stops land, and a lit copy for the end-to-end glow
     const spineD = L.spine ? L.edges.map((e, i) => (i ? e[2].replace(/^M[^C]+/, '') : e[2])).join('') : '';
-    $.map.innerHTML = `<defs><linearGradient id="obLit" gradientUnits="userSpaceOnUse" x1="0" y1="${Y0}" x2="0" y2="${Y1}"><stop offset="0" stop-color="#F783AC"/><stop offset=".5" stop-color="#C04AA0"/><stop offset="1" stop-color="#1F5BE0"/></linearGradient></defs>` +
+    $.map.innerHTML = `<defs><linearGradient id="obLit" gradientUnits="userSpaceOnUse" x1="0" y1="${Y0}" x2="0" y2="${Y1}"><stop offset="0" stop-color="${col[0]}"/><stop offset=".5" stop-color="${col[1]}"/><stop offset="1" stop-color="#1F5BE0"/></linearGradient></defs>` +
       L.edges.map((e, i) => `<path class="ob-e" data-i="${i}" d="${e[2]}" pathLength="1"/>`).join('') +
       (L.spine ? `<path class="ob-el ob-spine" d="${spineD}" pathLength="1"/>` : L.edges.map((e, i) => `<path class="ob-el" data-i="${i}" d="${e[2]}" pathLength="1"/>`).join(''));
 
     let num = 0;
     $.stops.innerHTML = L.isles.map((s, i) => `<div class="ob-isle" data-i="${i}" style="left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px"></div>`).join('') +
       stops.map((s, k) => {
-        const nd = L.nodes[k], inner = s.kind === 'lesson' ? `<span>${++num}</span>` : s.kind === 'review' ? ICON_CHECK : ICON_HEART;
+        const nd = L.nodes[k], inner = s.kind === 'lesson' ? `<span>${++num}</span>` : s.kind === 'review' ? ICON_CHECK : c.shape === 'heart' ? ICON_HEART : ICON_STAR;
         const pos = nd.side === 'b' ? `left:${-nd.w / 2}px;width:${nd.w}px` : nd.side === 'l' ? `right:24px;width:${nd.w}px` : `left:24px;width:${nd.w}px`;
         return `<div class="ob-stop ob-k-${s.kind} ob-s-${nd.side}" role="listitem" data-k="${k}" style="left:${nd.x.toFixed(1)}px;top:${nd.y.toFixed(1)}px">
           <i class="ob-dot">${inner}</i><span class="ob-lab" style="${pos}">${style === 'connect' ? `<span class="ob-chiplab">${esc(s.title)}</span>` : esc(s.title)}</span></div>`;
       }).join('');
 
-    const span = COURSES.heart.spans.find((s) => s.id === st.span) || COURSES.heart.spans[1];
-    $.card.innerHTML = `<p class="ob-card-eb">Your course</p><h2>${esc(COURSES.heart.title)}</h2><p class="ob-card-meta">${nLessons} lessons · ${esc(st.daily || '10 min a day')}</p>`;
-    $.fine.textContent = isHeart(st.topic) ? `Made for you · ${span.label.toLowerCase()} · ${COURSES.heart.goals.find((g) => g.id === (st.goal || 'how')).label.toLowerCase()}` : 'Here’s a sample course while we’re in prototype';
     setCta('Start learning', false, false);
 
     if (INSTANT) { // final state, no motion
-      Brain.setShape('heart', 'body', 10); Brain.setMode('idle');
+      Brain.setShape(c.shape, c.palette, 10); Brain.setMode('idle');
       $.stops.querySelectorAll('.ob-stop, .ob-isle').forEach((el) => el.classList.add('in', 'lit'));
       $.map.querySelectorAll('path').forEach((p) => { p.classList.add('on'); if (p.classList.contains('ob-spine')) p.style.strokeDashoffset = 0; });
       reveal(); return;
     }
 
-    Brain.setShape('heart', 'body', 900); Brain.setMode('idle'); place(184, 150, 0.56);
+    Brain.setShape(c.shape, c.palette, 900); Brain.setMode('idle'); place(184, 150, 0.56);
     const LINE2 = { roadmap: 'Ordering them so each builds on the last…', connect: 'Linking them so you can explore…', quick: 'Cutting them into quick bites…' }[style];
     const k1 = Math.round(n * 0.36), k2 = Math.round(n * 0.72);
     $.narrFill.style.width = '0%';
@@ -640,7 +776,7 @@
     B.L.edges.forEach((e, i) => { if (e[1] === k) { const p = $.map.querySelector(`.ob-e[data-i="${i}"]`); p && p.classList.add('on'); } });
     B.L.isles.forEach((s, i) => { if (s.members[0] === k) $.stops.querySelector(`.ob-isle[data-i="${i}"]`).classList.add('in'); });
     const nd = B.L.nodes[k], kind = B.stops[k].kind;
-    sparks(nd.x, nd.y, kind === 'review' ? ['#7FA3FF', '#1F5BE0'] : kind === 'final' ? ['#F783AC', '#7FA3FF', '#FFFFFF'] : BODY, kind === 'final' ? 26 : 16, kind === 'final' ? 44 : 30);
+    sparks(nd.x, nd.y, kind === 'review' ? ['#7FA3FF', '#1F5BE0'] : kind === 'final' ? [B.col[0], '#7FA3FF', '#FFFFFF'] : B.col, kind === 'final' ? 26 : 16, kind === 'final' ? 44 : 30);
   }
   // The path lights up end to end
   function lightUp() {
@@ -659,9 +795,9 @@
         tick(now) {
           const p = Math.min(1, (now - t0) / dur), e = ease(p), len = e * total, pt = spine.getPointAtLength(len);
           comet.head = { x: pt.x, y: pt.y }; spine.style.strokeDashoffset = 1 - e;
-          for (let i = 0; i < 3; i++) parts.push({ spark: true, sx: pt.x, sy: pt.y, tx: pt.x + rnd(-14, 14), ty: pt.y + rnd(-14, 14), t0: now, dur: rnd(360, 620), r: rnd(0.9, 1.8), c: i % 2 ? '247,131,172' : '127,163,255', done() {} });
+          for (let i = 0; i < 3; i++) parts.push({ spark: true, sx: pt.x, sy: pt.y, tx: pt.x + rnd(-14, 14), ty: pt.y + rnd(-14, 14), t0: now, dur: rnd(360, 620), r: rnd(0.9, 1.8), c: i % 2 ? rgb(B ? B.col[0] : '#F783AC') : '127,163,255', done() {} });
           while (lit + 1 < nodes.length && at[lit + 1] <= len + 1) { lit++; nodes[lit].classList.add('lit'); }
-          if (p >= 1) { nodes.forEach((el) => el.classList.add('lit')); comet = null; sparks(B.L.nodes[B.n - 1].x, B.L.nodes[B.n - 1].y, ['#F783AC', '#7FA3FF', '#FFFFFF'], 30, 56); Brain.pulse(); }
+          if (p >= 1) { nodes.forEach((el) => el.classList.add('lit')); comet = null; sparks(B.L.nodes[B.n - 1].x, B.L.nodes[B.n - 1].y, [B.col[0], '#7FA3FF', '#FFFFFF'], 30, 56); Brain.pulse(); }
         },
       };
     } else {
@@ -670,7 +806,7 @@
         el.classList.add('lit');
         B && B.L.isles.forEach((s, i) => { if (s.members[0] === k) $.stops.querySelector(`.ob-isle[data-i="${i}"]`).classList.add('lit'); });
         B && B.L.edges.forEach((e, i) => { if (e[1] === k) lits[i].classList.add('on'); });
-        if (k === nodes.length - 1 && B) { sparks(B.L.nodes[k].x, B.L.nodes[k].y, ['#F783AC', '#7FA3FF', '#FFFFFF'], 30, 56); Brain.pulse(); }
+        if (k === nodes.length - 1 && B) { sparks(B.L.nodes[k].x, B.L.nodes[k].y, [B.col[0], '#7FA3FF', '#FFFFFF'], 30, 56); Brain.pulse(); }
       }, k * 110));
     }
   }
@@ -685,7 +821,11 @@
   }
   function finish() {
     st.busy = true; root.classList.add('ob-leave');
-    const payload = { style: st.style || 'connect', topic: topicLabel(), goal: st.goal || 'how', span: st.span || 'twoweeks', daily: st.daily || '10 min a day' };
+    const c = courseOf(), goal = st.goal || goalsOf(c)[0].id;
+    // goal stays a heart goal id (Learn still builds COURSES.heart); courseGoal is the picked course's own goal id
+    const payload = { style: st.style || 'connect', topic: topicLabel(), goal: heartGoal(c, goal), span: st.span || 'twoweeks', daily: st.daily || '10 min a day',
+      intent: st.intent || null, level: st.level || null, courseId: c.id, courseGoal: goal, outcome: c.outcome };
+    store({ intent: payload.intent, level: payload.level, courseId: c.id });
     setTimeout(() => {
       st.busy = false; timers.forEach(clearTimeout); timers = []; comet = null; parts = [];
       Brain.setMode('idle'); Brain.setSpin(false); Brain.setDark(false);
@@ -706,13 +846,20 @@
     step = Math.max(0, Math.min(STEPS.length - 1, parseInt(step, 10) || 0));
     root.classList.remove('ob-leave');
     Brain.moveTo($.brain);
-    if (step === 0) Object.assign(st, { style: null, topic: '', goal: null, span: null, daily: '10 min a day' });
+    if (step === 0) Object.assign(st, { style: null, intent: null, level: null, topic: '', pick: null, courseId: 'heart', goal: null, span: null, daily: '10 min a day' });
     const S = (window.Store && Store.get()) || {};
+    // Jumping in mid-flow: fill earlier answers (?style= ?intent= ?level= ?course= work too)
     if (step === 2 && !st.style) st.style = P.get('style') || null;
     if (step >= 3) st.style = st.style || S.style || 'connect';
-    if (step >= 4) st.topic = (st.topic || '').trim() || 'How the human heart works';
-    if (step >= 5) st.goal = st.goal || S.goal || 'how';
-    if (step >= 6) st.span = st.span || S.span || 'twoweeks';
+    if (step >= 4) st.intent = st.intent || S.intent || P.get('intent') || 'life';
+    if (step >= 5) st.level = st.level || S.level || P.get('level') || 'new';
+    if (step === 5 && !st.pick && !st.topic && P.get('course') && catalog()[P.get('course')]) { st.pick = P.get('course'); st.topic = courseOf(st.pick).outcome; }
+    if (step >= 6 && !(st.topic || '').trim()) {
+      const id = catalog()[P.get('course')] ? P.get('course') : 'heart';
+      st.pick = id; st.courseId = id; st.topic = courseOf(id).outcome;
+    }
+    if (step >= 7) { const gs = goalsOf(courseOf()); if (!gs.find((g) => g.id === st.goal)) st.goal = gs.find((g) => g.id === S.goal) ? S.goal : gs[0].id; }
+    if (step >= 8) st.span = st.span || S.span || 'twoweeks';
     st.daily = st.daily || '10 min a day';
     go(SCENE_OF_STEP[step]);
   }

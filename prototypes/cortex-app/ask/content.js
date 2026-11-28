@@ -350,7 +350,21 @@ window.ASK_CONTENT = (function () {
   // C · talk mode: what the simulated mic "hears"
   const talk = { transcript: 'What’s the difference between a crocodile and an alligator?' };
   // C · show mode: the sample object the simulated camera sees
-  const show = { object: 'a leaf', say: 'That’s a leaf. Want to know why it changes colour?', ask: 'leaf' };
+  const show = { object: 'a leaf', say: 'That’s a leaf. Want to know why it changes colour?', ask: 'leaf', bub: 'Ooh, a leaf!' };
+  // C · the pixel character's home: what it says, and the pills under the greeting
+  const charC = {
+    hi: 'Hi!',
+    title: 'What’s on your mind?',
+    sub: 'Ask it, say it, or show me.',
+    pills: ['purr', 'croc'],
+    unfinished: 'brain', unfinishedTag: 'unfinished',
+    back: 'What next?',
+    listening: 'I’m listening…',
+    release: 'Release to send', tapListening: 'Listening…',
+    noRush: 'No rush.',
+    seeing: 'Show me something.',
+    pokes: ['Hey, that tickles.', 'Hi again!', 'Ask me anything.', 'I’m all ears.'],
+  };
 
   // ───────── Generic answers: what each question type becomes ─────────
   const kinds = {
@@ -362,5 +376,5 @@ window.ASK_CONTENT = (function () {
     artifact: { name: 'something to make', gets: 'something to keep or share, like a card or a quiz', shape: 'ak-card', near: ['octo'] },
   };
 
-  return { answers, terms, wonder, suggestions, history, talk, show, kinds };
+  return { answers, terms, wonder, suggestions, history, talk, show, kinds, charC };
 })();

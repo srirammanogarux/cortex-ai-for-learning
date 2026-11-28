@@ -78,6 +78,7 @@
     hand: ['M18 11V6a2 2 0 0 0-4 0v5', 'M14 10V4a2 2 0 0 0-4 0v6', 'M10 10.5V6a2 2 0 0 0-4 0v8', 'M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'],
     stop: [rect(6, 6, 12, 12, 2.5)],
     redo: ['M21 12a9 9 0 1 1-3-6.7L21 8', 'M21 3v5h-5'],
+    tee: ['M5 7V5h14v2', 'M12 5v14', 'M9 19h6'],
   };
   const ic = (name, size = 20, sw = 2) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(IC[name] || IC.sparkle).map((d) => `<path d="${d}"/>`).join('')}</svg>`;
 
@@ -190,6 +191,238 @@
     const d = document.createElement('div'); d.className = 'ak-glyph';
     d.innerHTML = glyph(host.dataset.shape || 'brain', host.dataset.palette || 'cobalt', 700, 0.02);
     host.appendChild(d);
+  }
+
+  // ───────── The pixel bot (home C): a formless character made of square pixels ─────────
+  // Emotion comes from two things only: the gaps that act as eyes, and how the pixels move.
+  // The same pixels regroup into the topic's icon, in the subject's colour.
+  const BOT_ART = [
+    '...########...',
+    '.############.',
+    '##############',
+    '##############',
+    '##############',
+    '##############',
+    '##############',
+    '##############',
+    '.############.',
+    '...########...',
+  ];
+  const PX_ICONS = {
+    cat: { c: ['#FFB86B', '#C2410C'], a: [
+      '.#..........#.', '.##........##.', '.###......###.', '.############.', '##############', '###..####..###',
+      '###..####..###', '##############', '######..######', '#####.##.#####', '.############.', '..##########..'] },
+    sun: { c: ['#FFD54A', '#F0661C'], a: [
+      '......##......', '.#....##....#.', '..#........#..', '.....####.....', '....######....', '...########...', '##.########.##',
+      '##.########.##', '...########...', '....######....', '.....####.....', '..#........#..', '.#....##....#.', '......##......'] },
+    croc: { c: ['#A3C14A', '#2F6B1F'], a: [
+      '..###.........', '.#####......#.', '.##.##########', '##############', '#####.#.#.#.#.', '####.#.#.#.#..', '#############.', '.###########..'] },
+    brain: { c: ['#A996F5', '#4A30B0'], a: [
+      '...###.###...', '.#####.#####.', '##.###.###.##', '###.##.##.###', '####.#.#.####', '##.###.###.##', '###.##.##.###', '.#####.#####.', '..####.####..', '....##.##....'] },
+    camera: { c: ['#8FB0FF', '#1A47B8'], a: [
+      '....####......', '...######.....', '.############.', '###########.##', '#####....#####', '####......####',
+      '####..##..####', '####..##..####', '####......####', '#####....#####', '.############.'] },
+    octo: { c: ['#F783AC', '#7048E8'], a: [
+      '....######....', '...########...', '..##########..', '..##########..', '..##..##..##..', '..##..##..##..',
+      '..##########..', '.############.', '##.##.##.##.##', '#..#..##..#..#', '#..#.#..#.#..#', '.#...#..#...#.'] },
+    leaf: { c: ['#8FCB4A', '#E0531A'], a: [
+      '..........####', '........######', '......#######.', '.....####.###.', '....####.####.', '...####.####..',
+      '...###.####...', '..###.####....', '..##.####.....', '..#.####......', '.#.###........', '#.............'] },
+    bulb: { c: ['#A996F5', '#4A30B0'], a: [
+      '...######...', '.##########.', '##.#########', '#.##########', '############', '.##########.', '..########..', '...######...', '............', '...######...', '....####....'] },
+    heart: { c: ['#F59BB3', '#C2255C'], a: [
+      '.####....####.', '######..######', '##############', '##############', '##############', '.############.',
+      '..##########..', '...########...', '....######....', '.....####.....', '......##......'] },
+    chart: { c: ['#A8C24A', '#3D6B12'], a: [
+      '.........#####', '...........###', '..........##.#', '.........##..#', '........##....', '..##...##.....',
+      '.####.##......', '##..###.......', '#....#........', '..............', '##############'] },
+    qmark: { c: ['#8FB0FF', '#1A47B8'], a: [
+      '..######..', '.########.', '###....###', '###....###', '......###.', '.....###..', '....###...', '....###...', '..........', '....###...', '....###...'] },
+  };
+  const ANSWER_ICON = { purr: 'cat', leaf: 'leaf', croc: 'croc', sun: 'sun', brain: 'brain', photo: 'camera', octo: 'octo' };
+  const KIND_ICON = { explain: 'bulb', compare: 'chart', scale: 'chart', myth: 'qmark', course: 'chart', artifact: 'heart' };
+  const hexRGB = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const mixRGB = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const COBALT = hexRGB('#1F5BE0');
+  // A static pixel icon (for pills and avatars)
+  function pxSVG(name, size = 20) {
+    const ic0 = PX_ICONS[name]; if (!ic0) return '';
+    const a = ic0.a, h = a.length, w = a[0].length, n = Math.max(w, h), c0 = hexRGB(ic0.c[0]), c1 = hexRGB(ic0.c[1]);
+    const ox = (n - w) / 2, oy = (n - h) / 2;
+    let s = `<svg width="${size}" height="${size}" viewBox="0 0 ${n} ${n}" aria-hidden="true" focusable="false" shape-rendering="crispEdges">`;
+    a.forEach((row, r) => { for (let c = 0; c < w; c++) if (row[c] === '#') { const t = (r / (h - 1)) * 0.65 + (c / (w - 1)) * 0.35, col = mixRGB(c0, c1, t).map(Math.round); s += `<rect x="${c + ox}" y="${r + oy}" width="1" height="1" fill="rgb(${col})"/>`; } });
+    return s + '</svg>';
+  }
+
+  function PixelBot(canvas, o = {}) {
+    const pitch = o.pitch || 13, COLS = o.cols || 20, ROWS = o.rows || 17, gap = o.gap != null ? o.gap : 0.12;
+    const BX = (COLS - 14) / 2, BY = o.by != null ? o.by : 4; // where the body's top-left cell sits
+    const CR = BY + 5, CC = COLS / 2; // visual centre (rows, cols)
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    canvas.width = Math.round(COLS * pitch * dpr); canvas.height = Math.round(ROWS * pitch * dpr);
+    canvas.style.width = COLS * pitch + 'px'; canvas.style.height = ROWS * pitch + 'px';
+    const ctx = canvas.getContext('2d');
+    const now = () => performance.now();
+    let px = [];      // { x, y, s, c, fx, fy, fs, fc, tx, ty, ts, tc, t0, d, arc, die }
+    let sparks = [];  // drifting pixels while thinking
+    const st = { form: 'bot', mood: 'idle', eye: 'open', look: [0, 0], arm: 0, level: 0, lv: 0, hopT: -1e9, bounceT: -1e9, think0: 0, nextSpark: 0, alive: true, paused: false };
+    let blinkT = 0, raf = 0;
+
+    const key = (r, c) => r + ',' + c;
+    function faceCells() {
+      const m = new Map();
+      BOT_ART.forEach((row, r) => { for (let c = 0; c < 14; c++) if (row[c] === '#') m.set(key(BY + r, BX + c), COBALT); });
+      // eyes
+      let [dc, dr] = st.look;
+      if (st.mood === 'think') { dc = 1; dr = -1; }
+      if (st.mood === 'down') { dr = 1; dc = 0; }
+      const eye = st.mood === 'happy' ? 'happy' : st.eye;
+      const shapes = { open: [[0, 0], [0, 1], [1, 0], [1, 1]], half: [[1, 0], [1, 1]], shut: [], happy: [[0, 0], [0, 1], [1, -1], [1, 2]] };
+      [[3, 3], [3, 9]].forEach(([er, ec]) => (shapes[eye] || shapes.open).forEach(([r, c]) => m.delete(key(BY + er + dr + r, BX + ec + dc + c))));
+      // the waving arm (outside the body, on the right)
+      if (st.arm) {
+        const A1 = [[6, 14], [5, 15], [4, 16], [3, 16]], A2 = [[6, 14], [5, 15], [4, 15], [3, 15]];
+        (st.arm === 1 ? A1 : A2).forEach(([r, c]) => m.set(key(BY + r, BX + c), COBALT));
+      }
+      return m;
+    }
+    function iconCells(name) {
+      const ic0 = PX_ICONS[name]; const m = new Map(); if (!ic0) return m;
+      const a = ic0.a, h = a.length, w = a[0].length, c0 = hexRGB(ic0.c[0]), c1 = hexRGB(ic0.c[1]);
+      const top = Math.round(CR - h / 2), left = Math.round(CC - w / 2);
+      a.forEach((row, r) => { for (let c = 0; c < w; c++) if (row[c] === '#') m.set(key(top + r, left + c), mixRGB(c0, c1, (r / (h - 1)) * 0.65 + (c / (w - 1)) * 0.35)); });
+      return m;
+    }
+    const parse = (k) => k.split(',').map(Number);
+    function go(p, r, c, col, d, delay, arc) {
+      p.fx = p.x; p.fy = p.y; p.fs = p.s; p.fc = p.c.slice();
+      p.ty = r; p.tx = c; p.ts = 1; p.tc = col; p.t0 = now() + (delay || 0); p.d = d; p.arc = arc || 0; p.die = false; p.cell = key(r, c);
+    }
+    function kill(p, d, delay, to) {
+      p.fx = p.x; p.fy = p.y; p.fs = p.s; p.fc = p.c.slice();
+      if (to) { p.ty = to[0]; p.tx = to[1]; } else { p.ty = p.y; p.tx = p.x; }
+      p.ts = 0; p.tc = p.c.slice(); p.t0 = now() + (delay || 0); p.d = d; p.arc = 0; p.die = true; p.cell = null;
+    }
+    // Small changes (eyes, blinks, the arm): pixels that keep their cell stay; nearby ones slide; the rest grow or shrink.
+    function snap(target, d = 110) {
+      const keep = new Set(), free = [];
+      px.forEach((p) => { if (p.cell && target.has(p.cell) && !keep.has(p.cell)) { keep.add(p.cell); const col = target.get(p.cell); if (col !== p.tc) { p.fc = p.c.slice(); p.tc = col; } } else if (!p.die) free.push(p); });
+      target.forEach((col, k) => {
+        if (keep.has(k)) return;
+        const [r, c] = parse(k);
+        let bi = -1, bd = 2.3;
+        free.forEach((p, i) => { if (!p) return; const dd = Math.hypot(p.ty - r, p.tx - c); if (dd < bd) { bd = dd; bi = i; } });
+        if (bi >= 0) { go(free[bi], r, c, col, d + bd * 40); free[bi] = null; }
+        else { const p = { x: c, y: r, s: 0, c: col.slice() }; go(p, r, c, col, d); px.push(p); }
+      });
+      free.forEach((p) => { if (p) kill(p, d * 0.8); });
+    }
+    // Big changes (bot ↔ icon): every pixel flies to a new cell along a little arc, in a ripple.
+    function morph(target, ms = 1000) {
+      const live = px.filter((p) => !p.die), cells = [...target.entries()].map(([k, col]) => { const [r, c] = parse(k); return { r, c, col }; });
+      // order targets from the centre out so the regroup reads as a ripple
+      cells.sort((a, b) => Math.hypot(a.r - CR, a.c - CC) - Math.hypot(b.r - CR, b.c - CC));
+      const used = new Array(live.length).fill(false);
+      cells.forEach((t, i) => {
+        let bi = -1, bd = 1e9;
+        for (let j = 0; j < live.length; j++) if (!used[j]) { const dd = Math.hypot(live[j].ty - t.r, live[j].tx - t.c) + Math.random() * 1.2; if (dd < bd) { bd = dd; bi = j; } }
+        let p;
+        if (bi >= 0) { p = live[bi]; used[bi] = true; }
+        else { const src = live[Math.floor(Math.random() * live.length)] || { x: CC, y: CR }; p = { x: src.x, y: src.y, s: 0.2, c: COBALT.slice() }; px.push(p); }
+        const dist = Math.hypot(p.x - CC, p.y - CR);
+        go(p, t.r, t.c, t.col, ms * (0.55 + Math.random() * 0.25), dist * 22 + Math.random() * 140, (Math.random() - 0.5) * 2.4);
+      });
+      live.forEach((p, j) => { if (!used[j]) { const t = cells[Math.floor(Math.random() * cells.length)]; kill(p, ms * 0.6, Math.random() * 200, t ? [t.r, t.c] : null); } });
+    }
+    const ease = bezier(0.32, 0.72, 0, 1), easeOut = bezier(0.23, 1, 0.32, 1);
+    const isStill = () => still();
+
+    function scheduleBlink(t) { blinkT = t + 2400 + Math.random() * 2800; }
+    function blink(double) {
+      if (st.form !== 'bot' || st.mood === 'happy' || st.mood === 'think') return;
+      const seq = [['half', 0], ['shut', 60], ['half', 150], ['open', 210]];
+      if (double) seq.push(['half', 330], ['shut', 390], ['half', 470], ['open', 530]);
+      seq.forEach(([e, t]) => setTimeout(() => { if (!st.alive || st.form !== 'bot') return; st.eye = e; snap(faceCells(), 70); }, t));
+    }
+
+    function frame() {
+      if (!st.alive) return;
+      raf = requestAnimationFrame(frame);
+      if (!canvas.isConnected) { api.destroy(); return; }
+      if (st.paused || canvas.offsetParent === null) return;
+      const t = now();
+      if (st.form === 'bot' && !isStill() && t > blinkT) { blink(Math.random() < 0.2); scheduleBlink(t); }
+      st.lv += (st.level - st.lv) * 0.25;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const P = pitch * dpr, size = P * (1 - gap), rad = Math.max(1, size * 0.14);
+      // whole-body motion: breathing, hop, bounce
+      const breath = isStill() ? 0 : (Math.sin(t / 3600 * Math.PI * 2) + 1) / 2;
+      const bu = (t - st.bounceT) / 520; let bY = 0, sqx = 1, sqy = 1;
+      if (bu > 0 && bu < 1) { bY = -Math.sin(bu * Math.PI) * 1.1; const land = Math.max(0, 1 - Math.abs(bu - 0.92) / 0.08); sqx = 1 + land * 0.06 + (bu < 0.5 ? -0.03 * Math.sin(bu * 2 * Math.PI) : 0); sqy = 1 - land * 0.07 + (bu < 0.5 ? 0.04 * Math.sin(bu * 2 * Math.PI) : 0); }
+      const lean = st.form === 'bot' ? st.look[0] * 0.12 : 0;
+      const floatY = st.form === 'icon' && !isStill() ? Math.sin(t / 900) * 0.08 : 0;
+      ctx.translate(CC * P, (BY + 10) * P); ctx.scale(sqx, sqy); ctx.translate(-CC * P, -(BY + 10) * P);
+      const bottom = BY + 10;
+      px = px.filter((p) => {
+        const u = clamp((t - p.t0) / p.d), e = isStill() ? 1 : (p.arc ? ease(u) : easeOut(u));
+        p.x = lerp(p.fx, p.tx, e) + (p.arc ? Math.sin(u * Math.PI) * p.arc * -(p.ty - p.fy) / (Math.hypot(p.ty - p.fy, p.tx - p.fx) + 0.01) : 0);
+        p.y = lerp(p.fy, p.ty, e) + (p.arc ? Math.sin(u * Math.PI) * p.arc * (p.tx - p.fx) / (Math.hypot(p.ty - p.fy, p.tx - p.fx) + 0.01) : 0);
+        p.s = lerp(p.fs, p.ts, e); p.c = mixRGB(p.fc, p.tc, isStill() ? 1 : smooth(0.25, 0.75, u));
+        if (p.die && u >= 1) return false;
+        if (p.s < 0.02) return true;
+        let x = p.x, y = p.y;
+        if (st.form === 'bot') {
+          y -= breath * 0.16 * clamp((bottom - p.y) / 10);
+          const hu = (t - st.hopT - (p.x - BX) * 32) / 380;
+          if (hu > 0 && hu < 1) y -= Math.sin(hu * Math.PI) * 0.9;
+          if (st.lv > 0.01) { const dx = p.x + 0.5 - CC, dy = p.y + 0.5 - CR; x += dx * st.lv * 0.09; y += dy * st.lv * 0.12 + Math.sin(t / 90 + p.x * 0.8) * st.lv * 0.18; }
+          x += lean;
+        }
+        y += bY + floatY;
+        const s = size * p.s, X = Math.round(x * P + (P - s) / 2), Y = Math.round(y * P + (P - s) / 2), S = Math.round(s);
+        ctx.fillStyle = `rgb(${p.c[0] | 0},${p.c[1] | 0},${p.c[2] | 0})`;
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(X, Y, S, S, rad * p.s) : ctx.rect(X, Y, S, S); ctx.fill();
+        return true;
+      });
+      // thinking: a pixel drifts up off the top
+      if (st.mood === 'think' && st.form === 'bot' && t > st.nextSpark && !isStill()) { sparks.push({ c: BX + 10 + Math.round(Math.random() * 2), t0: t, d: 1300 }); st.nextSpark = t + 650; }
+      sparks = sparks.filter((s) => {
+        const u = (t - s.t0) / s.d; if (u >= 1) return false;
+        const y = BY - 0.6 - u * 3.4 + bY, x = s.c + Math.sin(u * 5) * 0.35, k = (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85) * 0.85, sz = size * k;
+        ctx.globalAlpha = clamp(k * 1.2); ctx.fillStyle = 'rgb(31,91,224)';
+        ctx.beginPath(); const X = Math.round(x * P + (P - sz) / 2), Y = Math.round(y * P + (P - sz) / 2); ctx.roundRect ? ctx.roundRect(X, Y, Math.round(sz), Math.round(sz), rad * k) : ctx.rect(X, Y, sz, sz); ctx.fill();
+        ctx.globalAlpha = 1; return true;
+      });
+    }
+
+    const api = {
+      pitch, cols: COLS, rows: ROWS, centre: () => [CC * pitch, (BY + 5) * pitch],
+      // Appear: pixels pop in from the centre out
+      appear(instant) {
+        px = [];
+        faceCells().forEach((col, k) => { const [r, c] = parse(k); const p = { x: c, y: r, s: instant ? 1 : 0, c: col.slice() }; go(p, r, c, col, instant ? 1 : 420, instant ? 0 : Math.hypot(r + 0.5 - CR, c + 0.5 - CC) * 34); px.push(p); });
+      },
+      mood(m) { if (st.mood === m) return; st.mood = m; if (m === 'think') st.nextSpark = 0; if (st.form === 'bot') snap(faceCells(), 120); },
+      getMood: () => st.mood,
+      look(dc, dr) { if (st.look[0] === dc && st.look[1] === dr) return; st.look = [dc, dr]; if (st.form === 'bot' && st.mood !== 'think' && st.mood !== 'down') snap(faceCells(), 130); },
+      level(v) { st.level = clamp(v); },
+      hop() { st.hopT = now(); },
+      bounce() { st.bounceT = now(); },
+      wave(cycles = 3, step = 210) {
+        for (let i = 0; i < cycles * 2; i++) setTimeout(() => { if (!st.alive || st.form !== 'bot') return; st.arm = i % 2 ? 2 : 1; snap(faceCells(), 120); }, i * step);
+        setTimeout(() => { if (!st.alive) return; st.arm = 0; if (st.form === 'bot') snap(faceCells(), 160); }, cycles * 2 * step + 60);
+      },
+      blink,
+      toIcon(name, ms) { if (!PX_ICONS[name]) return; st.form = 'icon'; if (o.onForm) o.onForm('icon'); st.arm = 0; sparks = []; morph(iconCells(name), ms || 1000); },
+      toBot(ms) { st.form = 'bot'; if (o.onForm) o.onForm('bot'); st.mood = 'idle'; st.eye = 'open'; morph(faceCells(), ms || 900); },
+      form: () => st.form,
+      pause(v) { st.paused = v; },
+      destroy() { st.alive = false; cancelAnimationFrame(raf); },
+    };
+    scheduleBlink(now());
+    raf = requestAnimationFrame(frame);
+    return api;
   }
 
   // ───────── State ─────────
@@ -1274,66 +1507,226 @@
     bView = makeMap(homeEl.querySelector('.ak-bmap'), { overlay: false, liveHub: true, top: 136, bottom: 186, onPick: pickHist });
     bView.setData(histMapData(true), null);
   }
+  // ───────── Home C · a character you talk to ─────────
+  // The pixel bot is the hero. Below it: the greeting, a few pills, and three round actions:
+  // Type · Hold to talk (primary) · Show me. Asking makes the bot think, then regroup into the topic's icon.
+  const CC0 = C.charC || {};
+  let cBot = null, cGreeted = false, cLastIcon = null, cBusy = false;
+  const ct = { on: false, t0: 0, auto: false, k: 0, raf: 0, hist: [], bump: 0, last: 0 };
+  const cRoot = () => homeEl.querySelector('.ak-c');
+  const cq = (s) => homeEl.querySelector(s);
   function renderC() {
-    homeEl.innerHTML = `<div class="ak-c">
-      <p class="ak-c-say" data-say aria-live="polite">Hi. What’s on your mind?</p>
-      <p class="ak-c-sub" data-sub></p>
-      <div class="ak-c-stage" data-stage>
-        <div class="ak-glow" aria-hidden="true"></div>
-        <div class="ak-host ak-host-c"></div>
-        <div class="ak-cam" data-cam hidden>
-          <div class="ak-cam-scene" aria-hidden="true"><svg viewBox="0 0 120 150" class="ak-cam-leaf"><defs><linearGradient id="akCamL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="1" stop-color="#C2410C"/></linearGradient></defs><path d="M60 6C104 26 100 96 60 128 20 96 16 26 60 6z" fill="url(#akCamL)"/><path d="M60 126v20" stroke="#6B4A2B" stroke-width="4" stroke-linecap="round"/><path d="M60 22v100M60 50L36 38M60 50l24-12M60 72L32 60M60 72l28-12M60 94L38 84M60 94l22-10" stroke="rgba(255,255,255,.5)" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
-          <i class="ak-cam-c tl"></i><i class="ak-cam-c tr"></i><i class="ak-cam-c bl"></i><i class="ak-cam-c br"></i>
-          <p class="ak-cam-hint">Point at anything</p><div class="ak-cam-flash"></div>
-        </div>
-        <p class="ak-c-heard" data-heard></p>
+    if (cBot) { cBot.destroy(); cBot = null; }
+    stopC(); cBusy = false;
+    const pills = (CC0.pills || []).filter((id) => A[id]);
+    const un = CC0.unfinished && A[CC0.unfinished] ? CC0.unfinished : null;
+    const pill = (id, i, extra = '') => `<button type="button" class="ak-c-pill${extra ? ' is-open' : ''}" data-act="${extra ? 'c-resume' : 'c-ask'}" data-q="${id}" style="--d:${i}"><span class="ak-c-pill-ic">${pxSVG(ANSWER_ICON[id], 20)}</span><span>${esc(extra ? A[id].label : A[id].q)}</span>${extra ? `<em>${esc(extra)}</em>` : ''}</button>`;
+    homeEl.innerHTML = `<div class="ak-c" data-mode="home">
+      <div class="ak-c-stage">
+        <button type="button" class="ak-bot" data-act="poke" aria-label="Cortex, your guide. Tap to say hi"><canvas aria-hidden="true"></canvas></button>
+        <p class="ak-c-bub" data-bub aria-live="polite"></p>
       </div>
-      <div class="ak-c-modes" role="tablist" style="--i:0"><i class="ak-seg-thumb" aria-hidden="true"></i>${[['type', 'Type'], ['talk', 'Talk'], ['show', 'Show']].map(([m, l], k) => `<button type="button" role="tab" data-act="cmode" data-m="${m}" data-i="${k}" aria-selected="${k === 0}">${ic(m === 'type' ? 'type' : m === 'talk' ? 'mic' : 'camera', 18, 2.2)}<span>${l}</span></button>`).join('')}</div>
-      <div class="ak-c-panel" data-panel></div>
+      <header class="ak-c-head">
+        <h1 class="ak-c-title" data-title>${esc(CC0.title || 'What’s on your mind?')}</h1>
+        <p class="ak-c-sub" data-sub>${esc(CC0.sub || 'Ask it, say it, or show me.')}</p>
+      </header>
+      <div class="ak-c-pills">${pills.map((id, i) => pill(id, i)).join('')}${un ? pill(un, pills.length, CC0.unfinishedTag || 'unfinished') : ''}</div>
+      <div class="ak-c-talk" aria-live="polite"><p class="ak-c-heard" data-heard></p><canvas class="ak-c-wave" data-wave aria-hidden="true"></canvas></div>
+      <div class="ak-c-cam" data-cam>
+        <div class="ak-c-vf">
+          <div class="ak-cam-scene" aria-hidden="true"><svg viewBox="0 0 120 150" class="ak-cam-leaf"><defs><linearGradient id="akCamL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2A93B"/><stop offset="1" stop-color="#C2410C"/></linearGradient></defs><path d="M60 6C104 26 100 96 60 128 20 96 16 26 60 6z" fill="url(#akCamL)"/><path d="M60 126v20" stroke="#6B4A2B" stroke-width="4" stroke-linecap="round"/><path d="M60 22v100M60 50L36 38M60 50l24-12M60 72L32 60M60 72l28-12M60 94L38 84M60 94l22-10" stroke="rgba(255,255,255,.5)" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
+          <div class="ak-c-focus" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+          <p class="ak-c-chip" aria-hidden="true">${esc(cap((C.show.object || 'a leaf').replace(/^an? /, '')))}</p>
+          <p class="ak-c-vfhint">Point at anything</p>
+          <button type="button" class="ak-c-retake" data-act="c-retake" aria-label="Show something else">${ic('redo', 18, 2.4)}</button>
+          <div class="ak-cam-flash"></div>
+        </div>
+        <button type="button" class="btn-lit ak-c-offer" data-act="c-ask" data-q="${C.show.ask}" data-src="show">${esc(A[C.show.ask] ? A[C.show.ask].q : '')}</button>
+      </div>
+      <form class="ak-c-field" data-form="c-ask" autocomplete="off"><label class="ak-sr" for="akInC">Your question</label><input id="akInC" name="q" type="text" placeholder="Ask me anything…" enterkeyhint="send" autocomplete="off"><button type="submit" class="ak-c-send" aria-label="Send" disabled>${ic('up', 20, 2.6)}</button></form>
+      <div class="ak-c-acts">
+        <button type="button" class="ak-c-act" data-act="c-type" aria-pressed="false"><span class="ak-c-orb">${ic('tee', 22, 2.2)}</span><span class="ak-c-lbl">Type</span></button>
+        <button type="button" class="ak-c-act is-main" data-act="c-talk" aria-label="Hold to talk"><span class="ak-c-orb"><i class="ak-c-ring" aria-hidden="true"></i><i class="ak-c-ring is-2" aria-hidden="true"></i>${ic('mic', 28, 2.2)}</span><span class="ak-c-lbl" data-talk-lbl>Hold to talk</span></button>
+        <button type="button" class="ak-c-act" data-act="c-show" aria-pressed="false"><span class="ak-c-orb">${ic('camera', 22, 2.2)}</span><span class="ak-c-lbl">Show me</span></button>
+      </div>
     </div>`;
-    setCMode('type', true);
+    cBot = PixelBot(cq('.ak-bot canvas'), { pitch: 14, cols: 20, rows: 17, by: 4, onForm: (f) => { const sg = cq('.ak-c-stage'); if (sg) sg.classList.toggle('is-icon', f === 'icon'); } });
+    const root0 = cRoot();
+    if (still()) { cBot.appear(true); cGreeted = true; cLastIcon = null; return; }
+    if (cLastIcon) {
+      // back from an answer: the icon regroups into the character
+      const icon = cLastIcon; cLastIcon = null;
+      cBot.appear(true); cBot.toIcon(icon, 1);
+      root0.classList.add('is-back');
+      cT(() => cBot.toBot(900), 260);
+      cT(() => { cBot.hop(); bubble(CC0.back || 'What next?', 2000); }, 1150);
+    } else if (!cGreeted) {
+      cGreeted = true;
+      root0.classList.add('is-greet');
+      cBot.appear(false);
+      cT(() => cBot.hop(), 520);
+      cT(() => { bubble(CC0.hi || 'Hi', 2300); cBot.mood('happy'); cBot.wave(3, 200); }, 820);
+      cT(() => cBot.mood('idle'), 2200);
+    } else {
+      root0.classList.add('is-back');
+      cBot.appear(false); cT(() => cBot.hop(), 420);
+    }
   }
-  function setCMode(m, quiet) {
-    stopC();
-    cState.mode = m;
-    const modes = homeEl.querySelector('.ak-c-modes'); if (!modes) return;
-    const i = ['type', 'talk', 'show'].indexOf(m);
-    modes.style.setProperty('--i', i);
-    modes.querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-selected', k === i));
-    const panel = homeEl.querySelector('[data-panel]'), cam = homeEl.querySelector('[data-cam]'), heard = homeEl.querySelector('[data-heard]');
-    heard.textContent = ''; heard.classList.remove('is-on');
-    cam.hidden = m !== 'show'; homeEl.querySelector('.ak-c').classList.toggle('is-cam', m === 'show'); homeEl.querySelector('.ak-c').classList.remove('is-shot'); cam.classList.remove('is-shot');
-    const sub = homeEl.querySelector('[data-sub]'); sub.textContent = { type: 'Type it, say it, or show me something.', talk: 'Tap the mic and ask out loud.', show: 'Point your camera at anything.' }[m];
-    if (m === 'type') { panel.innerHTML = boxHTML('Type your question…', 'c'); sayC('Hi. What’s on your mind?'); }
-    if (m === 'talk') { panel.innerHTML = `<button type="button" class="ak-mic" data-act="mic" aria-pressed="false"><span class="ak-mic-ring" aria-hidden="true"></span>${ic('mic', 26, 2.2)}</button><p class="ak-c-hint" data-hint>Tap to talk</p>`; sayC('Go ahead. I’m all ears.'); }
-    if (m === 'show') { panel.innerHTML = `<button type="button" class="ak-shutter" data-act="shutter" aria-label="Take a photo"><i></i></button><p class="ak-c-hint" data-hint>Tap to snap</p>`; sayC('Show me something.'); }
-    if (shown && view === 'home') { BR.mode(m === 'talk' ? 'idle' : 'idle'); if (m !== 'show') BR.shape('brain', 'cobalt', 900); }
-    if (!quiet) BR.pulse();
+  function bubble(t, ms) {
+    const b = cq('[data-bub]'); if (!b) return;
+    clearTimeout(bubble.t);
+    if (!t) { b.classList.remove('is-on'); return; }
+    if (b.textContent !== t || !b.classList.contains('is-on')) { b.textContent = t; b.classList.remove('is-on'); void b.offsetWidth; b.classList.add('is-on'); }
+    if (ms) bubble.t = setTimeout(() => b.classList.remove('is-on'), still() ? 0 : ms);
   }
-  const sayC = (t) => { const s = homeEl.querySelector('[data-say]'); if (s && s.textContent !== t) { s.textContent = t; pop(s); } };
-  function stopC() { cState.timers.forEach(clearTimeout); cState.timers = []; cState.listening = false; }
+  // modes: home · type · talk · show · ask
+  function cMode(m) {
+    const r = cRoot(); if (!r) return;
+    const was = r.dataset.mode; if (was === m) return;
+    if (was === 'talk') talkStop();
+    if (was === 'show') { stopC(); if (m !== 'ask' && cBot && cBot.form() === 'icon') cBot.toBot(800); }
+    r.dataset.mode = m; r.classList.remove('is-greet', 'is-back');
+    cq('[data-act="c-type"]').setAttribute('aria-pressed', m === 'type');
+    cq('[data-act="c-show"]').setAttribute('aria-pressed', m === 'show');
+    const f = cq('.ak-c-field');
+    if (m !== 'type' && f.contains(document.activeElement)) document.activeElement.blur();
+    if (cBot) {
+      if (m === 'type') cBot.mood('down');
+      else if (m === 'home') { cBot.mood('idle'); bubble(''); }
+    }
+    if (m === 'home') {
+      const tt = cq('[data-title]'); if (tt) tt.textContent = CC0.title || 'What’s on your mind?';
+      const sb = cq('[data-sub]'); if (sb) { sb.textContent = CC0.sub || 'Ask it, say it, or show me.'; sb.classList.remove('is-thinking'); }
+    }
+  }
+  function stopC() { cState.timers.forEach(clearTimeout); cState.timers = []; talkStop(true); }
   const cT = (fn, ms) => cState.timers.push(setTimeout(fn, still() ? 0 : ms));
-  function micTap(btn) {
-    if (cState.listening) { stopC(); btn.setAttribute('aria-pressed', 'false'); btn.classList.remove('is-on'); BR.mode('idle'); homeEl.querySelector('[data-hint]').textContent = 'Tap to talk'; sayC('No rush. Tap when you’re ready.'); homeEl.querySelector('[data-heard]').classList.remove('is-on'); return; }
-    cState.listening = true; btn.setAttribute('aria-pressed', 'true'); btn.classList.add('is-on');
-    BR.mode('listen'); BR.pulse(); sayC('I’m listening…');
-    homeEl.querySelector('[data-hint]').textContent = 'Listening. Tap to stop';
-    const heard = homeEl.querySelector('[data-heard]'), words = C.talk.transcript.split(' ');
-    heard.innerHTML = ''; heard.classList.add('is-on');
-    words.forEach((w, k) => cT(() => { if (k) heard.appendChild(document.createTextNode(' ')); const sp = document.createElement('span'); sp.textContent = w; heard.appendChild(sp); BR.pulse(); }, 700 + k * 210));
-    const end = 700 + words.length * 210;
-    cT(() => { BR.mode('think'); sayC('Got it. Let me show you.'); homeEl.querySelector('[data-hint]').textContent = 'Got it'; btn.classList.remove('is-on'); }, end + 250);
-    cT(() => { cState.listening = false; openQuestion(C.talk.transcript, { o: localPt(homeEl.querySelector('.ak-c-stage')), src: 'talk' }); }, end + 1000);
+  const botPt = () => localPt(cq('.ak-bot'));
+
+  // Ask from C: the bot thinks (eyes up, a pixel drifting off), regroups into the topic icon, then the answer opens.
+  function cAsk(q, o = {}) {
+    if (cBusy || !cBot) return; cBusy = true;
+    const c0 = classify(q);
+    const icon = o.icon || (c0.id ? ANSWER_ICON[c0.id] : KIND_ICON[c0.type]) || 'bulb';
+    const label = o.label || (A[q] ? A[q].q : String(q).trim());
+    cMode('ask');
+    const tt = cq('[data-title]'); tt.textContent = label; pop(tt);
+    const sb = cq('[data-sub]'); sb.textContent = CC0.thinkingLine || 'Thinking'; sb.classList.add('is-thinking');
+    const go = o.open || (() => openQuestion(q, { src: o.src || 'typed', o: botPt(), noThink: true }));
+    const done = () => { cLastIcon = icon; cBusy = false; go(); };
+    if (still()) { cBot.toIcon(icon, 1); done(); return; }
+    if (cBot.form() === 'icon') { cBot.bounce(); cT(done, 520); return; }
+    cBot.mood('think'); bubble('');
+    cT(() => cBot.toIcon(icon, 1100), 1250);
+    cT(done, 2550);
   }
-  function shutter() {
-    const cam = homeEl.querySelector('[data-cam]'); if (cam.classList.contains('is-shot')) return;
-    cam.classList.add('is-shot'); homeEl.querySelector('.ak-c').classList.add('is-shot');
-    sayC('Let me look…'); homeEl.querySelector('[data-sub]').textContent = ''; BR.form(); BR.mode('think');
-    cT(() => { BR.mode('idle'); BR.shape('ak-leaf', 'society', 1500); }, 650);
-    cT(() => {
-      sayC(C.show.say);
-      homeEl.querySelector('[data-panel]').innerHTML = `<button type="button" class="btn-lit ak-c-ask" data-act="ask" data-q="${C.show.ask}">${esc(A[C.show.ask].q)}</button><button type="button" class="ak-ghost" data-act="retake">${ic('redo', 16, 2.2)} <span>Show something else</span></button>`;
-    }, 1600);
+
+  // Hold to talk: press shows a live waveform and the bot listening; the words appear; release sends.
+  // A quick tap works too: it listens to the end, then sends.
+  function talkStart() {
+    if (ct.on || cBusy || !cBot) return;
+    stopC(); cMode('talk');
+    Object.assign(ct, { on: true, t0: performance.now(), auto: false, k: 0, hist: [], bump: 0, last: 0 });
+    cq('[data-act="c-talk"]').classList.add('is-on');
+    cq('[data-talk-lbl]').textContent = CC0.release || 'Release to send';
+    const heard = cq('[data-heard]'); heard.innerHTML = '';
+    cBot.mood('listen'); bubble(CC0.listening || 'I’m listening…');
+    const words = C.talk.transcript.split(' ');
+    words.forEach((w, k) => cT(() => addWord(k), 600 + k * 230));
+    cT(() => { ct.full = true; if (ct.auto) talkSend(); }, 600 + words.length * 230 + 500);
+    ct.full = false;
+    waveLoop();
+  }
+  function addWord(k) {
+    const words = C.talk.transcript.split(' '), heard = cq('[data-heard]'); if (!heard || k < ct.k) return;
+    for (; ct.k <= k; ct.k++) { if (ct.k) heard.appendChild(document.createTextNode(' ')); const sp = document.createElement('span'); sp.textContent = words[ct.k]; heard.appendChild(sp); }
+    ct.bump = 1;
+  }
+  function talkRelease() {
+    if (!ct.on) return;
+    if (performance.now() - ct.t0 < 400) { ct.auto = true; cq('[data-talk-lbl]').textContent = CC0.tapListening || 'Listening…'; return; }
+    talkSend();
+  }
+  function talkSend() {
+    if (!ct.on) return;
+    cState.timers.forEach(clearTimeout); cState.timers = [];
+    addWord(C.talk.transcript.split(' ').length - 1);
+    ct.on = false;
+    cq('[data-act="c-talk"]').classList.remove('is-on');
+    cq('[data-talk-lbl]').textContent = 'Hold to talk';
+    cBot.level(0); cBot.mood('idle'); bubble('');
+    cT(() => { talkStop(true); cAsk(C.talk.transcript, { src: 'talk' }); }, 450);
+  }
+  function talkStop(quiet) {
+    cancelAnimationFrame(ct.raf); ct.raf = 0;
+    const was = ct.on; ct.on = false;
+    if (!homeEl || !cBot) return;
+    cBot.level(0);
+    const b = cq('[data-act="c-talk"]'); if (b) b.classList.remove('is-on');
+    const l = cq('[data-talk-lbl]'); if (l) l.textContent = 'Hold to talk';
+    if (was && !quiet) { cBot.mood('idle'); bubble(CC0.noRush || 'No rush. Hold when you’re ready.', 2000); }
+  }
+  function waveLoop() {
+    const cv = cq('[data-wave]'); if (!cv) return;
+    const W = 296, H = 64, dpr = Math.min(3, window.devicePixelRatio || 1);
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    const x = cv.getContext('2d'), N = 37, bw = 4, step = W / N;
+    let lv = 0;
+    const tick = (t) => {
+      if (!ct.on || !cv.isConnected) { ct.raf = 0; return; }
+      ct.raf = requestAnimationFrame(tick);
+      const speaking = ct.k < C.talk.transcript.split(' ').length || !ct.full;
+      ct.bump *= 0.9;
+      const target = (speaking && ct.k > 0 ? 0.35 + 0.35 * Math.abs(Math.sin(t / 130)) * Math.abs(Math.sin(t / 47)) : 0.06 + 0.05 * Math.abs(Math.sin(t / 200))) + ct.bump * 0.4;
+      lv += (target - lv) * 0.3;
+      cBot.level(lv);
+      if (t - ct.last > 55) { ct.last = t; ct.hist.push(clamp(lv + (Math.random() - 0.5) * 0.18 * lv)); if (ct.hist.length > N) ct.hist.shift(); }
+      x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      for (let i = 0; i < N; i++) {
+        const v = ct.hist[ct.hist.length - N + i]; const h = v == null ? 4 : 4 + v * (H - 8);
+        const cx = i * step + (step - bw) / 2, a = 0.25 + 0.75 * smooth(0, N * 0.35, i);
+        x.globalAlpha = a; x.fillStyle = '#1F5BE0';
+        x.beginPath(); x.roundRect ? x.roundRect(cx, (H - h) / 2, bw, h, 2) : x.rect(cx, (H - h) / 2, bw, h); x.fill();
+      }
+      x.globalAlpha = 1;
+    };
+    ct.raf = requestAnimationFrame(tick);
+  }
+
+  // Show me: a viewfinder; it sees a leaf, the bot becomes the leaf, and offers the question.
+  function showOpen() {
+    if (cBusy || !cBot) return;
+    stopC();
+    const cam = cq('[data-cam]'); cam.classList.remove('is-lock', 'is-shot', 'is-offer');
+    if (cBot.form() === 'icon') cBot.toBot(700);
+    cMode('show');
+    cBot.mood('down'); bubble(CC0.seeing || 'Show me something.');
+    cT(() => { cam.classList.add('is-lock'); cBot.mood('idle'); }, 1400);
+    cT(() => { cam.classList.add('is-shot'); cBot.mood('think'); bubble(''); }, 2200);
+    cT(() => { cBot.toIcon('leaf', 1000); }, 2800);
+    cT(() => { cam.classList.add('is-offer'); bubble(C.show.bub || 'Ooh, a leaf.', 2600); }, 3500);
+  }
+
+  // The bot's eyes follow the pointer a little
+  function botLook(e) {
+    if (!cBot || view !== 'home' || homeEl.dataset.v !== 'C') return;
+    const cv = cq('.ak-bot canvas'); if (!cv) return;
+    const r = cv.getBoundingClientRect(), k = r.width / (cBot.cols * cBot.pitch);
+    const [cx0, cy0] = cBot.centre(), dx = (e.clientX - (r.left + cx0 * k)) / k, dy = (e.clientY - (r.top + cy0 * k)) / k;
+    cBot.look(dx > 46 ? 1 : dx < -46 ? -1 : 0, dy > 70 ? 1 : dy < -60 ? -1 : 0);
+  }
+  function poke() {
+    if (!cBot || cBusy) return;
+    const m = cRoot().dataset.mode;
+    if (cBot.form() === 'icon') { if (m === 'show') { cBot.bounce(); return; } cBot.toBot(800); return; }
+    cBot.bounce();
+    if (m === 'talk') return;
+    const prev = cBot.getMood();
+    cBot.mood('happy');
+    const lines = CC0.pokes || ['Hi again.'];
+    poke.i = ((poke.i || 0) + 1) % lines.length;
+    bubble(lines[poke.i], 1700);
+    clearTimeout(poke.t); poke.t = setTimeout(() => { if (cBot && cBot.getMood() === 'happy') cBot.mood(prev === 'happy' ? 'idle' : prev); }, 900);
   }
 
   // The character, wherever the home wants it
@@ -1346,7 +1739,8 @@
     } else if (v === 'B') {
       const h = bView && bView.hubHost(); if (h) { BR.take(h, 'brain', 'cobalt', 900); BR.mode('idle'); }
     } else {
-      BR.take(homeEl.querySelector('.ak-host-c'), cState.mode === 'show' && homeEl.querySelector('[data-cam].is-shot') ? 'ak-leaf' : 'brain', cState.mode === 'show' ? 'society' : 'cobalt', 900); BR.mode('idle');
+      // C has its own pixel character: park the particle canvas off-screen
+      const park = document.getElementById('brainPark'); if (park && window.Brain) { Brain.moveTo(park); BR.host = null; BR.mode('idle'); }
     }
   }
 
@@ -1395,10 +1789,23 @@
       case 'qz-next': { const q = sec.querySelector('[data-quiz]'); q.dataset.i = +q.dataset.i + 1; renderQuiz(q, b); break; }
       case 'quiz-again': { const q = sec.querySelector('[data-quiz]'); q.dataset.i = 0; q.dataset.score = 0; delete q.dataset.locked; renderQuiz(q, b); break; }
       case 'send-quiz': { try { if (navigator.clipboard) navigator.clipboard.writeText('cortex.app/quiz/octopus').catch(() => {}); } catch (er) { /* noop */ } say('Quiz link copied. Send it to a friend'); break; }
-      case 'cmode': setCMode(t.dataset.m); homeBrain(); break;
-      case 'mic': micTap(t); break;
-      case 'shutter': shutter(); break;
-      case 'retake': setCMode('show'); break;
+      case 'poke': poke(); break;
+      case 'c-type': {
+        if (cBusy) break;
+        if (cRoot().dataset.mode === 'type') { cMode('home'); break; }
+        stopC(); cMode('type');
+        const inp = cq('#akInC'); setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (er) { inp.focus(); } }, still() ? 0 : 120);
+        break;
+      }
+      case 'c-talk': break; // press-and-hold is handled on pointerdown / pointerup
+      case 'c-show': if (cBusy) break; if (cRoot().dataset.mode === 'show') { cMode('home'); break; } showOpen(); break;
+      case 'c-retake': showOpen(); break;
+      case 'c-ask': cAsk(t.dataset.q, { src: t.dataset.src || 'suggest' }); break;
+      case 'c-resume': {
+        const k = t.dataset.q, c = convos.get(k);
+        cAsk(k, { src: 'history', open: () => { if (c) { c.current = c.current || c.key; enterChat(c, { o: botPt() }); } else openQuestion(k, { src: 'history', o: botPt(), noThink: true }); } });
+        break;
+      }
     }
   }
   let wonderDrag = false;
@@ -1408,6 +1815,7 @@
     const inp = f.querySelector('input'), v = inp.value.trim(); if (!v) return;
     inp.value = ''; f.querySelector('button[type=submit]').disabled = true; inp.blur();
     if (f.dataset.form === 'follow') { chatEl.classList.remove('is-typing'); followUp(v); return; }
+    if (f.dataset.form === 'c-ask') { f.classList.remove('has-text'); cAsk(v, { src: 'typed' }); return; }
     openQuestion(v, { o: localPt(f), src: 'typed' });
   }
   let typeT = 0;
@@ -1415,10 +1823,11 @@
     const f = e.target.closest('form'); if (!f) return;
     const has = !!e.target.value.trim();
     f.querySelector('button[type=submit]').disabled = !has;
-    if (view === 'home' && homeEl.dataset.v === 'C') {
-      BR.mode(has ? 'listen' : 'idle'); if (has) BR.pulse();
-      sayC(has ? 'I’m listening…' : 'Hi. What’s on your mind?');
-      clearTimeout(typeT); if (has) typeT = setTimeout(() => { if (view === 'home') sayC('Ready when you are. Press send.'); }, 1600);
+    if (f.dataset.form === 'c-ask' && cBot) {
+      const had = f.classList.contains('has-text');
+      f.classList.toggle('has-text', has); if (cRoot()) cRoot().classList.toggle('has-text', has);
+      if (has && !had) cBot.hop();
+      clearTimeout(typeT); typeT = setTimeout(() => { if (cBot && cRoot() && cRoot().dataset.mode === 'type') cBot.blink(); }, 500);
     }
   }
 
@@ -1475,6 +1884,17 @@
     const release = (e) => { const h = e.target.closest && e.target.closest('[data-act="hold"]'); if (h) holdPurr(h.closest('.ak-sec'), false); };
     root.addEventListener('pointerup', release); root.addEventListener('pointercancel', release); root.addEventListener('lostpointercapture', release, true);
     root.addEventListener('input', (e) => { if (e.target.matches('[data-act="wave"]')) { const sec = e.target.closest('.ak-sec'), v = +e.target.value; drawWave(sec.querySelector('[data-wv]'), v); const b = blockData(e.target); sec.querySelector('[data-cap]').textContent = b.cap[v > 6 ? 1 : 0]; BR.pulse(); } });
+    // C · hold to talk (a tap works too), and the bot's eyes follow the pointer
+    root.addEventListener('pointerdown', (e) => { const h = e.target.closest('[data-act="c-talk"]'); if (h) { e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (er) { /* noop */ } talkStart(); } });
+    const talkUp = (e) => { if (ct.on && e.target.closest && e.target.closest('[data-act="c-talk"]')) talkRelease(); };
+    root.addEventListener('pointerup', talkUp); root.addEventListener('pointercancel', talkUp); root.addEventListener('lostpointercapture', talkUp, true);
+    root.addEventListener('pointermove', botLook);
+    root.addEventListener('keydown', (e) => {
+      const h = e.target.closest && e.target.closest('[data-act="c-talk"]');
+      if (h && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) talkStart(); }
+      if (e.key === 'Escape' && view === 'home' && cRoot() && !cBusy && cRoot().dataset.mode !== 'home') cMode('home');
+    });
+    root.addEventListener('keyup', (e) => { const h = e.target.closest && e.target.closest('[data-act="c-talk"]'); if (h && (e.key === ' ' || e.key === 'Enter')) talkRelease(); });
     // the wonder: drag to poke the particles; a clean tap opens it
     let wd = null;
     root.addEventListener('pointerdown', (e) => { if (e.target.closest('.ak-wonder')) { wd = [e.clientX, e.clientY]; wonderDrag = false; } }, true);
@@ -1516,7 +1936,12 @@
   function show() {
     if (!mounted) return;
     shown = true;
-    if (view === 'home') { renderHome(); if (app()) app().setTabBar(true); homeBrain(); }
+    if (view === 'home') {
+      // C keeps its live character (and its greeting) if it is already on screen
+      const keepC = homeEl.dataset.v === 'C' && cBot && cRoot() && ((window.Store && Store.get().variants.askHome) || 'A') === 'C';
+      if (!keepC) renderHome(); else cMode('home');
+      if (app()) app().setTabBar(true); homeBrain();
+    }
     else {
       if (app()) app().setTabBar(false);
       const n = cur && cur.nodes.get(cur.current), last = n && n.turns && n.turns[n.turns.length - 1];
@@ -1527,17 +1952,26 @@
   function hide() {
     shown = false;
     closePop(); stopC(); closeMap(true);
+    if (cBot && cRoot()) { cBusy = false; if (cBot.form() === 'icon') cBot.toBot(1); cMode('home'); }
     BR.mode('idle'); BR.setLobes(0);
   }
 
   // ───────── URL hooks for screenshots ─────────
   //   akq=<answer id or text>  open a question   ·  akpath=larynx,vibration  branch along a path
   //   akpop=<term id>  open a term's popover      ·  akmap=1  open the zoom-out map  ·  akhist=1  the history map
-  //   akmode=talk|show  (home C)                  ·  akfollow=<text>  ask a follow-up
+  //   akmode=type|talk|show (home C; aktext=<text> prefills Type) · akcq=<question> ask from C · akbot=<icon> morph the bot
+  //   akfast=1  run C hooks without waiting for the greeting  ·  akfollow=<text>  ask a follow-up
   function testHooks() {
     const q = P.get('akq'); const fast = still() ? 0 : 1;
     const steps = [];
-    if (P.get('akmode') && homeEl.dataset.v === 'C') steps.push([0, () => { setCMode(P.get('akmode')); homeBrain(); }]);
+    if (P.get('akmode') && homeEl.dataset.v === 'C') steps.push([P.has('akfast') ? 0 : 2600, () => {
+      const m = P.get('akmode');
+      if (m === 'type') { cq('[data-act="c-type"]').click(); const t = P.get('aktext'); if (t) { const inp = cq('#akInC'); inp.value = t; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
+      if (m === 'talk') talkStart();
+      if (m === 'show') showOpen();
+    }]);
+    if (P.get('akbot') && homeEl.dataset.v === 'C') steps.push([P.has('akfast') ? 0 : 2600, () => { if (cBot) cBot.toIcon(P.get('akbot'), 1000); }]);
+    if (P.get('akcq') && homeEl.dataset.v === 'C') steps.push([P.has('akfast') ? 0 : 2600, () => cAsk(P.get('akcq'), { src: 'typed' })]);
     if (P.has('akhist')) steps.push([300, () => openHistMap()]);
     if (q) steps.push([100, () => openQuestion(q, { src: A[q] && q === C.wonder.id ? 'wonder' : 'typed', instant: P.has('akinstant') })]);
     (P.get('akpath') || '').split(',').filter((t) => T[t]).forEach((tid) => steps.push([P.has('akinstant') ? 200 : 2600, () => { const b = cur && cur.nodes.get(cur.current).page.querySelector(`.ak-term[data-term="${tid}"]`); branch(tid, b); }]));

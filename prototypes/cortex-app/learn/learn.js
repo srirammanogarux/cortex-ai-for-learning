@@ -126,7 +126,7 @@
   const isCourseDone = (list, st) => st.every((x) => x === 'done');
 
   // ───────── State ─────────
-  let viewEl, root, home, play, stage, bar, foot, cta, tagline, popEl = null, panel, confetti, sheet = null;
+  let viewEl, root, home, fl, play, stage, bar, foot, cta, tagline, popEl = null, panel, confetti, sheet = null;
   let PL = null;              // the open player (lesson, review or finale)
   let shown = false, hooksRan = false;
 
@@ -138,31 +138,38 @@
   const rich = (s) => esc(s).replace(/\[\[(\w+)(?:\|([^\]]+))?\]\]/g, (m, id, txt) => (L.terms[id] ? termBtn(id, txt || L.terms[id].label) : (txt || id)));
 
   // ═════════════════════════ HOME ═════════════════════════
+  // Compact top (course switcher, streak, one progress line), then the path is the hero.
+  // The current stop carries its own Start card; a slim floating card above the tab bar
+  // takes over when the current stop scrolls out of view.
   function renderHome(o = {}) {
     clearT('home');
+    const keep = o.keepScroll ? home.scrollTop : null;
     const c = P.has('empty') ? null : course();
-    if (!c) { home.innerHTML = emptyHTML(); takeVis(home); return; }
+    if (!c) { home.innerHTML = emptyHTML(); setFloat(null); takeVis(home); return; }
     const list = stops(), st = states(list), s = S();
     const doneN = st.filter((x) => x === 'done').length, curI = st.indexOf('current'), sty = style();
+    const pct = Math.round(doneN / list.length * 100);
     const STYLE = { roadmap: ['route', 'Full roadmap'], connect: ['nodes', 'Connect the dots'], quick: ['zap', 'Quick bites'] }[sty];
     home.innerHTML = `
       <header class="ln-head">
         <button type="button" class="ln-switch" data-act="switch" aria-haspopup="dialog" aria-label="Switch course. Now: ${esc(c.title)}">
           <span class="ln-switch-ic">${glyph('heart', 'body', 240, 1.2)}</span><span class="ln-switch-t">${esc(c.title)}</span><span class="ln-switch-car">${ic('caret', 16, 2.6)}</span>
         </button>
-        <button type="button" class="ln-streak" data-act="streak" aria-label="${s.streak}-day streak">${flameSVG(20)}<b>${s.streak}</b></button>
+        <button type="button" class="ln-streak" data-act="streak" aria-label="${s.streak}-day streak">${flameSVG(18)}<b>${s.streak}</b></button>
       </header>
-      <div class="ln-prog" aria-label="${doneN} of ${list.length} stops done">
-        <p class="ln-prog-t"><b>${doneN} of ${list.length}</b> stops done</p>
-        <p class="ln-prog-p">${Math.round(doneN / list.length * 100)}%</p>
-        <div class="ln-segs">${list.map((x, i) => `<i class="is-${st[i]}${x.kind !== 'lesson' ? ' is-' + x.kind : ''}"></i>`).join('')}</div>
+      <div class="ln-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${doneN}" aria-label="${doneN} of ${list.length} stops done">
+        <p class="ln-prog-t"><b>${doneN} of ${list.length}</b><span aria-hidden="true">·</span>${pct}%</p>
+        <span class="ln-styletag">${ic(STYLE[0], 13, 2.2)}${STYLE[1]}</span>
+        <div class="ln-bar"><i style="width:${pct}%"></i></div>
       </div>
-      ${curI >= 0 ? nextCard(list, list[curI], doneN) : completeCard()}
-      <div class="ln-maphead"><h2 class="ln-h-map">Your path</h2><span class="ln-styletag">${ic(STYLE[0], 14, 2.2)}${STYLE[1]}</span></div>
       <div class="ln-map ln-map-${sty}" data-map>${sty === 'quick' ? mapQuick(list, st) : sty === 'connect' ? mapConnect(list, st) : mapRoadmap(list, st)}</div>
-      <p class="ln-mapfoot">${sty === 'connect' ? 'Side stops are optional deeper dives. They open as you finish each lesson.' : sty === 'quick' ? 'Short packs you can finish in a few minutes each.' : 'One path, start to finish. Every stop builds on the last.'}</p>`;
+      ${sty === 'connect' ? '<p class="ln-mapfoot">Side stops are optional deeper dives. They open as you finish each lesson.</p>' : ''}`;
     takeVis(home);
+    setFloat(curI >= 0 ? list[curI] : 'complete', list);
     if (o.justDone) celebrateStop(o.justDone, list, st);
+    else if (keep != null) home.scrollTop = keep;
+    else settleOn(home.querySelector('[data-cur]') || home.querySelector('.ln-stop.is-final, .ln-pack-final'));
+    syncFloat();
   }
 
   function emptyHTML() {
@@ -173,33 +180,45 @@
       <button type="button" class="btn-lit" data-act="build">Build a course</button></div>`;
   }
 
-  function nextCard(list, st, doneN) {
-    const kind = st.kind, first = doneN === 0;
-    const eyebrow = kind === 'review' ? 'Up next · Review' : kind === 'final' ? 'Up next · The finish' : `Up next · Lesson ${lessonNo(list, st)}`;
-    const go = kind === 'review' ? 'Start the review' : kind === 'final' ? 'Start the final challenge' : first ? 'Start your first lesson' : 'Start lesson';
-    const checks = kind === 'lesson' ? (content(st).quiz || []).length : kind === 'review' ? 5 : 3;
-    return `<section class="ln-next${kind !== 'lesson' ? ' is-' + kind : ''}" aria-label="Up next">
-      <div class="ln-next-top">
-        <div class="ln-next-txt">
-          <p class="ln-eyebrow">${eyebrow}</p>
-          <h1 class="ln-next-t">${esc(st.title)}</h1>
-          <p class="ln-next-hook">${esc(st.hook)}</p>
-        </div>
-        <div class="ln-next-vis"><div class="ln-glow" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="${stopShape(st)}" data-pal="${kind === 'review' ? 'cobalt' : 'body'}" style="--k:.4"></div></div>
-      </div>
-      <div class="ln-next-meta"><span>${ic('clock', 15, 2.2)}${minutes(st)} min</span><span>${ic('sparkle', 15, 2.2)}${checks} quick check${checks === 1 ? '' : 's'}</span></div>
-      <button type="button" class="btn-lit ln-next-go" data-act="open" data-id="${st.id}">${go}</button>
-    </section>`;
+  // The Start card attached to the current stop on the roadmap and connect maps
+  function curCard(list, x, side) {
+    const go = x.kind === 'review' ? 'Review' : x.kind === 'final' ? 'Begin' : 'Start';
+    return `<span class="ln-cur ${side}"><b class="ln-cur-t">${esc(x.title)}</b><span class="ln-cur-row"><span class="ln-cur-m">${ic('clock', 14, 2.2)}${minutes(x)} min</span><span class="ln-cur-go">${go}</span></span></span>`;
   }
-  function completeCard() {
-    const g = courseData(course()).gift;
-    return `<section class="ln-next is-complete" aria-label="Course complete">
-      <div class="ln-next-top">
-        <div class="ln-next-txt"><p class="ln-eyebrow">Course complete</p><h1 class="ln-next-t">You earned ${esc(g.title.toLowerCase())}</h1><p class="ln-next-hook">It’s on your Profile shelf. Here’s where to go next.</p></div>
-        <div class="ln-next-vis"><div class="ln-glow" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="heart" data-pal="body" style="--k:.4"></div></div>
-      </div>
-      <button type="button" class="btn-lit ln-next-go" data-act="widen-open">See what’s next</button>
-    </section>`;
+
+  // Floating continue card (just above the tab bar)
+  const playSVG = (n = 16) => `<svg width="${n}" height="${n}" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.4-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" fill="currentColor"/></svg>`;
+  function setFloat(x, list) {
+    if (!fl) return;
+    fl.dataset.always = '';
+    if (!x) { fl.innerHTML = ''; fl.dataset.id = ''; fl.classList.remove('is-on'); return; }
+    if (x === 'complete') {
+      const g = courseData(course()).gift;
+      fl.dataset.act = 'widen-open'; fl.dataset.id = ''; fl.dataset.always = '1';
+      fl.setAttribute('aria-label', `Course complete. You earned ${g.title}. See what’s next`);
+      fl.innerHTML = `<span class="ln-fl-ic is-gift">${giftSVG(30)}</span><span class="ln-fl-tx"><b>You earned ${esc(g.title.toLowerCase())}</b><span>Course complete</span></span><span class="ln-fl-go is-txt">Next</span>`;
+      return;
+    }
+    const kind = x.kind;
+    fl.dataset.act = 'open'; fl.dataset.id = x.id;
+    fl.setAttribute('aria-label', `Continue: ${x.title}. ${minutes(x)} minutes`);
+    const art = kind === 'review' ? shuffleSVG(20, 'white') : kind === 'final' ? giftSVG(28) : `<span class="ln-fl-g">${glyph(stopShape(x), 'white', 240, 1.25)}</span>`;
+    const meta = kind === 'review' ? `Review · ${minutes(x)} min` : kind === 'final' ? `Final challenge · ${minutes(x)} min` : `Lesson ${lessonNo(list, x)} · ${minutes(x)} min`;
+    fl.innerHTML = `<span class="ln-fl-ic${kind === 'final' ? ' is-gift' : ''}">${art}</span><span class="ln-fl-tx"><b>${esc(x.title)}</b><span>${meta}</span></span><span class="ln-fl-go" aria-hidden="true">${playSVG(16)}</span>`;
+  }
+  // Show the floating card only when the current stop is out of view
+  function syncFloat() {
+    if (!fl || !home) return;
+    let on = !!fl.innerHTML && !!fl.dataset.always;
+    const cur = home.querySelector('[data-cur]');
+    if (fl.innerHTML && !on && cur) {
+      const hr = home.getBoundingClientRect(), k = hr.height / home.offsetHeight || 1, r = cur.getBoundingClientRect();
+      const top = (r.top - hr.top) / k, bot = (r.bottom - hr.top) / k;
+      on = bot < 96 || top > home.offsetHeight - 190;
+    }
+    fl.classList.toggle('is-on', on);
+    fl.setAttribute('aria-hidden', on ? 'false' : 'true');
+    fl.tabIndex = on ? 0 : -1;
   }
 
   // Stop tiles (shared by all three map shapes)
@@ -210,15 +229,14 @@
     if (st.kind === 'review') return `<span class="ln-tile ln-tile-review is-${state} ${size}">${halo}${shuffleSVG(size === 'is-sm' ? 20 : 26, state === 'locked' ? 'muted' : state === 'current' || state === 'done' ? 'white' : 'color')}${badge}</span>`;
     return `<span class="ln-tile is-${state} ${size}">${halo}<span class="ln-tile-g">${glyph(stopShape(st), state === 'locked' ? 'muted' : 'white', 240, 1.25)}</span>${badge}</span>`;
   }
-  const startPill = (state) => state === 'current' ? '<span class="ln-start">Start</span>' : '';
-  const stateWord = (s) => ({ done: 'Done', current: 'Up next', locked: 'Locked' }[s]);
+    const stateWord = (s) => ({ done: 'Done', current: 'Start', locked: 'Locked' }[s]);
 
   // Shape 1 · Full roadmap: one long winding path
   function mapRoadmap(list, st) {
-    const gap = 128, top = 62, last = list.length - 1;
+    const gap = 116, top = 60, last = list.length - 1;
     const pos = list.map((x, i) => ({ x: i % 2 ? 258 : 70, y: top + i * gap }));
     pos[last] = { x: 164, y: top + last * gap + 22 };
-    const H = pos[last].y + 120;
+    const H = pos[last].y + (st[last] === 'current' ? 176 : 120);
     let paths = '', glint = '';
     for (let i = 0; i < last; i++) {
       const a = pos[i], b = pos[i + 1], dy = b.y - a.y;
@@ -230,8 +248,8 @@
     const svg = `<svg class="ln-map-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true"><defs><linearGradient id="lnLit" x1="0" y1="0" x2="0" y2="${H}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F783AC"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>${paths}${glint}</svg>`;
     const nodes = list.map((x, i) => {
       const p = pos[i], final = x.kind === 'final', side = final ? 'is-c' : i % 2 ? 'is-l' : 'is-r';
-      const lab = `<span class="ln-lab ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${st[i] === 'current' ? 'Up next · ' + minutes(x) + ' min' : stopMeta(list, x)}</span></span>`;
-      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}" aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${startPill(st[i])}${lab}</button>`;
+      const lab = st[i] === 'current' ? curCard(list, x, side) : `<span class="ln-lab ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${stopMeta(list, x)}</span></span>`;
+      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}"${st[i] === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${lab}</button>`;
     }).join('');
     return `<div class="ln-map-in" style="height:${H}px">${svg}${nodes}</div>`;
   }
@@ -243,9 +261,9 @@
     return parentState === 'done' ? 'open' : 'locked';
   }
   function mapConnect(list, st) {
-    const gap = 148, top = 58, spine = 164, last = list.length - 1;
+    const gap = 136, top = 46, spine = 164, last = list.length - 1;
     const pos = list.map((x, i) => ({ x: spine, y: top + i * gap + (x.kind === 'final' ? 16 : 0) }));
-    const H = pos[last].y + 116;
+    const H = pos[last].y + (st[last] === 'current' ? 176 : 116);
     let paths = '', dives = '';
     for (let i = 0; i < last; i++) {
       const a = pos[i], b = pos[i + 1];
@@ -266,8 +284,8 @@
     const svg = `<svg class="ln-map-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true"><defs><linearGradient id="lnLit" x1="0" y1="0" x2="0" y2="${H}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F783AC"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>${paths}</svg>`;
     const nodes = list.map((x, i) => {
       const p = pos[i], final = x.kind === 'final', side = final ? 'is-c' : i % 2 === 0 ? 'is-l' : 'is-r';
-      const lab = `<span class="ln-lab ln-lab-c ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${st[i] === 'current' ? 'Up next · ' + minutes(x) + ' min' : stopMeta(list, x)}</span></span>`;
-      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}" aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${startPill(st[i])}${lab}</button>`;
+      const lab = st[i] === 'current' ? curCard(list, x, side) : `<span class="ln-lab ln-lab-c ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${stopMeta(list, x)}</span></span>`;
+      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}"${st[i] === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${lab}</button>`;
     }).join('');
     return `<div class="ln-map-in" style="height:${H}px">${svg}${nodes}${dives}</div>`;
   }
@@ -287,7 +305,7 @@
       const link = ci ? `<div class="ln-pack-link${st[ch.items[0]] !== 'locked' ? ' is-lit' : ''}" aria-hidden="true"><i></i><i></i><i></i></div>` : '';
       if (ch.kind === 'review' || ch.kind === 'final') {
         const i = ch.items[0], x = list[i], s = st[i];
-        return `${link}<button type="button" class="ln-pack ln-pack-${ch.kind} is-${s}" data-act="open" data-id="${x.id}" aria-label="${esc(x.title)}. ${stateWord(s)}">
+        return `${link}<button type="button" class="ln-pack ln-pack-${ch.kind} is-${s}" data-act="open" data-id="${x.id}"${s === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(s)}">
           ${tileHTML(x, s)}
           <span class="ln-pack-tx"><b>${esc(x.title)}</b><span>${esc(x.hook)}</span></span>
           ${s === 'current' ? '<span class="ln-pill-start">Start</span>' : s === 'done' ? `<span class="ln-state is-done">${ic('check', 16, 3)}</span>` : `<span class="ln-state">${ic('lock', 15, 2.4)}</span>`}
@@ -300,7 +318,7 @@
           <span class="ln-ring" style="--p:${dn / ch.items.length}" aria-label="${dn} of ${ch.items.length} done"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15"/>${dn ? '<circle class="v" cx="18" cy="18" r="15" pathLength="1"/>' : ''}</svg><b>${dn}/${ch.items.length}</b></span></header>
         <div class="ln-bites">${ch.items.map((i) => {
           const x = list[i], s = st[i];
-          return `<button type="button" class="ln-bite is-${s}" data-act="open" data-id="${x.id}" aria-label="${esc(x.title)}. ${stateWord(s)}">
+          return `<button type="button" class="ln-bite is-${s}" data-act="open" data-id="${x.id}"${s === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(s)}">
             ${tileHTML(x, s, 'is-sm')}
             <span class="ln-bite-tx"><b>${esc(x.title)}</b><span>Bite ${lessonNo(list, x)} · ${minutes(x)} min</span></span>
             ${s === 'current' ? '<span class="ln-pill-start">Start</span>' : s === 'done' ? `<span class="ln-state is-done">${ic('check', 16, 3)}</span>` : `<span class="ln-state">${ic('lock', 15, 2.4)}</span>`}
@@ -321,6 +339,13 @@
     if (next && st[i + 1] === 'current') next.classList.add('is-unlock');
     scrollToEl(next || done, true);
     after('home', () => { const B = brain(); if (B) B.pulse(); }, 700);
+  }
+  // On open: keep the header in view if the current stop already sits comfortably; otherwise bring it to mid-screen
+  function settleOn(el) {
+    if (!el) return;
+    const hr = home.getBoundingClientRect(), er = el.getBoundingClientRect(), k = hr.height / home.offsetHeight || 1;
+    const mid = home.scrollTop + (er.top - hr.top + er.height / 2) / k, H = home.offsetHeight;
+    home.scrollTop = mid + 76 <= H - 120 ? 0 : Math.max(0, mid - H * 0.47);
   }
   function scrollToEl(el, smooth) {
     if (!el) return;
@@ -1022,7 +1047,7 @@
       window.Bus.emit('explored', { id: key, label: cap(t.label), subject: 'Body', shape: t.shape || 'heart', palette: 'body', from: 'learn' });
       say(`${cap(t.label)} added to your graph`);
     }
-    closePanel(); if (!PL) renderHome();
+    closePanel(); if (!PL) renderHome({ keepScroll: true });
   }
   function askAbout(id) {
     const t = L.terms[id]; if (!t) return;
@@ -1099,6 +1124,7 @@
     root.innerHTML = `
       <div class="ln-home" data-home></div>
       <div class="ln-topfade" aria-hidden="true"></div>
+      <button type="button" class="ln-float" data-act="open" aria-hidden="true" tabindex="-1"></button>
       <div class="ln-play" hidden>
         <div class="ln-stage" data-stage></div>
         <header class="ln-pbar">
@@ -1112,10 +1138,12 @@
       </div>
       <div class="ln-panel" hidden></div>`;
     el.appendChild(root);
-    home = root.querySelector('[data-home]'); play = root.querySelector('.ln-play'); stage = root.querySelector('[data-stage]');
+    home = root.querySelector('[data-home]'); fl = root.querySelector('.ln-float'); play = root.querySelector('.ln-play'); stage = root.querySelector('[data-stage]');
     bar = root.querySelector('.ln-pbar'); foot = root.querySelector('.ln-pfoot'); cta = root.querySelector('.ln-cta');
     tagline = root.querySelector('.ln-tagline'); panel = root.querySelector('.ln-panel'); confetti = root.querySelector('.ln-confetti');
     root.addEventListener('click', onClick);
+    let flRaf = 0;
+    home.addEventListener('scroll', () => { if (!flRaf) flRaf = requestAnimationFrame(() => { flRaf = 0; syncFloat(); }); }, { passive: true });
     stage.addEventListener('scroll', () => { if (popEl) closePop(); }, { passive: true, capture: true });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || viewEl.hidden) return;

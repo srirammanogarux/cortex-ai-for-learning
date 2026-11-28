@@ -90,45 +90,107 @@
 .ak-bdock { position: absolute; left: 16px; right: 16px; bottom: 106px; z-index: 3; }
 .ak-bdock::before { content: ''; position: absolute; left: -16px; right: -16px; bottom: -106px; height: 210px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(220,220,222,0), rgba(220,220,222,.9) 46%, #DCDCDE); }
 
-/* ───── Home C · the character talks to you ───── */
-.ak-c { position: absolute; inset: 0; padding: 68px 16px 112px; display: flex; flex-direction: column; align-items: center; }
-.ak-c-sub:empty { display: none; }
-.ak-c-sub { margin-top: 2px !important; font-size: 15px; font-weight: 500; color: var(--ink-2); text-align: center; }
-.ak-c-say { min-height: 58px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 600; font-size: 24px; line-height: 29px; letter-spacing: -.03em; padding: 0 12px; text-wrap: balance; }
-.ak-c-stage { position: relative; width: 320px; height: 330px; flex-shrink: 0; margin-top: 4px; }
-.ak-home .ak-host-c { position: absolute; left: 50%; top: 50%; width: 320px; height: 320px; margin: -160px 0 0 -160px; transform: scale(1.04); transition: opacity 500ms var(--out); }
-.ak-home .ak-c.is-cam:not(.is-shot) .ak-host-c { opacity: 0; pointer-events: none; }
-.ak-c-heard { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 8px); width: 300px; padding: 12px 16px; border-radius: 20px; background: #fff; box-shadow: var(--card); font-size: 17px; line-height: 23px; font-weight: 600; letter-spacing: -.01em; text-align: center; opacity: 0; transition: opacity 260ms ease-out, transform 360ms var(--out); pointer-events: none; }
-.ak-c-heard.is-on { opacity: 1; transform: translate(-50%, 0); }
-.ak-c-heard span { animation: akWord 360ms var(--out) both; display: inline-block; }
-.ak-c-modes { position: relative; width: 100%; margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; border-radius: 999px; background: rgba(20,18,17,.07); box-shadow: inset 0 1px 2px rgba(20,18,17,.06); --n: 3; }
-.ak-c-modes button { position: relative; z-index: 1; height: 48px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 15px; font-weight: 600; color: var(--ink-2); transition: color 260ms; }
-.ak-c-modes button[aria-selected="true"] { color: #fff; }
-.ak-c-panel { width: 100%; margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.ak-c-panel .ak-box { width: 100%; }
-.ak-c-hint { font-size: 14px; font-weight: 600; color: var(--ink-2); }
-.ak-mic { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; color: #fff !important; background: var(--lit-bg) !important; box-shadow: var(--lit-sh); transition: transform 160ms var(--out); }
-.ak-mic:active { transform: scale(.94); }
-.ak-mic-ring { position: absolute; inset: -8px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(31,91,224,.35); opacity: 0; }
-.ak-mic.is-on .ak-mic-ring { animation: akRing 1.3s var(--out) infinite; }
-.ak-shutter { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: #fff !important; box-shadow: 0 0 0 4px rgba(20,18,17,.12), 0 8px 20px rgba(20,18,17,.14); transition: transform 160ms var(--out); }
-.ak-shutter i { width: 60px; height: 60px; border-radius: 50%; background: var(--lit-bg); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.5); }
-.ak-shutter:active { transform: scale(.93); }
-.ak-c-ask { width: 100%; }
-.ak-c-panel .ak-ghost { margin-top: 0; }
-.ak-cam { position: absolute; inset: 10px 14px; border-radius: 40px; overflow: hidden; transition: opacity 600ms ease-out 250ms, transform 700ms var(--glide) 250ms;
+/* ───── Home C · a character you talk to ───── */
+.ak-c { position: absolute; inset: 0; --e: var(--out); }
+.ak-c > * { transition: opacity 320ms ease-out, transform 420ms var(--glide), visibility 0s; }
+.ak-c-stage { position: absolute; left: 50%; top: 58px; width: 280px; height: 238px; margin-left: -140px; transform-origin: 50% 30%; }
+.ak-c[data-mode="show"] .ak-c-stage { transform: scale(.8) translateY(-14px); }
+.ak-c-stage::after { content: ''; position: absolute; left: 50%; top: 212px; width: 150px; height: 14px; margin-left: -75px; border-radius: 50%; background: radial-gradient(closest-side, rgba(11,42,102,.16), rgba(11,42,102,0)); pointer-events: none; z-index: -1; }
+.ak-bot { display: block; width: 280px; height: 238px; border-radius: 32px; touch-action: manipulation; }
+.ak-bot canvas { display: block; }
+.ak-c-bub { position: absolute; right: -20px; bottom: calc(100% - 50px); max-width: 190px; padding: 9px 14px 10px; border-radius: 18px 18px 18px 6px; background: #fff; box-shadow: 0 1px 2px rgba(20,18,17,.06), 0 8px 22px rgba(20,18,17,.1);
+  font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; transform-origin: 0 100%; opacity: 0; transform: scale(.6) translateY(6px); pointer-events: none;
+  transition: opacity 180ms ease-out, transform 220ms var(--out); }
+.ak-c-stage.is-icon .ak-c-bub { bottom: calc(100% - 22px); }
+.ak-c-bub.is-on { opacity: 1; transform: none; transition: opacity 160ms ease-out, transform 460ms cubic-bezier(.34, 1.56, .64, 1); }
+
+.ak-c-head { position: absolute; left: 24px; right: 24px; top: 292px; text-align: center; }
+.ak-c-title { font-weight: 600; font-size: 28px; line-height: 34px; letter-spacing: -.03em; text-wrap: balance; }
+.ak-c-sub { margin-top: 6px !important; font-size: 16px; line-height: 22px; font-weight: 500; color: var(--ink-2); transition: opacity 240ms ease-out; }
+
+.ak-c-pills { position: absolute; left: 16px; right: 16px; top: 390px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ak-c-pill { height: 44px; max-width: 100%; display: inline-flex; align-items: center; gap: 9px; padding: 0 18px 0 13px !important; border-radius: 999px; background: #fff !important;
+  box-shadow: 0 1px 2px rgba(20,18,17,.05), 0 4px 14px rgba(20,18,17,.06); font-size: 15px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; transition: transform 160ms var(--out), box-shadow 200ms; }
+.ak-c-pill:active { transform: scale(.96); }
+.ak-c-pill-ic { display: grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0; }
+.ak-c-pill.is-open { background: rgba(255,255,255,.35) !important; box-shadow: none; outline: 1.5px dashed rgba(20,18,17,.32); outline-offset: -1.5px; }
+.ak-c-pill em { font-style: normal; font-weight: 500; color: var(--ink-2); }
+.ak-c-pill em::before { content: '·'; margin: 0 6px 0 -2px; }
+
+/* Talk: the words you said, and a live waveform */
+.ak-c-talk { position: absolute; left: 24px; right: 24px; top: 282px; display: flex; flex-direction: column; align-items: center; }
+.ak-c-heard { min-height: 102px; width: 100%; font-size: 24px; line-height: 30px; font-weight: 600; letter-spacing: -.025em; text-align: center; text-wrap: balance; }
+.ak-c-heard span { display: inline-block; animation: akWord 320ms var(--out) both; }
+.ak-c-wave { margin-top: 22px; }
+
+/* Show me: a viewfinder */
+.ak-c-cam { position: absolute; left: 16px; right: 16px; top: 272px; }
+.ak-c-vf { position: relative; height: 236px; border-radius: 32px; overflow: hidden; isolation: isolate; box-shadow: 0 10px 30px rgba(20,18,17,.18);
   background: radial-gradient(60% 50% at 30% 30%, #6E8F57 0%, rgba(110,143,87,0) 100%), radial-gradient(50% 50% at 75% 70%, #8C6A45 0%, rgba(140,106,69,0) 100%), radial-gradient(40% 40% at 80% 20%, #C9D6A8 0%, rgba(201,214,168,0) 100%), #3C4A33; }
-.ak-cam-scene { position: absolute; inset: 0; display: grid; place-items: center; }
-.ak-cam-leaf { width: 150px; height: auto; transform: rotate(-14deg); filter: drop-shadow(0 12px 18px rgba(0,0,0,.3)); }
-.ak-cam-c { position: absolute; width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.9); }
-.ak-cam-c.tl { left: 22px; top: 22px; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
-.ak-cam-c.tr { right: 22px; top: 22px; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
-.ak-cam-c.bl { left: 22px; bottom: 22px; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
-.ak-cam-c.br { right: 22px; bottom: 22px; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
-.ak-cam-hint { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; font-size: 14px; font-weight: 600; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.4); }
-.ak-cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
-.ak-cam.is-shot { opacity: 0; transform: scale(.9); pointer-events: none; }
-.ak-cam.is-shot .ak-cam-flash { animation: akFlash 420ms ease-out; }
+.ak-c-vf .ak-cam-scene { position: absolute; inset: 0; display: grid; place-items: center; }
+.ak-c-vf .ak-cam-leaf { width: 104px; height: auto; transform: rotate(-14deg); filter: drop-shadow(0 12px 18px rgba(0,0,0,.3)); }
+.ak-c-focus { position: absolute; inset: 18px; transition: inset 620ms var(--glide); animation: akRingSoft 1.6s ease-in-out infinite; }
+.ak-c-focus i { position: absolute; width: 26px; height: 26px; border: 3px solid rgba(255,255,255,.92); }
+.ak-c-focus .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
+.ak-c-focus .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
+.ak-c-focus .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
+.ak-c-focus .br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
+.ak-c-cam.is-lock .ak-c-focus { inset: 34px 100px 30px; animation: none; }
+.ak-c-cam.is-lock .ak-c-focus i { border-color: #FFD54A; }
+.ak-c-chip { position: absolute; left: 50%; top: 14px; padding: 5px 11px; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 600; color: var(--ink); transform: translate(-50%, 4px); opacity: 0; transition: opacity 240ms ease-out 240ms, transform 360ms var(--out) 240ms; }
+.ak-c-cam.is-lock .ak-c-chip { opacity: 1; transform: translate(-50%, 0); }
+.ak-c-vfhint { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 14px; font-weight: 600; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.45); transition: opacity 240ms; }
+.ak-c-cam.is-lock .ak-c-vfhint { opacity: 0; }
+.ak-c-retake { position: absolute; right: 10px; bottom: 10px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff !important; background: rgba(20,18,17,.32) !important; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transform: scale(.8); pointer-events: none; transition: opacity 240ms, transform 300ms var(--out); }
+.ak-c-cam.is-offer .ak-c-retake { opacity: 1; transform: none; pointer-events: auto; }
+.ak-c-vf .ak-cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.ak-c-cam.is-shot .ak-cam-flash { animation: akFlash 460ms ease-out; }
+.ak-c-offer { margin-top: 12px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity 300ms ease-out, transform 460ms var(--out); }
+.ak-c-cam.is-offer .ak-c-offer { opacity: 1; transform: none; pointer-events: auto; }
+
+/* Type: a field rises above the action row */
+.ak-c-field { position: absolute; left: 16px; right: 16px; bottom: 226px; height: 60px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 20px; border-radius: 30px; background: #fff;
+  box-shadow: 0 1px 2px rgba(20,18,17,.06), 0 12px 32px rgba(20,18,17,.12); }
+.ak-c-field input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 17px; font-weight: 500; color: var(--ink); letter-spacing: -.01em; }
+.ak-c-field input::placeholder { color: var(--ink-3); }
+.ak-c-send { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3) !important; background: #ECEBEF !important; transition: background-color 220ms, color 220ms, box-shadow 320ms ease-out, transform 360ms cubic-bezier(.34, 1.56, .64, 1); }
+.ak-c-field.has-text .ak-c-send { color: #fff !important; background: var(--c5) !important; box-shadow: 0 0 0 4px rgba(31,91,224,.12), 0 4px 16px rgba(31,91,224,.5); }
+.ak-c-send:active { transform: scale(.92) !important; }
+
+/* The three actions: Type · Hold to talk · Show me */
+.ak-c-acts { position: absolute; left: 0; right: 0; bottom: 106px; display: flex; justify-content: center; align-items: flex-start; gap: 22px; }
+.ak-c-act { width: 88px; display: flex; flex-direction: column; align-items: center; gap: 9px; padding-top: 10px !important; touch-action: none; -webkit-touch-callout: none; }
+.ak-c-act.is-main { padding-top: 0 !important; }
+.ak-c-orb { position: relative; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: #F2F1F4; box-shadow: var(--carved); transition: transform 200ms var(--out), background-color 240ms, color 240ms, box-shadow 240ms; }
+.ak-c-act:active .ak-c-orb { transform: scale(.93); }
+.ak-c-act[aria-pressed="true"] .ak-c-orb { color: #fff; background: var(--c5); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 8px 18px rgba(31,91,224,.35); }
+.ak-c-lbl { font-size: 13px; line-height: 16px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.ak-c-act[aria-pressed="true"] .ak-c-lbl { color: var(--c7); }
+.is-main .ak-c-orb { width: 76px; height: 76px; color: #fff; background: var(--lit-bg); box-shadow: var(--lit-sh); }
+.is-main .ak-c-lbl { font-size: 14px; color: var(--ink); }
+.is-main.is-on .ak-c-orb { transform: scale(1.1); }
+.ak-c-ring { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 2px rgba(31,91,224,.45); opacity: 0; pointer-events: none; }
+.is-main.is-on .ak-c-ring { animation: akRingOut 1.4s var(--out) infinite; }
+.is-main.is-on .ak-c-ring.is-2 { animation-delay: .7s; }
+
+/* What shows in each mode */
+.ak-c-talk, .ak-c-cam, .ak-c-field { opacity: 0; visibility: hidden; transform: translateY(14px); pointer-events: none; transition: opacity 220ms ease-out, transform 420ms var(--glide), visibility 0s 420ms; }
+.ak-c-field { transform: translateY(18px) scale(.96); transform-origin: 30% 100%; }
+.ak-c[data-mode="talk"] .ak-c-talk, .ak-c[data-mode="show"] .ak-c-cam, .ak-c[data-mode="type"] .ak-c-field { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition: opacity 260ms ease-out 80ms, transform 460ms var(--glide) 40ms, visibility 0s; }
+.ak-c[data-mode="talk"] .ak-c-head, .ak-c[data-mode="show"] .ak-c-head,
+.ak-c:not([data-mode="home"]):not([data-mode="type"]) .ak-c-pills, .ak-c.has-text .ak-c-pills, .ak-c[data-mode="type"] .ak-c-pill.is-open { opacity: 0; visibility: hidden; transform: translateY(-8px); pointer-events: none; transition: opacity 180ms ease-out, transform 300ms var(--glide), visibility 0s 300ms; }
+.ak-c-sub.is-thinking { font-size: 15px; font-weight: 600; background: linear-gradient(90deg, #57534F 0%, #57534F 40%, #1F5BE0 50%, #57534F 60%, #57534F 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: akShimmer 1.4s linear infinite; }
+.ak-c[data-mode="ask"] .ak-c-acts { opacity: 0; transform: translateY(16px); pointer-events: none; }
+.ak-c[data-mode="ask"] .ak-c-head { transform: translateY(-4px); }
+
+/* The greeting: the bot says hi, then the title, the pills and the actions arrive */
+.ak-c.is-greet .ak-c-title { animation: akRise 560ms var(--out) 1000ms both; }
+.ak-c.is-greet .ak-c-sub { animation: akRise 560ms var(--out) 1120ms both; }
+.ak-c.is-greet .ak-c-pill { animation: akRise 520ms var(--out) calc(1240ms + var(--d) * 70ms) both; }
+.ak-c.is-greet .ak-c-acts { animation: akRise 560ms var(--out) 1420ms both; }
+.ak-c.is-back .ak-c-title, .ak-c.is-back .ak-c-sub { animation: akRise 460ms var(--out) 120ms both; }
+.ak-c.is-back .ak-c-pill { animation: akRise 460ms var(--out) calc(200ms + var(--d) * 60ms) both; }
+.ak-c.is-back .ak-c-acts { animation: akRise 460ms var(--out) 260ms both; }
 
 /* ───── Chat ───── */
 .ak-chat { position: absolute; inset: 0; z-index: 2; }
@@ -272,7 +334,6 @@
 .ak-seg-sm button { height: 40px; font-size: 14px; }
 .ak-seg-4 button { font-size: 13px; padding: 0 2px !important; }
 .ak-quiz { padding: 18px 16px; border-radius: 26px; background: #fff; box-shadow: var(--card); }
-.ak-c-modes .ak-seg-thumb { top: 4px; bottom: 4px; width: calc((100% - 8px) / 3); }
 
 /* Guess / options */
 .ak-opts { display: grid; gap: 10px; }
@@ -513,7 +574,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ak-w { opacity: 1 !important; animation: none !important; }
-  .ak-term-ic, .ak-mn.is-wonder::before, .ak-hold.is-on, .ak-mic.is-on .ak-mic-ring { animation: none !important; }
+  .ak-term-ic, .ak-mn.is-wonder::before, .ak-hold.is-on, .ak-c-ring, .ak-c-focus { animation: none !important; }
+  .ak-c *, .ak-c > * { animation-duration: 1ms !important; animation-delay: 0s !important; }
 }
 .still .ak-q p, .still .ak-rest > * { opacity: 1; transform: none; }
 .still .is-shown .ak-host { transform: scale(.74); }
+
+.still .ak-c *, .still .ak-c > * { animation: none !important; transition: none !important; }

@@ -9,6 +9,7 @@ This repo holds the research, decisions and clickable prototypes made so far.
 | Prototype | Link | Status |
 |---|---|---|
 | **Cortex v4 app (current)**: onboarding builds your course → Learn · Ask · Profile, with variant pickers | https://cortex-app-phi.vercel.app | Current |
+| **App style exploration · Living Matter**: the same app in the warm Cortex brand | https://cortex-app-phi.vercel.app/living/ | Current |
 | **Brand explorations**: 4 names × styles | https://cortex-app-phi.vercel.app/brand/ | Current |
 | Onboarding v3, one flow: trailer → 3 quick questions → pondering orbs → exploration → map → save → Today (PM path) | https://cortex-onboarding-v3.vercel.app | Earlier exploration |
 | Onboarding v2: one-minute work path | https://cortex-onboarding-v2.vercel.app | Earlier exploration |

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex · App style exploration · Living Matter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Figtree:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../core/shell.css">
+  <link rel="stylesheet" href="../onboarding/onboarding.css">
+  <link rel="stylesheet" href="../learn/learn.css">
+  <link rel="stylesheet" href="../ask/ask.css">
+  <link rel="stylesheet" href="../profile/profile.css">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+  <div class="page">
+    <aside class="side">
+      <p class="eyebrow">App style exploration · Living Matter</p>
+      <h2>One app, warm</h2>
+      <p>Onboarding builds your first course, then you land in Learn · Ask · Profile. Jump anywhere below.</p>
+      <nav class="jump" id="jump" aria-label="Steps"></nav>
+      <button class="restart" id="restart">↻ Start from the beginning</button>
+    </aside>
+
+    <main id="phoneHolder">
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone">
+          <div class="island"></div>
+          <div class="screen" id="screen">
+            <div class="statusbar"><span>9:41</span><span aria-hidden="true" style="display:flex;gap:6px;align-items:center">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+              <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="currentColor"/></svg>
+            </span></div>
+
+            <div class="layer" id="tabLayer">
+              <div class="view" id="learnView" hidden></div>
+              <div class="view" id="askView" hidden></div>
+              <div class="view" id="profileView" hidden></div>
+            </div>
+            <nav class="tabbar hide" id="tabbar" aria-label="Tabs"></nav>
+            <div class="layer" id="onboardingLayer" hidden></div>
+            <div class="layer" id="sheetLayer"></div>
+            <div class="layer" id="toastLayer"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="side">
+      <p class="eyebrow">Explore</p>
+      <div id="variants"></div>
+      <a class="lv-chip" href="../index.html"><span class="lv-chip-dot" aria-hidden="true"></span><span>Style: Living Matter · <b>see the original →</b></span></a>
+      <a class="lv-link" href="../brand/index.html?b=1">The Cortex × Living Matter brand →</a>
+    </aside>
+  </div>
+
+  <div id="brainPark" style="position:absolute;left:-9999px;top:0;width:320px;height:320px"><canvas id="brain" aria-label="Cortex character. Touch it."></canvas></div>
+
+  <script src="brain.js"></script>
+  <script src="../icons.js"></script>
+  <script src="theme.js"></script>
+  <script src="../core/bus.js"></script>
+  <script src="../data/heart.js"></script>
+  <script src="../data/courses-catalog.js"></script>
+  <script src="../onboarding/onboarding.js"></script>
+  <script src="../learn/content.js"></script>
+  <script src="../learn/learn.js"></script>
+  <script src="../ask/content.js"></script>
+  <script src="../ask/ask.js"></script>
+  <script src="../profile/profile.js"></script>
+  <script src="../core/shell.js"></script>
+</body>
+</html>
