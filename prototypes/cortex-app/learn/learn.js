@@ -1,7 +1,9 @@
-// Learn tab (module B): the course roadmap, three lesson styles, review stops, and the course-end gift.
+// Learn tab (module B): your learning plan (4 roadmap styles), the plan reveal, lessons, adaptive stops,
+// light sheets after lesson 1, the pace check-in, and the course end with your next course.
 // Content lives in learn/content.js (window.LEARN). Talks to other modules only via Bus, Store and App.
+// Small illustrations are painted (OrbGlyphs 'ii'). Particles appear only in the collectible at the end.
 (function () {
-  const L = window.LEARN || { terms: {}, lessons: {}, review: [], final: [], packs: {}, short: {}, widenShape: {} };
+  const L = window.LEARN || { terms: {}, lessons: {}, review: [], final: [], short: {}, plan: {} };
   const P = new URLSearchParams(location.search);
   const docEl = document.documentElement;
   const still = () => docEl.classList.contains('still');
@@ -11,6 +13,9 @@
   const say = (m) => window.toast && window.toast(m);
   const brain = () => window.Brain || null;
   const S = () => window.Store.get();
+  const gate = (m, o) => (window.App && App.gate ? App.gate(m, o) : Promise.resolve(true));
+  const tabBar = (v) => { if (window.App && App.setTabBar) App.setTabBar(v); };
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
   let uid = 0;
 
   // Timers are grouped so closing a lesson cancels its pending choreography.
@@ -48,27 +53,14 @@
     grid: ['M4 4h7v7H4z', 'M13 4h7v7h-7z', 'M4 13h7v7H4z', 'M13 13h7v7h-7z'],
     nodes: [circ(6, 6, 2.5), circ(18, 8, 2.5), circ(10, 18, 2.5), 'M8.3 7l7.3.8', 'M7 8.3l2.2 7.4', 'M16.4 10l-4.6 6.2'],
     arrow: ['M5 12h14', 'M13 6l6 6-6 6'],
+    mail: ['M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z', 'M3.5 7l8.5 6 8.5-6'],
+    bell: ['M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z', 'M10 20.5a2 2 0 0 0 4 0'],
+    minus: ['M5 12h14'],
+    slow: [circ(12, 12, 9.5), 'M8 12h8'],
   };
   const ic = (n, size = 20, sw = 2) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(IC[n] || IC.sparkle).map((d) => `<path d="${d}"/>`).join('')}</svg>`;
-
-  // Solid colour-gradient art (fillSVG style): gift box, review shuffle, streak flame
-  function giftSVG(size = 48, muted = false) {
-    const id = 'lng' + (++uid);
-    const box = muted ? ['#D9D6DD', '#B3AFB8'] : ['#FF9EC2', '#D6336C'], lid = muted ? ['#E4E1E7', '#C2BEC7'] : ['#FFB8D2', '#E64980'], rib = muted ? ['#CFCBD3', '#A9A5AE'] : ['#FFE066', '#F59F00'];
-    return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true"><defs>
-      <linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${box[0]}"/><stop offset="1" stop-color="${box[1]}"/></linearGradient>
-      <linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lid[0]}"/><stop offset="1" stop-color="${lid[1]}"/></linearGradient>
-      <linearGradient id="${id}r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${rib[0]}"/><stop offset="1" stop-color="${rib[1]}"/></linearGradient></defs>
-      <rect x="8" y="21" width="32" height="21" rx="4.5" fill="url(#${id}b)"/>
-      <rect x="5" y="14" width="38" height="9.5" rx="3.8" fill="url(#${id}l)"/>
-      <rect x="21" y="14" width="6" height="28" fill="url(#${id}r)"/>
-      <path d="M24 14.2c-2.6-5.8-9.6-7.6-10.4-3.4-.6 3.2 5 4.2 10.4 3.4zM24 14.2c2.6-5.8 9.6-7.6 10.4-3.4.6 3.2-5 4.2-10.4 3.4z" fill="url(#${id}r)"/>
-      <rect x="10.5" y="24" width="3.6" height="14" rx="1.8" fill="#fff" opacity=".28"/></svg>`;
-  }
-  function shuffleSVG(size = 28, tone = 'color') {
-    const id = 'lns' + (++uid), c = tone === 'white' ? ['#fff', '#fff'] : tone === 'muted' ? ['#A9A5AE', '#8C8892'] : ['#A78BFA', '#6D4AE0'];
-    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="url(#${id})" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="${id}" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs>${IC.shuffle.map((d) => `<path d="${d}"/>`).join('')}</svg>`;
-  }
+  const APPLE = '<svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.72-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.05 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.32-3.5zM14.2 6.13c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.67-.92 2.66.97.07 1.96-.49 2.56-1.21z"/></svg>';
+  const GOOGLE = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.6 12.23c0-.71-.06-1.4-.18-2.05H12v3.88h5.39a4.6 4.6 0 0 1-2 3.02v2.5h3.23c1.9-1.74 2.98-4.3 2.98-7.35zM12 22c2.7 0 4.96-.9 6.62-2.42l-3.23-2.5c-.9.6-2.04.95-3.39.95-2.6 0-4.81-1.76-5.6-4.12H3.07v2.6A10 10 0 0 0 12 22zM6.4 13.91a6 6 0 0 1 0-3.82v-2.6H3.07a10 10 0 0 0 0 9.02zM12 5.98c1.47 0 2.79.5 3.83 1.5l2.86-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.49l3.33 2.6C7.19 7.74 9.4 5.98 12 5.98z"/></svg>';
   function flameSVG(size = 20) {
     const id = 'lnf' + (++uid);
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC078"/><stop offset="1" stop-color="#E8590C"/></linearGradient></defs>
@@ -76,59 +68,134 @@
       <path d="M12 13.3c1.5 1.3 2.5 2.4 2.5 3.9a2.5 2.5 0 0 1-5 0c0-1.4.9-2.6 2.5-3.9z" fill="#FFF0DC"/></svg>`;
   }
 
-  // Static dot glyph of a particle shape (the character, frozen): tone = palette name | 'white' | 'muted'
-  const gCache = {};
-  function glyph(shape, tone = 'body', n = 110, rk = 1) {
-    const key = shape + '|' + tone + '|' + n + '|' + rk;
-    if (gCache[key]) return gCache[key];
-    const B = brain(); if (!B || !B.sample) return '';
-    let a, b;
-    if (tone === 'white') { a = [255, 255, 255]; b = [255, 255, 255]; }
-    else if (tone === 'muted') { a = [200, 196, 205]; b = [128, 124, 134]; }
-    else if (tone === 'glow') { a = [255, 190, 214]; b = [255, 255, 255]; }
-    else { const p = B.palette(tone); a = p[0]; b = p[1]; }
-    const pts = B.sample(shape, n);
-    const out = `<svg viewBox="-1.15 -1.15 2.3 2.3" aria-hidden="true">${pts.map(([x, y, d]) => {
-      const c = a.map((v, j) => Math.round(v + (b[j] - v) * d)).join(',');
-      return `<circle cx="${x.toFixed(3)}" cy="${y.toFixed(3)}" r="${((0.03 + 0.032 * d) * rk).toFixed(3)}" fill="rgb(${c})" opacity="${(0.42 + 0.58 * d).toFixed(2)}"/>`;
-    }).join('')}</svg>`;
-    gCache[key] = out; return out;
+  // ───────── Painted illustrations (OrbGlyphs 'ii') ─────────
+  const SUBJECTS = ['body', 'mind', 'space', 'tech', 'nature', 'arts', 'society', 'history'];
+  const SUBJ_ALIAS = { biology: 'body', health: 'body', medicine: 'body', fitness: 'body', language: 'society', languages: 'society', business: 'society', money: 'society', finance: 'society', economics: 'society', work: 'society', ai: 'tech', technology: 'tech', computing: 'tech', coding: 'tech', science: 'space', physics: 'space', astronomy: 'space', psychology: 'mind', art: 'arts', photography: 'arts', music: 'arts', design: 'arts', ecology: 'nature', animals: 'nature' };
+  const subjOf = (d) => { const s = String((d && d.subject) || 'body').toLowerCase(); return SUBJECTS.includes(s) ? s : SUBJ_ALIAS[s] || 'mind'; };
+  function paint(id, size, o = {}) {
+    const OG = window.OrbGlyphs;
+    if (!OG) return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" fill="#F3E3CF"/><circle cx="24" cy="24" r="12" fill="#D4502F"/></svg>`;
+    const motif = o.motif && OG.motifs.includes(o.motif) ? o.motif : undefined;
+    return OG.svg(id, 'ii', o.subject || 'body', size, { motif, label: o.label });
   }
+  // The painted drawing for a stop on the plan
+  function artOf(x, d, size) {
+    d = d || courseData(course());
+    const pl = planFor(d), subject = subjOf(d);
+    if (x.kind === 'recap' && x.from) { const src = (d.lessons || []).find((y) => y.id === x.from); if (src) return paint(src.id, size, { subject, motif: glyphKey(src, d), label: src.title }); }
+    const OG = window.OrbGlyphs, hub = OG ? OG.motif(d.id, subject, d.title) : null;
+    const motif = x.glyph || (pl && pl.glyph && pl.glyph[x.id]) || (x.kind === 'review' ? 'forget' : x.kind === 'final' ? (d.glyph || hub) : null);
+    return paint(x.id, size, { subject, motif, label: x.title });
+  }
+  const glyphKey = (x, d) => x.glyph || (planFor(d) && planFor(d).glyph && planFor(d).glyph[x.id]) || null;
+  const artBox = (x, d, size, cls = '') => `<span class="ln-art ${cls}" data-keep-colour>${artOf(x, d, size)}</span>`;
 
   // ───────── Course data ─────────
-  const style = () => S().style || 'connect';
   function course() {
     const s = S(); if (!s.courses || !s.courses.length) return null;
     return s.courses.find((c) => c.id === s.activeCourse) || s.courses[0];
   }
-  const courseData = (c) => (window.COURSES && (COURSES[c.id] || COURSES.heart)) || null;
-  function stops() {
-    const c = course(); if (!c || !window.courseRoadmap) return [];
-    return courseRoadmap(courseData(c), S().goal, S().span);
+  const courseData = (c) => (window.COURSES && c && (COURSES[c.id] || COURSES.heart)) || null;
+  const planFor = (d) => (d && L.plan && L.plan[d.id]) || null;
+  const goalId = () => S().goal || 'how';
+  const dailyText = () => { const v = S().daily || (S().profile && S().profile.daily) || 10; return typeof v === 'number' || /^\d+$/.test(v) ? `${v} min a day` : String(v); };
+  function summaryOf(d) {
+    const pl = planFor(d);
+    if (d.summary) return d.summary;
+    if (pl && pl.summary) return pl.summary[goalId()] || pl.summary.how;
+    const p = S().profile;
+    return p && p.roleText ? `Built for a ${p.roleText.toLowerCase()} who wants to ${goalShortOf(d)}.` : `Built around what you told us: ${goalShortOf(d)}.`;
   }
-  const progress = () => { const c = course(); if (!c) return {}; return c.progress || (c.progress = {}); };
-  function states(list) {
-    const p = progress(); let cur = false;
+  function goalShortOf(d) {
+    const pl = planFor(d), p = S().profile;
+    if (d.goalShort) return d.goalShort;
+    if (pl && pl.goalShort) return pl.goalShort[goalId()] || pl.goalShort.how;
+    if (p && p.goalText) return p.goalText.replace(/\.$/, '').replace(/^./, (m) => m.toLowerCase());
+    return 'learn ' + String(d.topic || d.title || 'this').toLowerCase();
+  }
+  // The base plan: a built (personalised) course is used as it is; the heart demo is cut to goal and span.
+  function baseStops(c) {
+    const d = courseData(c); if (!d) return [];
+    if (d.summary || d.persona || d.built || !d.spans || !window.courseRoadmap) return (d.lessons || []).slice();
+    return courseRoadmap(d, S().goal, S().span);
+  }
+  // What Learn changed for you: added stops, skipped stops, minutes, tags, a note. Kept on the Store course entry.
+  function adapt(c = course()) {
+    if (!c) return { added: [], skip: {}, mins: {}, tags: {}, why: {}, changed: [] };
+    return c.adapt || (c.adapt = { added: [], skip: {}, mins: {}, tags: {}, why: {}, pace: null, note: null, changed: [] });
+  }
+  function stops(c = course()) {
+    if (!c) return [];
+    const a = adapt(c), out = [];
+    baseStops(c).forEach((x) => {
+      if (a.skip[x.id]) return;
+      out.push(x);
+      const chain = (id) => a.added.filter((r) => r.after === id).forEach((r) => { out.push(r); chain(r.id); });
+      chain(x.id);
+    });
+    return out;
+  }
+  const progress = (c = course()) => { if (!c) return {}; return c.progress || (c.progress = {}); };
+  function states(list, c = course()) {
+    const p = progress(c); let cur = false;
     return list.map((st) => { if (p[st.id] === 'done') return 'done'; if (!cur) { cur = true; return 'current'; } return 'locked'; });
   }
+  let muted = false;
+  function saveCourses() { muted = true; window.Store.set({ courses: S().courses }); muted = false; }
+
+  // Lessons: the heart course has rich content; any other course gets a light generic lesson from its plan.
   const content = (st) => L.lessons[st.id] || genericLesson(st);
+  const isHeartLesson = (st) => !!L.lessons[st.id];
   function genericLesson(st) {
-    return { min: 4, answer: st.hook || st.title, blocks: [], extra: [], recap: [st.hook || st.title], quiz: [] };
+    const peers = (courseData(course()).lessons || []).filter((x) => x.kind !== 'review' && x.kind !== 'final' && x.id !== st.id && x.hook);
+    const quiz = st.quiz || (st.hook && peers.length >= 2 ? [autoQ(st, peers)] : []);
+    return { min: st.min || 4, answer: st.answer || st.hook || st.title, blocks: st.points ? [{ type: 'points', eyebrow: 'The key ideas', title: st.title, items: st.points }] : [], extra: [], recap: st.recap || [st.hook || st.title], quiz };
   }
-  function minutes(st) { if (st.kind === 'review') return 2; if (st.kind === 'final') return 3; return content(st).min || 4; }
-  function lessonNo(list, st) { let n = 0; for (const x of list) { if (x.kind === 'lesson') n++; if (x.id === st.id) return n; } return n; }
+  function autoQ(st, peers) {
+    const seed = [...st.id].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+    const others = [peers[seed % peers.length], peers[(seed + 1) % peers.length]].filter((x, i, a) => a.indexOf(x) === i).map((x) => x.hook);
+    const opts = others.slice(0, 2); const at = seed % (opts.length + 1); opts.splice(at, 0, st.hook);
+    return { q: `Which line sums up “${st.title}”?`, options: opts, answer: at, explain: st.hook };
+  }
+  function baseMinutes(st) {
+    if (st.kind === 'recap') return 1;
+    if (st.kind === 'review') return st.min || 2;
+    if (st.kind === 'final') return st.min || 3;
+    return (L.lessons[st.id] && L.lessons[st.id].min) || st.min || 4;
+  }
+  function minutes(st) { const a = adapt(); return a.mins[st.id] != null ? a.mins[st.id] : baseMinutes(st); }
+  function lessonNo(list, st) { let n = 0; for (const x of list) { if (x.kind === 'lesson' || !x.kind) n++; if (x.id === st.id) return n; } return n; }
+  const isLesson = (x) => !x.kind || x.kind === 'lesson';
   function stopMeta(list, st) {
     if (st.kind === 'review') return `Review · ${minutes(st)} min`;
-    if (st.kind === 'final') return 'Earn your gift';
+    if (st.kind === 'final') return `Final challenge · ${minutes(st)} min`;
+    if (st.kind === 'recap') return `Recap · ${minutes(st)} min`;
     return `Lesson ${lessonNo(list, st)} · ${minutes(st)} min`;
   }
-  const stopShape = (st) => st.kind === 'review' ? 'qmark' : st.kind === 'final' ? 'heart' : ((L.lessons[st.id] && L.lessons[st.id].shape) || st.shape || 'heart');
-  const isCourseDone = (list, st) => st.every((x) => x === 'done');
+  const shortOf = (st) => L.short[st.id] || st.title;
+  // Why this stop is in your plan
+  function becauseOf(x, list, d) {
+    const a = adapt(), pl = planFor(d);
+    if (a.why[x.id]) return a.why[x.id];
+    if (x.because) return x.because;
+    if (pl && pl.because && pl.because[x.id]) return pl.because[x.id];
+    const i = list.indexOf(x), prev = list.slice(0, Math.max(0, i)).reverse().find(isLesson);
+    if (x.kind === 'review') return 'Brings back what you have covered before it fades';
+    if (x.kind === 'final') return 'Shows it stuck, and earns your collectible';
+    return prev ? `Builds on “${prev.title}”` : 'Starts from what you already know';
+  }
+  function forYouOf(x, d) {
+    const pl = planFor(d);
+    if (x.forYou) return x.forYou;
+    if (pl && pl.forYou && pl.forYou[x.id]) return pl.forYou[x.id];
+    return `As you go, think about how you would use this to ${goalShortOf(d)}.`;
+  }
+  const tagOf = (x) => (x.added ? 'Added for you' : adapt().tags[x.id] || '');
 
   // ───────── State ─────────
-  let viewEl, root, home, fl, play, stage, bar, foot, cta, tagline, popEl = null, panel, confetti, sheet = null;
-  let PL = null;              // the open player (lesson, review or finale)
-  let shown = false, hooksRan = false;
+  let viewEl, root, home, dock, goBtn, play, stage, bar, cta, cta2, tagline, popEl = null, panel, confetti, sheet = null;
+  let PL = null;              // the open player (lesson, review, recap or finale)
+  let shown = false, hooksRan = false, chOpen = null, revealRan = false, revealAt = 0;
 
   // ───────── Rich text with glowing terms ─────────
   function termBtn(id, txt) {
@@ -137,221 +204,214 @@
   }
   const rich = (s) => esc(s).replace(/\[\[(\w+)(?:\|([^\]]+))?\]\]/g, (m, id, txt) => (L.terms[id] ? termBtn(id, txt || L.terms[id].label) : (txt || id)));
 
-  // ═════════════════════════ HOME ═════════════════════════
-  // Compact top (course switcher, streak, one progress line), then the path is the hero.
-  // The current stop carries its own Start card; a slim floating card above the tab bar
-  // takes over when the current stop scrolls out of view.
+  // ═════════════════════════ HOME: YOUR LEARNING PLAN ═════════════════════════
+  const RM_STYLES = ['stack', 'timeline', 'chapters', 'path'];
+  const rmStyle = () => { const v = S().variants && S().variants.roadmap; return RM_STYLES.includes(v) ? v : 'stack'; };
+  const isReveal = () => !!S().justBuilt;
+
   function renderHome(o = {}) {
     clearT('home');
     const keep = o.keepScroll ? home.scrollTop : null;
     const c = P.has('empty') ? null : course();
-    if (!c) { home.innerHTML = emptyHTML(); setFloat(null); takeVis(home); return; }
-    const list = stops(), st = states(list), s = S();
-    const doneN = st.filter((x) => x === 'done').length, curI = st.indexOf('current'), sty = style();
-    const pct = Math.round(doneN / list.length * 100);
-    const STYLE = { roadmap: ['route', 'Full roadmap'], connect: ['nodes', 'Connect the dots'], quick: ['zap', 'Quick bites'] }[sty];
+    root.classList.toggle('is-reveal', false);
+    if (!c) { home.innerHTML = emptyHTML(); setDock(null); return; }
+    const d = courseData(c), list = stops(c), st = states(list, c), reveal = isReveal(), v = rmStyle();
+    const doneN = st.filter((x) => x === 'done').length, curI = st.indexOf('current'), total = list.length;
+    const ctx = { d, reveal, doneN, curI, changed: o.changed || [], arrive: o.added || null };
+    const a = adapt(c);
+    if (reveal && !revealRan) revealAt = performance.now();
+    root.classList.toggle('is-reveal', reveal && !calm() && performance.now() - revealAt < 400);
+    root.classList.toggle('is-planview', reveal);
+    root.dataset.rm = v;
     home.innerHTML = `
-      <header class="ln-head">
-        <button type="button" class="ln-switch" data-act="switch" aria-haspopup="dialog" aria-label="Switch course. Now: ${esc(c.title)}">
-          <span class="ln-switch-ic">${glyph('heart', 'body', 240, 1.2)}</span><span class="ln-switch-t">${esc(c.title)}</span><span class="ln-switch-car">${ic('caret', 16, 2.6)}</span>
-        </button>
-        <button type="button" class="ln-streak" data-act="streak" aria-label="${s.streak}-day streak">${flameSVG(18)}<b>${s.streak}</b></button>
+      <header class="ln-ph">
+        <div class="ln-ph-top"><p class="ln-ph-eb">Your learning plan</p>${reveal ? '' : `<button type="button" class="ln-streak" data-act="streak" aria-label="${S().streak}-day streak">${flameSVG(18)}<b>${S().streak}</b></button>`}</div>
+        ${reveal ? `<h1 class="ln-ph-t">${esc(c.title || d.title)}</h1>`
+          : `<button type="button" class="ln-ph-t ln-ph-sw" data-act="switch" aria-haspopup="dialog" aria-label="Switch course. Now: ${esc(c.title || d.title)}"><span>${esc(c.title || d.title)}</span><i>${ic('caret', 18, 2.6)}</i></button>`}
+        ${reveal ? `<p class="ln-ph-sum">${esc(summaryOf(d))}</p><p class="ln-ph-meta">${list.length} stops · about ${list.reduce((n, x) => n + minutes(x), 0)} min · ${esc(dailyText())}</p>`
+          : `<div class="ln-ph-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${doneN}" aria-label="${doneN} of ${total} stops done"><p><b>${doneN} of ${total}</b><span aria-hidden="true"> · </span>${esc(goalShortOf(d))}</p><div class="ln-meter"><i style="width:${Math.round(doneN / total * 100)}%"></i></div></div>`}
       </header>
-      <div class="ln-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${doneN}" aria-label="${doneN} of ${list.length} stops done">
-        <p class="ln-prog-t"><b>${doneN} of ${list.length}</b><span aria-hidden="true">·</span>${pct}%</p>
-        <span class="ln-styletag">${ic(STYLE[0], 13, 2.2)}${STYLE[1]}</span>
-        <div class="ln-bar"><i style="width:${pct}%"></i></div>
-      </div>
-      <div class="ln-map ln-map-${sty}" data-map>${sty === 'quick' ? mapQuick(list, st) : sty === 'connect' ? mapConnect(list, st) : mapRoadmap(list, st)}</div>
-      ${sty === 'connect' ? '<p class="ln-mapfoot">Side stops are optional deeper dives. They open as you finish each lesson.</p>' : ''}`;
-    takeVis(home);
-    setFloat(curI >= 0 ? list[curI] : 'complete', list);
-    if (o.justDone) celebrateStop(o.justDone, list, st);
+      ${!reveal && a.note ? `<div class="ln-adnote${o.noteIn ? ' is-in' : ''}" role="status"><span class="ln-adnote-ic">${ic(a.pace === 'hard' ? 'slow' : a.pace === 'easy' ? 'zap' : 'check', 16, 2.4)}</span><p>${esc(a.note)}</p><button type="button" class="ln-adnote-x" data-act="note-x" aria-label="Dismiss">${ic('x', 15, 2.6)}</button></div>` : ''}
+      <div class="ln-map ln-rm-${v}" data-map>${RM[v](list, st, ctx)}</div>`;
+    if (reveal) { tabBar(false); revealRan = true; }
+    const cur = curI >= 0 ? list[curI] : null;
+    setDock(reveal ? 'reveal' : cur ? (doneN ? 'continue' : 'start') : 'complete', cur, list.length);
+    if (o.justDone) celebrateStop(o.justDone, o.added);
     else if (keep != null) home.scrollTop = keep;
-    else settleOn(home.querySelector('[data-cur]') || home.querySelector('.ln-stop.is-final, .ln-pack-final'));
-    syncFloat();
+    else if (reveal) home.scrollTop = 0;
+    else settleOn(home.querySelector('[data-cur]'));
   }
 
   function emptyHTML() {
     return `<div class="ln-empty">
-      <div class="ln-empty-vis"><div class="ln-glow" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="brain" data-pal="cobalt" style="--k:.7"></div></div>
+      <span class="ln-art ln-empty-art" data-keep-colour>${paint('brain', 150, { subject: 'mind', motif: 'brain' })}</span>
       <h1 class="ln-h1">Build your first course</h1>
-      <p class="ln-lead">Tell Cortex what you’re curious about. It turns it into a short course with a clear finish line.</p>
+      <p class="ln-lead">Tell Cortex what you want to learn. It turns it into a short plan with a clear finish line.</p>
       <button type="button" class="btn-lit" data-act="build">Build a course</button></div>`;
   }
 
-  // The Start card attached to the current stop on the roadmap and connect maps
-  function curCard(list, x, side) {
-    const go = x.kind === 'review' ? 'Review' : x.kind === 'final' ? 'Begin' : 'Start';
-    return `<span class="ln-cur ${side}"><b class="ln-cur-t">${esc(x.title)}</b><span class="ln-cur-row"><span class="ln-cur-m">${ic('clock', 14, 2.2)}${minutes(x)} min</span><span class="ln-cur-go">${go}</span></span></span>`;
+  // The sticky CTA: "Start learning" in the reveal and before lesson 1, then "Continue"
+  function setDock(mode, cur, n) {
+    if (!mode) { dock.hidden = true; return; }
+    dock.hidden = false; dock.dataset.mode = mode;
+    dock.style.setProperty('--n', Math.min(n || 6, 8));
+    const label = { reveal: 'Start learning', start: 'Start learning', continue: 'Continue', complete: 'See your next course' }[mode];
+    goBtn.textContent = label;
+    goBtn.setAttribute('aria-label', cur && mode === 'continue' ? `Continue: ${cur.title}` : label);
   }
 
-  // Floating continue card (just above the tab bar)
-  const playSVG = (n = 16) => `<svg width="${n}" height="${n}" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.4-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" fill="currentColor"/></svg>`;
-  function setFloat(x, list) {
-    if (!fl) return;
-    fl.dataset.always = '';
-    if (!x) { fl.innerHTML = ''; fl.dataset.id = ''; fl.classList.remove('is-on'); return; }
-    if (x === 'complete') {
-      const g = courseData(course()).gift;
-      fl.dataset.act = 'widen-open'; fl.dataset.id = ''; fl.dataset.always = '1';
-      fl.setAttribute('aria-label', `Course complete. You earned ${g.title}. See what’s next`);
-      fl.innerHTML = `<span class="ln-fl-ic is-gift">${giftSVG(30)}</span><span class="ln-fl-tx"><b>You earned ${esc(g.title.toLowerCase())}</b><span>Course complete</span></span><span class="ln-fl-go is-txt">Next</span>`;
-      return;
+  // Shared bits for the four styles
+  const tagsHTML = (x, s, ctx) => {
+    const t = [];
+    if (s === 'current' && !ctx.noCurTag) t.push(`<span class="ln-tag is-dark">${ctx.doneN && !ctx.reveal ? 'Up next' : 'Start here'}</span>`);
+    const tg = tagOf(x); if (tg) t.push(`<span class="ln-tag is-for${ctx.changed.includes(x.id) || ctx.arrive === x.id ? ' is-pop' : ''}">${ic(x.added ? 'plus' : 'sparkle', 11, 2.8)}${esc(tg)}</span>`);
+    return t.length ? `<span class="ln-tags">${t.join('')}</span>` : '';
+  };
+  const showWhy = (x, s, ctx) => ctx.reveal || x.added || s === 'current' || !!adapt().tags[x.id];
+  const whyHTML = (x, list, ctx, cls = '') => `<span class="ln-why ${cls}">${esc(becauseOf(x, list, ctx.d))}</span>`;
+  const stateWord = (s) => ({ done: 'Done', current: 'Start here', locked: 'Later' }[s]);
+  const kindCls = (x) => (x.kind === 'review' ? ' is-review' : x.kind === 'final' ? ' is-final' : x.kind === 'recap' ? ' is-recap' : '') + (x.added ? ' is-added' : '');
+  const doneMark = () => `<span class="ln-donemark" aria-hidden="true">${ic('check', 14, 3.2)}</span>`;
+  const rowAttrs = (x, s, i, ctx, list) => `data-act="open" data-id="${esc(x.id)}"${s === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stopMeta(list, x)}. ${stateWord(s)}${tagOf(x) ? '. ' + tagOf(x) : ''}"`;
+  const arriveCls = (x, ctx) => (ctx.arrive === x.id ? ' is-arrive' : '') + (ctx.changed.includes(x.id) ? ' is-changed' : '');
+
+  // Style 1 · Stack (default): full-width cards joined by a thin connector, like a learning plan
+  function rmStack(list, st, ctx) {
+    return `<ol class="ln-sk">${list.map((x, i) => {
+      const s = st[i];
+      return `<li class="ln-sk-i is-${s}${kindCls(x)}${arriveCls(x, ctx)} ln-in" style="--i:${i}">
+        <button type="button" class="ln-sk-c" ${rowAttrs(x, s, i, ctx, list)}>
+          ${artBox(x, ctx.d, 52, 'ln-sk-art')}
+          <span class="ln-sk-tx">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${showWhy(x, s, ctx) ? whyHTML(x, list, ctx) : ''}</span>
+          ${s === 'done' ? doneMark() : ''}
+        </button></li>`;
+    }).join('')}</ol>`;
+  }
+
+  // Style 2 · Timeline: a thin line with numbered dots, a small painted thumbnail, the title and minutes
+  function rmTimeline(list, st, ctx) {
+    return `<ol class="ln-tl">${list.map((x, i) => {
+      const s = st[i];
+      return `<li class="ln-tl-i is-${s}${kindCls(x)}${arriveCls(x, ctx)} ln-in" style="--i:${i}">
+        <button type="button" class="ln-tl-r" ${rowAttrs(x, s, i, ctx, list)}>
+          <span class="ln-tl-dot" aria-hidden="true">${s === 'done' ? ic('check', 13, 3.2) : i + 1}</span>
+          ${artBox(x, ctx.d, 40, 'ln-tl-art')}
+          <span class="ln-tl-tx">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal || x.added ? whyHTML(x, list, ctx) : ''}</span>
+          ${s === 'current' && !ctx.reveal ? `<span class="ln-tl-go" aria-hidden="true">${ic('chev', 16, 2.6)}</span>` : ''}
+        </button></li>`;
+    }).join('')}</ol>`;
+  }
+
+  // Style 3 · Chapters: 3 or 4 named chapters, one painting each. The current chapter is open.
+  function chaptersOf(list, d) {
+    const pl = planFor(d), defs = d.chapters || (pl && pl.chapters);
+    let groups = [];
+    if (defs) {
+      groups = defs.map((g) => ({ name: g.name, items: [] }));
+      let last = 0;
+      list.forEach((x, i) => {
+        let k = defs.findIndex((g) => g.ids.includes(x.id));
+        if (k < 0) k = last; last = k; groups[k].items.push(i);
+      });
+      groups = groups.filter((g) => g.items.length);
+    } else {
+      const fin = list.findIndex((x) => x.kind === 'final'), body = list.map((x, i) => i).filter((i) => i !== fin);
+      const n = body.length >= 9 ? 3 : 2, size = Math.ceil(body.length / n), names = ['The basics', 'Going deeper', 'Putting it to work'];
+      for (let k = 0; k < n; k++) groups.push({ name: names[k], items: body.slice(k * size, (k + 1) * size) });
+      groups = groups.filter((g) => g.items.length);
+      if (fin >= 0) groups.push({ name: 'Finish line', items: [fin] });
     }
-    const kind = x.kind;
-    fl.dataset.act = 'open'; fl.dataset.id = x.id;
-    fl.setAttribute('aria-label', `Continue: ${x.title}. ${minutes(x)} minutes`);
-    const art = kind === 'review' ? shuffleSVG(20, 'white') : kind === 'final' ? giftSVG(28) : `<span class="ln-fl-g">${glyph(stopShape(x), 'white', 240, 1.25)}</span>`;
-    const meta = kind === 'review' ? `Review · ${minutes(x)} min` : kind === 'final' ? `Final challenge · ${minutes(x)} min` : `Lesson ${lessonNo(list, x)} · ${minutes(x)} min`;
-    fl.innerHTML = `<span class="ln-fl-ic${kind === 'final' ? ' is-gift' : ''}">${art}</span><span class="ln-fl-tx"><b>${esc(x.title)}</b><span>${meta}</span></span><span class="ln-fl-go" aria-hidden="true">${playSVG(16)}</span>`;
+    return groups;
   }
-  // Show the floating card only when the current stop is out of view
-  function syncFloat() {
-    if (!fl || !home) return;
-    let on = !!fl.innerHTML && !!fl.dataset.always;
-    const cur = home.querySelector('[data-cur]');
-    if (fl.innerHTML && !on && cur) {
-      const hr = home.getBoundingClientRect(), k = hr.height / home.offsetHeight || 1, r = cur.getBoundingClientRect();
-      const top = (r.top - hr.top) / k, bot = (r.bottom - hr.top) / k;
-      on = bot < 96 || top > home.offsetHeight - 190;
-    }
-    fl.classList.toggle('is-on', on);
-    fl.setAttribute('aria-hidden', on ? 'false' : 'true');
-    fl.tabIndex = on ? 0 : -1;
+  function rmChapters(list, st, ctx) {
+    ctx = Object.assign({}, ctx, { noCurTag: !ctx.reveal });
+    const groups = chaptersOf(list, ctx.d);
+    const curG = groups.findIndex((g) => g.items.some((i) => st[i] === 'current'));
+    return `<ol class="ln-ch">${groups.map((g, k) => {
+      const dn = g.items.filter((i) => st[i] === 'done').length, all = dn === g.items.length, cur = k === curG;
+      const open = ctx.reveal || (chOpen ? chOpen.has(k) : cur);
+      const lead = list[g.items.find((i) => isLesson(list[i])) != null ? g.items.find((i) => isLesson(list[i])) : g.items[0]];
+      const mins = g.items.reduce((n, i) => n + minutes(list[i]), 0), state = all ? 'done' : cur ? 'current' : 'locked';
+      return `<li class="ln-ch-i is-${state}${open ? ' is-open' : ''} ln-in" style="--i:${k * 2}">
+        <button type="button" class="ln-ch-h" data-act="chap" data-ch="${k}" aria-expanded="${open}" ${ctx.reveal ? 'tabindex="-1"' : ''}>
+          ${artBox(lead, ctx.d, 56, 'ln-ch-art')}
+          <span class="ln-ch-tx"><span class="ln-ch-k">Chapter ${k + 1} · ${g.items.length} stop${g.items.length === 1 ? '' : 's'} · ${mins} min</span><b>${esc(g.name)}</b></span>
+          <span class="ln-ch-st">${all ? doneMark() : dn ? `<span class="ln-ch-n">${dn}/${g.items.length}</span>` : ''}${ctx.reveal ? '' : `<i class="ln-ch-car">${ic('caret', 16, 2.6)}</i>`}</span>
+        </button>
+        <div class="ln-ch-body"${open ? '' : ' hidden'}><ol class="ln-ch-l">${g.items.map((i) => {
+          const x = list[i], s = st[i];
+          return `<li class="ln-ch-r is-${s}${kindCls(x)}${arriveCls(x, ctx)}"><button type="button" class="ln-ch-rb" ${rowAttrs(x, s, i, ctx, list)}>
+            <span class="ln-ch-dot" aria-hidden="true">${s === 'done' ? ic('check', 12, 3.4) : ''}</span>
+            <span class="ln-ch-rt">${tagsHTML(x, s, ctx)}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal || x.added ? whyHTML(x, list, ctx) : ''}</span>
+            ${s === 'current' && !ctx.reveal ? '<span class="ln-ch-go">Start</span>' : ''}
+          </button></li>`;
+        }).join('')}</ol></div></li>`;
+    }).join('')}</ol>`;
   }
 
-  // Stop tiles (shared by all three map shapes)
-  function tileHTML(st, state, size = '') {
-    const badge = state === 'done' ? `<span class="ln-badge is-done">${ic('check', 13, 3.2)}</span>` : state === 'locked' ? `<span class="ln-badge is-lock">${ic('lock', 12, 2.4)}</span>` : '';
-    const halo = state === 'current' ? '<span class="ln-halo" aria-hidden="true"></span><span class="ln-halo is-2" aria-hidden="true"></span>' : '';
-    if (st.kind === 'final') return `<span class="ln-tile ln-tile-final is-${state} ${size}">${halo}<span class="ln-gift-art">${giftSVG(size === 'is-sm' ? 30 : 50, false)}</span><span class="ln-twinkle t1"></span><span class="ln-twinkle t2"></span><span class="ln-twinkle t3"></span>${badge}</span>`;
-    if (st.kind === 'review') return `<span class="ln-tile ln-tile-review is-${state} ${size}">${halo}${shuffleSVG(size === 'is-sm' ? 20 : 26, state === 'locked' ? 'muted' : state === 'current' || state === 'done' ? 'white' : 'color')}${badge}</span>`;
-    return `<span class="ln-tile is-${state} ${size}">${halo}<span class="ln-tile-g">${glyph(stopShape(st), state === 'locked' ? 'muted' : 'white', 240, 1.25)}</span>${badge}</span>`;
-  }
-    const stateWord = (s) => ({ done: 'Done', current: 'Start', locked: 'Locked' }[s]);
-
-  // Shape 1 · Full roadmap: one long winding path
-  function mapRoadmap(list, st) {
-    const gap = 116, top = 60, last = list.length - 1;
-    const pos = list.map((x, i) => ({ x: i % 2 ? 258 : 70, y: top + i * gap }));
-    pos[last] = { x: 164, y: top + last * gap + 22 };
-    const H = pos[last].y + (st[last] === 'current' ? 176 : 120);
-    let paths = '', glint = '';
+  // Style 4 · Path: the winding path, quiet, with painted stops
+  function rmPath(list, st, ctx) {
+    const top = 52, last = list.length - 1;
+    // room for each label: a tag line, a long title, the reason in the reveal
+    const need = list.map((x, i) => 104 + (ctx.reveal ? 34 : 0) + ((tagOf(x) || st[i] === 'current') ? 16 : 0) + (x.title.length > 34 ? 14 : 0));
+    let y = top; const pos = list.map((x, i) => { const p = { x: i % 2 ? 254 : 74, y }; y += Math.max(need[i], need[i + 1] || 0); return p; });
+    pos[last] = { x: 164, y: pos[last].y + 18 };
+    const H = pos[last].y + (ctx.reveal ? 150 : 120);
+    let paths = '';
     for (let i = 0; i < last; i++) {
       const a = pos[i], b = pos[i + 1], dy = b.y - a.y;
-      const d = `M${a.x} ${a.y}C${a.x} ${a.y + dy * 0.6} ${b.x} ${b.y - dy * 0.6} ${b.x} ${b.y}`;
-      const lit = st[i] === 'done';
-      paths += `<path class="ln-trk" d="${d}"/>` + (lit ? `<path class="ln-seg-glow" d="${d}"/><path class="ln-seg is-lit" data-seg="${i + 1}" pathLength="1" d="${d}"/>` : `<path class="ln-seg is-dim" d="${d}"/>`);
-      if (lit && st[i + 1] === 'current' && !calm()) glint = `<circle class="ln-glintdot" r="3.2"><animateMotion dur="2.6s" repeatCount="indefinite" path="${d}" keyPoints="0;1" keyTimes="0;1" calcMode="linear"/></circle>`;
+      paths += `<path class="ln-pa-ln${st[i] === 'done' ? ' is-lit' : ''}" d="M${a.x} ${a.y}C${a.x} ${a.y + dy * 0.62} ${b.x} ${b.y - dy * 0.62} ${b.x} ${b.y}"/>`;
     }
-    const svg = `<svg class="ln-map-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true"><defs><linearGradient id="lnLit" x1="0" y1="0" x2="0" y2="${H}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F783AC"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>${paths}${glint}</svg>`;
     const nodes = list.map((x, i) => {
-      const p = pos[i], final = x.kind === 'final', side = final ? 'is-c' : i % 2 ? 'is-l' : 'is-r';
-      const lab = st[i] === 'current' ? curCard(list, x, side) : `<span class="ln-lab ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${stopMeta(list, x)}</span></span>`;
-      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}"${st[i] === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${lab}</button>`;
+      const p = pos[i], s = st[i], side = i === last ? 'is-c' : i % 2 ? 'is-l' : 'is-r';
+      const tag = tagOf(x) ? `<span class="ln-tags"><span class="ln-tag is-for${ctx.arrive === x.id || ctx.changed.includes(x.id) ? ' is-pop' : ''}">${ic(x.added ? 'plus' : 'sparkle', 11, 2.8)}${esc(tagOf(x))}</span></span>` : s === 'current' ? `<span class="ln-tags"><span class="ln-tag is-dark">${ctx.doneN && !ctx.reveal ? 'Up next' : 'Start here'}</span></span>` : '';
+      return `<button type="button" class="ln-pa-s is-${s}${kindCls(x)}${arriveCls(x, ctx)} ln-in" style="left:${p.x}px;top:${p.y}px;--i:${i}" ${rowAttrs(x, s, i, ctx, list)}>
+        <span class="ln-pa-art">${artBox(x, ctx.d, 64)}${s === 'done' ? doneMark() : ''}</span>
+        <span class="ln-pa-lab ${side}">${tag}<b>${esc(x.title)}</b><span class="ln-meta">${stopMeta(list, x)}</span>${ctx.reveal ? whyHTML(x, list, ctx) : ''}</span>
+      </button>`;
     }).join('');
-    return `<div class="ln-map-in" style="height:${H}px">${svg}${nodes}</div>`;
+    return `<div class="ln-pa" style="height:${H}px"><svg class="ln-pa-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true">${paths}</svg>${nodes}</div>`;
   }
+  const RM = { stack: rmStack, timeline: rmTimeline, chapters: rmChapters, path: rmPath };
 
-  // Shape 2 · Connect the dots: a spine with optional side dives
-  function diveState(st, parentState) {
-    const t = content(st).dive; if (!t || !L.terms[t]) return null;
-    if (S().explored.includes('dive:' + t)) return 'explored';
-    return parentState === 'done' ? 'open' : 'locked';
-  }
-  function mapConnect(list, st) {
-    const gap = 136, top = 46, spine = 164, last = list.length - 1;
-    const pos = list.map((x, i) => ({ x: spine, y: top + i * gap + (x.kind === 'final' ? 16 : 0) }));
-    const H = pos[last].y + (st[last] === 'current' ? 176 : 116);
-    let paths = '', dives = '';
-    for (let i = 0; i < last; i++) {
-      const a = pos[i], b = pos[i + 1];
-      const d = `M${a.x} ${a.y}L${b.x} ${b.y}`;
-      const lit = st[i] === 'done';
-      paths += `<path class="ln-trk" d="${d}"/>` + (lit ? `<path class="ln-seg-glow" d="${d}"/><path class="ln-seg is-lit" data-seg="${i + 1}" pathLength="1" d="${d}"/>` : `<path class="ln-seg is-dim" d="${d}"/>`);
-    }
-    list.forEach((x, i) => {
-      if (x.kind !== 'lesson') return;
-      const ds = diveState(x, st[i]); if (!ds) return;
-      const t = content(x).dive, right = i % 2 === 0, dx = right ? 276 : 52, dy = pos[i].y + 30, sx = spine + (right ? 32 : -32);
-      const d = `M${sx} ${pos[i].y}C${(sx + dx) / 2} ${pos[i].y} ${(sx + dx) / 2} ${dy} ${dx} ${dy}`;
-      paths += `<path class="ln-branch is-${ds}" d="${d}"/>`;
-      dives += `<button type="button" class="ln-dive is-${ds}" style="left:${dx}px;top:${dy}px" data-act="dive" data-term="${t}" data-parent="${x.id}" aria-label="Deeper dive: ${esc(L.terms[t].label)}. ${ds === 'locked' ? 'Opens after this lesson' : ds === 'explored' ? 'Explored' : 'Optional'}">
-        <span class="ln-dive-t">${ds === 'explored' ? ic('check', 18, 3) : glyph(L.terms[t].shape || 'heart', ds === 'locked' ? 'muted' : 'body', 240, 1.2)}</span>
-        <span class="ln-dive-l"><b>${esc(cap(L.terms[t].label))}</b><span>${ds === 'locked' ? 'After this lesson' : ds === 'explored' ? 'Explored' : 'Deeper dive'}</span></span></button>`;
-    });
-    const svg = `<svg class="ln-map-svg" width="328" height="${H}" viewBox="0 0 328 ${H}" aria-hidden="true"><defs><linearGradient id="lnLit" x1="0" y1="0" x2="0" y2="${H}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F783AC"/><stop offset="1" stop-color="#D6336C"/></linearGradient></defs>${paths}</svg>`;
-    const nodes = list.map((x, i) => {
-      const p = pos[i], final = x.kind === 'final', side = final ? 'is-c' : i % 2 === 0 ? 'is-l' : 'is-r';
-      const lab = st[i] === 'current' ? curCard(list, x, side) : `<span class="ln-lab ln-lab-c ${side} is-${st[i]}"><b>${esc(x.title)}</b><span>${stopMeta(list, x)}</span></span>`;
-      return `<button type="button" class="ln-stop is-${st[i]}${final ? ' is-final' : ''}${x.kind === 'review' ? ' is-review' : ''}" style="left:${p.x}px;top:${p.y}px" data-act="open" data-id="${x.id}"${st[i] === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(st[i])}">${tileHTML(x, st[i])}${lab}</button>`;
-    }).join('');
-    return `<div class="ln-map-in" style="height:${H}px">${svg}${nodes}${dives}</div>`;
-  }
-  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-  // Shape 3 · Quick bites: short separate packs
-  function mapQuick(list, st) {
-    const chunks = [];
-    list.forEach((x, i) => {
-      if (x.kind !== 'lesson') { chunks.push({ kind: x.kind, items: [i] }); return; }
-      const name = L.packs[x.id] || 'More bites', lastC = chunks[chunks.length - 1];
-      if (lastC && lastC.kind === 'pack' && lastC.name === name && lastC.items.length < 3) lastC.items.push(i);
-      else chunks.push({ kind: 'pack', name, items: [i] });
-    });
-    let packN = 0;
-    return chunks.map((ch, ci) => {
-      const link = ci ? `<div class="ln-pack-link${st[ch.items[0]] !== 'locked' ? ' is-lit' : ''}" aria-hidden="true"><i></i><i></i><i></i></div>` : '';
-      if (ch.kind === 'review' || ch.kind === 'final') {
-        const i = ch.items[0], x = list[i], s = st[i];
-        return `${link}<button type="button" class="ln-pack ln-pack-${ch.kind} is-${s}" data-act="open" data-id="${x.id}"${s === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(s)}">
-          ${tileHTML(x, s)}
-          <span class="ln-pack-tx"><b>${esc(x.title)}</b><span>${esc(x.hook)}</span></span>
-          ${s === 'current' ? '<span class="ln-pill-start">Start</span>' : s === 'done' ? `<span class="ln-state is-done">${ic('check', 16, 3)}</span>` : `<span class="ln-state">${ic('lock', 15, 2.4)}</span>`}
-        </button>`;
-      }
-      packN++;
-      const dn = ch.items.filter((i) => st[i] === 'done').length, mins = ch.items.reduce((a, i) => a + minutes(list[i]), 0);
-      return `${link}<section class="ln-pack${ch.items.some((i) => st[i] === 'current') ? ' is-live' : ''}">
-        <header class="ln-pack-h"><div><p class="ln-pack-k">Pack ${packN} · ${ch.items.length} bite${ch.items.length === 1 ? '' : 's'} · ${mins} min</p><h3 class="ln-pack-n">${esc(ch.name)}</h3></div>
-          <span class="ln-ring" style="--p:${dn / ch.items.length}" aria-label="${dn} of ${ch.items.length} done"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15"/>${dn ? '<circle class="v" cx="18" cy="18" r="15" pathLength="1"/>' : ''}</svg><b>${dn}/${ch.items.length}</b></span></header>
-        <div class="ln-bites">${ch.items.map((i) => {
-          const x = list[i], s = st[i];
-          return `<button type="button" class="ln-bite is-${s}" data-act="open" data-id="${x.id}"${s === 'current' ? ' data-cur' : ''} aria-label="${esc(x.title)}. ${stateWord(s)}">
-            ${tileHTML(x, s, 'is-sm')}
-            <span class="ln-bite-tx"><b>${esc(x.title)}</b><span>Bite ${lessonNo(list, x)} · ${minutes(x)} min</span></span>
-            ${s === 'current' ? '<span class="ln-pill-start">Start</span>' : s === 'done' ? `<span class="ln-state is-done">${ic('check', 16, 3)}</span>` : `<span class="ln-state">${ic('lock', 15, 2.4)}</span>`}
-          </button>`;
-        }).join('')}</div></section>`;
-    }).join('');
-  }
-
-  // After a lesson: the stop fills, the path draws, the next stop unlocks
-  function celebrateStop(id, list, st) {
+  // After a stop: it fills, the next one is current, a new stop slides in if one was added
+  function celebrateStop(id, addedId) {
     const map = home.querySelector('[data-map]'); if (!map) return;
-    const i = list.findIndex((x) => x.id === id); if (i < 0) return;
-    const done = map.querySelector(`[data-id="${id}"]`), next = map.querySelector(`[data-id="${list[i + 1] && list[i + 1].id}"]`);
-    const seg = map.querySelector(`[data-seg="${i + 1}"]`);
-    if (calm()) { scrollToEl(next || done, false); return; }
-    if (done) done.classList.add('is-justdone');
-    if (seg) seg.classList.add('is-draw');
-    if (next && st[i + 1] === 'current') next.classList.add('is-unlock');
-    scrollToEl(next || done, true);
-    after('home', () => { const B = brain(); if (B) B.pulse(); }, 700);
+    const done = map.querySelector(`[data-id="${CSS.escape(id)}"]`), cur = map.querySelector('[data-cur]');
+    const el = (b) => b && (b.closest('li') || b);
+    if (!calm()) { if (done) el(done).classList.add('is-justdone'); if (cur) el(cur).classList.add('is-unlock'); }
+    scrollToEl(cur || done, !calm());
   }
-  // On open: keep the header in view if the current stop already sits comfortably; otherwise bring it to mid-screen
-  function settleOn(el) {
-    if (!el) return;
+  // Keep the header in view when the stop fits above the button; otherwise bring the stop up to sit just above it
+  function scrollTarget(el) {
     const hr = home.getBoundingClientRect(), er = el.getBoundingClientRect(), k = hr.height / home.offsetHeight || 1;
-    const mid = home.scrollTop + (er.top - hr.top + er.height / 2) / k, H = home.offsetHeight;
-    home.scrollTop = mid + 76 <= H - 120 ? 0 : Math.max(0, mid - H * 0.47);
+    const top = home.scrollTop + (er.top - hr.top) / k, bottom = top + er.height / k, H = home.offsetHeight, room = H - (isReveal() ? 150 : 236);
+    return bottom <= room ? 0 : Math.max(0, Math.min(top - 90, bottom - room));
   }
+  function settleOn(el) { home.scrollTop = el ? scrollTarget(el) : 0; }
   function scrollToEl(el, smooth) {
     if (!el) return;
-    const hr = home.getBoundingClientRect(), er = el.getBoundingClientRect(), k = hr.height / home.offsetHeight || 1;
-    const y = home.scrollTop + (er.top - hr.top) / k - 330;
-    home.scrollTo({ top: Math.max(0, y), behavior: smooth ? 'smooth' : 'auto' });
+    home.scrollTo({ top: scrollTarget(el.closest('li') || el), behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  // The big button under the plan
+  async function onGo() {
+    if (goBtn.disabled) return;
+    const c = course(); if (!c) return;
+    const list = stops(c), st = states(list, c), cur = list[st.indexOf('current')];
+    if (isReveal()) {
+      goBtn.disabled = true;
+      const ok = await gate('start');
+      goBtn.disabled = false;
+      if (!ok) return;
+      muted = true; window.Store.set({ justBuilt: false }); muted = false;
+      tabBar(true);
+      renderHome();
+      if (cur) openStop(cur.id);
+      return;
+    }
+    if (!cur) { const fin = list.find((x) => x.kind === 'final'); if (fin) { startQuiz('final', fin, { at: 'next' }); PL.finished = PL.completed = true; } return; }
+    openStop(cur.id);
   }
 
   // ═════════════════════════ COURSE SWITCHER SHEET ═════════════════════════
@@ -360,11 +420,10 @@
     const layer = document.getElementById('sheetLayer'); if (!layer) return;
     const s = S(), plus = window.Store.isPlus(), act = course();
     const rows = s.courses.map((c) => {
-      const list = c.id === act.id ? stops() : [], dn = Object.values(c.progress || {}).filter((v) => v === 'done').length;
-      const on = c.id === act.id;
-      return `<button type="button" class="ln-crow" data-sact="pick" data-id="${c.id}" aria-pressed="${on}">
-        <span class="ln-crow-ic">${glyph((COURSES[c.id] || COURSES.heart).shape || 'heart', on ? 'white' : 'body', 240, 1.2)}</span>
-        <span class="ln-crow-tx"><b>${esc(c.title)}</b><span>${dn} of ${list.length || '–'} done${on ? ' · Current' : ''}</span></span>
+      const d = courseData(c), list = stops(c), dn = list.filter((x) => (c.progress || {})[x.id] === 'done').length, on = c.id === act.id;
+      return `<button type="button" class="ln-crow" data-sact="pick" data-id="${esc(c.id)}" aria-pressed="${on}">
+        <span class="ln-crow-ic" data-keep-colour>${paint(d.id, 50, { subject: subjOf(d), motif: d.glyph, label: d.title })}</span>
+        <span class="ln-crow-tx"><b>${esc(c.title)}</b><span>${dn} of ${list.length} done${on ? ' · Current' : ''}</span></span>
         <span class="ln-crow-chk">${on ? ic('check', 18, 3) : ''}</span></button>`;
     }).join('');
     const wrap = document.createElement('div'); wrap.className = 'ln-sheetwrap';
@@ -375,10 +434,10 @@
         <h2 class="ln-sh-t">Your courses</h2>
         <p class="ln-sh-s">${plus ? 'Plus: as many courses as you like.' : `Free plan · ${s.courses.length} of 3 courses`}</p>
         <div class="ln-sh-list">${rows}</div>
-        <button type="button" class="ln-crow ln-crow-new" data-sact="new"><span class="ln-crow-ic is-new">${ic('plus', 22, 2.6)}</span><span class="ln-crow-tx"><b>New course</b><span>Type any topic. Cortex builds the course.</span></span><span class="ln-crow-chk">${ic('chev', 18, 2.4)}</span></button>
+        <button type="button" class="ln-crow ln-crow-new" data-sact="new"><span class="ln-crow-ic is-new">${ic('plus', 22, 2.6)}</span><span class="ln-crow-tx"><b>New course</b><span>Type any topic. Cortex builds the plan.</span></span><span class="ln-crow-chk">${ic('chev', 18, 2.4)}</span></button>
       </div>`;
     layer.appendChild(wrap); sheet = wrap;
-    requestAnimationFrame(() => wrap.classList.add('is-open')); if (still()) wrap.classList.add('is-open');
+    if (still()) wrap.classList.add('is-open'); else requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('is-open')));
     wrap.addEventListener('click', (e) => {
       const t = e.target.closest('[data-sact]'); if (!t) return;
       const a = t.dataset.sact;
@@ -386,13 +445,14 @@
       if (a === 'pick') { if (t.dataset.id !== act.id) window.Store.set({ activeCourse: t.dataset.id }); closeSheet(); }
       if (a === 'new') { closeSheet(true); newCourse(); }
     });
-    const sh = wrap.querySelector('.ln-sh'), grab = wrap.querySelector('.ln-sh-grab');
+    dragToClose(wrap.querySelector('.ln-sh'), () => closeSheet());
+  }
+  function dragToClose(sh, close) {
     let y0 = null, dy = 0;
-    sh.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; sh.setPointerCapture(e.pointerId); sh.style.transition = 'none'; });
+    sh.addEventListener('pointerdown', (e) => { if (e.target.closest('button, input')) return; y0 = e.clientY; dy = 0; sh.setPointerCapture(e.pointerId); sh.style.transition = 'none'; });
     sh.addEventListener('pointermove', (e) => { if (y0 == null) return; dy = Math.max(0, (e.clientY - y0) / (window.PS || 1)); sh.style.transform = `translateY(${dy}px)`; });
-    const end = () => { if (y0 == null) return; y0 = null; sh.style.transition = ''; if (dy > 80) closeSheet(); else sh.style.transform = ''; };
+    const end = () => { if (y0 == null) return; y0 = null; sh.style.transition = ''; if (dy > 80) close(); else sh.style.transform = ''; };
     sh.addEventListener('pointerup', end); sh.addEventListener('pointercancel', end);
-    grab.style.cursor = 'grab';
   }
   function closeSheet(now) {
     if (!sheet) return; const w = sheet; sheet = null;
@@ -401,45 +461,148 @@
   }
   function newCourse() {
     if (!window.Store.isPlus() && S().courses.length >= 3) { window.App.paywall('courses'); return; }
-    say('Course builder opens here');
+    if (window.App && App.showOnboarding) App.showOnboarding(0); else say('Course builder opens here');
+  }
+
+  // ───────── Light sheets: save progress, reminder, pace check-in ─────────
+  // ask(html, label, onAct) resolves with the value of the [data-sval] tapped, or null when dismissed.
+  function ask(html, label, onAct) {
+    return new Promise((resolve) => {
+      closeSheet(true);
+      const layer = document.getElementById('sheetLayer'); if (!layer) return resolve(null);
+      const wrap = document.createElement('div'); wrap.className = 'ln-sheetwrap ln-light';
+      wrap.innerHTML = `<div class="ln-sh-bd" data-sval=""></div><div class="ln-sh" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="ln-sh-grab" aria-hidden="true"></div>${html}</div>`;
+      layer.appendChild(wrap); sheet = wrap;
+      if (still()) wrap.classList.add('is-open'); else requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('is-open')));
+      let done = false;
+      const finish = (v) => { if (done) return; done = true; if (sheet === wrap) closeSheet(); else wrap.remove(); resolve(v); };
+      wrap._finish = finish;
+      wrap.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-sval], [data-sact]'); if (!t || t.disabled) return;
+        if (t.dataset.sact && onAct) { onAct(t, wrap); return; }
+        if (t.dataset.sval != null) finish(t.dataset.sval || null);
+      });
+      dragToClose(wrap.querySelector('.ln-sh'), () => finish(null));
+      const sh = wrap.querySelector('.ln-sh'); sh.tabIndex = -1; setTimeout(() => sh.focus({ preventScroll: true }), still() ? 0 : 360);
+    });
+  }
+  async function saveSheet() {
+    const v = await ask(`<p class="ln-eyebrow ln-sh-eb">Lesson 1 done</p>
+      <h2 class="ln-sh-t">Save your progress</h2>
+      <p class="ln-sh-s">Keep your plan, your streak and what you earn, on any device.</p>
+      <div class="ln-auth">
+        <button type="button" class="ln-auth-b is-dark" data-sval="Apple">${APPLE}Continue with Apple</button>
+        <button type="button" class="ln-auth-b" data-sval="Google">${GOOGLE}Continue with Google</button>
+        <button type="button" class="ln-auth-b" data-sval="email">${ic('mail', 19, 2)}Continue with email</button>
+      </div>
+      <button type="button" class="ln-sh-later" data-sval="later">Not now</button>`, 'Save your progress');
+    window.Store.set({ savedWith: v || 'later' });
+    return v && v !== 'later' ? (v === 'email' ? 'Saved. Check your inbox to confirm' : `Saved with ${v}`) : '';
+  }
+  const TIMES = [['morning', 'Morning', '8:00 am'], ['lunch', 'Lunch', '12:30 pm'], ['evening', 'Evening', '7:00 pm'], ['custom', 'Pick a time', 'Custom']];
+  async function reminderSheet(saved) {
+    let pick = null, inp = null;
+    const fmt12 = (t) => { const [h, m] = t.split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`; };
+    const v = await ask(`<p class="ln-eyebrow ln-sh-eb">${saved ? `${ic('check', 13, 3)} ${esc(saved)}` : 'One nudge a day'}</p>
+      <h2 class="ln-sh-t">When should we remind you?</h2>
+      <p class="ln-sh-s">A short reminder at the same time each day. ${esc(dailyText())} is all it takes.</p>
+      <div class="ln-times" role="radiogroup" aria-label="Reminder time">${TIMES.map(([id, l, t]) => `<button type="button" role="radio" aria-checked="false" class="ln-time" data-sact="time" data-time="${id}"><b>${l}</b><span>${t}</span></button>`).join('')}</div>
+      <label class="ln-custom" hidden><span>Time</span><input type="time" value="21:00" data-ctime></label>
+      <button type="button" class="btn-lit ln-sh-go" data-sval="set" disabled>Remind me</button>
+      <button type="button" class="ln-sh-later" data-sval="skip">Not now</button>`, 'When should we remind you?', (t, wrap) => {
+      pick = t.dataset.time; inp = wrap.querySelector('[data-ctime]');
+      wrap.querySelectorAll('.ln-time').forEach((b) => b.setAttribute('aria-checked', String(b === t)));
+      const cu = wrap.querySelector('.ln-custom'); cu.hidden = pick !== 'custom';
+      wrap.querySelector('[data-sval="set"]').disabled = false;
+      if (pick === 'custom') wrap.querySelector('[data-ctime]').focus();
+    });
+    if (v !== 'set' || !pick) { if (saved) say(saved); return; }
+    const t = pick === 'custom' ? fmt12((inp && inp.value) || '21:00') : TIMES.find((x) => x[0] === pick)[2];
+    window.Store.set({ reminder: { slot: pick, time: t } });
+    say(saved && saved.startsWith('Saved with') ? `${saved}. Reminder at ${t}` : `We’ll remind you at ${t}`);
+  }
+  async function checkinSheet() {
+    const a = adapt(); a.checkinAsked = true;
+    const v = await ask(`<p class="ln-eyebrow ln-sh-eb">3 lessons in</p>
+      <h2 class="ln-sh-t">How’s the pace?</h2>
+      <p class="ln-sh-s">Tell us and we’ll reshape the rest of your plan.</p>
+      <div class="ln-pace">
+        <button type="button" class="ln-pace-b" data-sval="easy"><span class="ln-pace-ic">${ic('zap', 18, 2.2)}</span><span><b>Too easy</b><span>Speed it up</span></span></button>
+        <button type="button" class="ln-pace-b" data-sval="right"><span class="ln-pace-ic">${ic('check', 18, 2.6)}</span><span><b>Just right</b><span>Keep it as it is</span></span></button>
+        <button type="button" class="ln-pace-b" data-sval="hard"><span class="ln-pace-ic">${ic('slow', 18, 2.2)}</span><span><b>Too hard</b><span>Slow it down</span></span></button>
+      </div>
+      <button type="button" class="ln-sh-later" data-sval="">Ask me later</button>`, 'How is the pace?');
+    if (!v) { a.checkinAsked = false; a.later = true; return; }
+    applyPace(v);
+  }
+  // Reshape what's left: faster drops a stop and trims minutes; slower adds practice and minutes.
+  function applyPace(v) {
+    const c = course(), a = adapt(c), list = stops(c), st = states(list, c);
+    const rest = list.filter((x, i) => st[i] !== 'done' && x.kind !== 'final');
+    const lessons = rest.filter(isLesson), changed = [];
+    a.pace = v; a.checkinAsked = true;
+    const doShape = () => {
+      if (v === 'easy') {
+        const drop = rest.find((x) => x.kind === 'review') || (lessons.length >= 3 ? lessons[lessons.length - 1] : null);
+        if (drop) a.skip[drop.id] = true;
+        lessons.filter((x) => x !== drop).forEach((x) => { a.mins[x.id] = Math.max(2, baseMinutes(x) - 1); a.tags[x.id] = 'Shortened for you'; a.why[x.id] = 'You said the pace felt easy, so this one is a minute shorter'; changed.push(x.id); });
+        const trimmed = lessons.some((x) => x !== drop);
+        a.note = drop ? `Faster pace. We took out “${drop.title}”${trimmed ? ' and trimmed each lesson by a minute' : ''}.` : trimmed ? 'Faster pace. We trimmed each lesson left by a minute.' : 'Faster pace. Your last stops already move fast.';
+      } else if (v === 'hard') {
+        const at = lessons[0];
+        if (at && !a.added.some((r) => r.id === 'practice-pace')) a.added.push({ id: 'practice-pace', kind: 'review', title: 'Extra practice', hook: 'A slower round on what you have covered.', added: true, after: at.id, because: 'You said the pace felt hard, so here is a slower round' });
+        lessons.forEach((x) => { a.mins[x.id] = baseMinutes(x) + 1; a.tags[x.id] = 'One more example'; a.why[x.id] = 'You said the pace felt hard, so this one has an extra worked example'; changed.push(x.id); });
+        a.note = 'Slower pace. We added a practice stop and one more example to each lesson.';
+      } else {
+        a.note = `Keeping your pace. ${rest.length + 1} stops to go.`;
+      }
+      a.changed = changed;
+      saveCourses();
+      say(v === 'easy' ? 'Plan updated for a faster pace' : v === 'hard' ? 'Plan updated for a slower pace' : 'Keeping your pace');
+      renderHome({ keepScroll: true, changed, added: v === 'hard' ? 'practice-pace' : null, noteIn: true });
+      const first = home.querySelector('.is-changed, .is-arrive'); if (first) scrollToEl(first, !calm());
+    };
+    // the stop that goes, goes visibly
+    const dropId = ((rest.find((x) => x.kind === 'review') || (lessons.length >= 3 ? lessons[lessons.length - 1] : null)) || {}).id || '';
+    const gone = v === 'easy' && dropId && home.querySelector(`[data-map] [data-id="${CSS.escape(dropId)}"]`);
+    if (gone && !calm()) { const li = gone.closest('li') || gone; scrollToEl(li, true); setTimeout(() => li.classList.add('is-leave'), 380); setTimeout(doShape, 900); }
+    else doShape();
   }
 
   // ═════════════════════════ PLAYER ═════════════════════════
-  // mode: 'paced' | 'cards' | 'connect' | 'long' (lessons); 'quiz' for review + finale
+  // mode: 'paced' | 'cards' | 'connect' | 'long' (lessons); 'quiz' for review, recap and finale
+  const style = () => S().style || 'connect';
   function lessonMode() {
     const v = S().variants.lesson;
     if (v === '2') return 'cards';
-    if (v === '3') return { quick: 'cards', connect: 'connect', roadmap: 'long' }[style()];
+    if (v === '3') return { quick: 'cards', connect: 'connect', roadmap: 'long' }[style()] || 'paced';
     return 'paced';
   }
-  const PICK = {
-    quick: ['Card stack', 'you like quick bites'],
-    connect: ['Branching', 'you like connecting ideas'],
-    roadmap: ['Longer steps', 'you like a full roadmap'],
-  };
+  const PICK = { quick: ['Card stack', 'you like quick bites'], connect: ['Branching', 'you like connecting ideas'], roadmap: ['Longer steps', 'you like a full roadmap'] };
 
   function openStop(id, o = {}) {
     const list = stops(), st = states(list), i = list.findIndex((x) => x.id === id);
     if (i < 0) return;
     if (st[i] === 'locked' && !o.force) {
-      const el = home.querySelector(`[data-id="${id}"]`);
-      if (el) { el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); }
-      say(list[i].kind === 'final' ? 'Finish every stop to unlock your gift' : 'Finish the stop before this one to unlock it');
+      const el = home.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if (el) { const n = el.closest('li') || el; n.classList.remove('is-nope'); void n.offsetWidth; n.classList.add('is-nope'); }
+      say(list[i].kind === 'final' ? 'Finish every stop to reach the final challenge' : 'Finish the stop before this one first');
       return;
     }
     const stop = list[i];
     if (stop.kind === 'review') startQuiz('review', stop);
-    else if (stop.kind === 'final') { if (st[i] === 'done' && !o.force) startQuiz('final', stop, { at: 'gift' }); else startQuiz('final', stop, o); }
+    else if (stop.kind === 'recap') startQuiz('recap', stop);
+    else if (stop.kind === 'final') { if (st[i] === 'done' && !o.force) { startQuiz('final', stop, { at: 'gift' }); PL.finished = PL.completed = true; } else startQuiz('final', stop, o); }
     else startLesson(stop);
   }
 
   function newPL(stop, kind, mode) {
-    return { stop, kind, mode, steps: [], i: 0, right: 0, total: 0, seen: new Set(), q: {}, qn: 0, gate: true, completed: false, ci: 0, cards: null };
+    return { stop, kind, mode, steps: [], i: 0, right: 0, total: 0, missed: [], seen: new Set(), q: {}, qn: 0, gate: true, completed: false, ci: 0, cards: null };
   }
   function enterPlayer() {
-    clearT('play'); closePop(); closePanel();
+    clearT('play'); closePop(); closePanel(); closeSheet(true);
     play.hidden = false; play.className = 'ln-play';
-    if (window.App && App.setTabBar) App.setTabBar(false);
+    tabBar(false);
     if (calm()) play.classList.add('is-in'); else requestAnimationFrame(() => requestAnimationFrame(() => play.classList.add('is-in')));
   }
 
@@ -464,32 +627,40 @@
     return steps;
   }
 
+  function quizPool(beforeIdx, list) {
+    const before = list.slice(0, beforeIdx).filter(isLesson), pool = [];
+    before.forEach((x) => (content(x).quiz || []).forEach((q) => pool.push(q)));
+    const ids = before.map((x) => x.id);
+    (L.review || []).forEach((q) => { if (q.from && ids.includes(q.from)) pool.push(q); });
+    return pool;
+  }
   function startQuiz(kind, stop, o = {}) {
     PL = newPL(stop, kind, 'quiz');
     enterPlayer(); play.classList.remove('has-tag'); tagline.innerHTML = '';
-    let qs;
+    const list = stops(), idx = list.findIndex((x) => x.id === stop.id);
     if (kind === 'review') {
-      const list = stops(), idx = list.findIndex((x) => x.id === stop.id), before = list.slice(0, idx).filter((x) => x.kind === 'lesson').map((x) => x.id);
-      const pool = [];
-      before.forEach((id) => (L.lessons[id] && L.lessons[id].quiz || []).forEach((q) => pool.push(q)));
-      L.review.forEach((q) => { if (!q.from || before.includes(q.from)) pool.push(q); });
-      qs = shuffle(pool).slice(0, 5);
+      const qs = shuffle(quizPool(idx, list)).slice(0, 5);
       PL.steps = qs.map((q, k) => ({ t: 'quiz', q, k, n: qs.length })).concat([{ t: 'result' }]);
+    } else if (kind === 'recap') {
+      const qs = (stop.missed && stop.missed.length ? stop.missed : (content({ id: stop.from }).quiz || []).slice(0, 1));
+      PL.steps = [{ t: 'recapcard' }].concat(qs.map((q, k) => ({ t: 'quiz', q, k, n: qs.length })), [{ t: 'result' }]);
     } else {
-      qs = L.final.slice(0, 3);
-      PL.steps = qs.map((q, k) => ({ t: 'quiz', q, k, n: qs.length, fin: true })).concat([{ t: 'gift' }, { t: 'graph' }, { t: 'widen' }]);
+      const heart = list.some((x) => isHeartLesson(x)) && courseData(course()).id === 'heart';
+      const qs = heart && L.final.length ? L.final.slice(0, 3) : shuffle(quizPool(idx, list)).slice(0, 3);
+      PL.steps = qs.map((q, k) => ({ t: 'quiz', q, k, n: qs.length, fin: true })).concat([{ t: 'gift' }, { t: 'next' }]);
     }
     const at = o.at ? PL.steps.findIndex((s) => s.t === o.at) : 0;
     showStep(Math.max(0, at), 'none');
   }
   function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 
-  const LEARN_STEPS = { intro: 1, block: 1, quiz: 1, recap: 1 };
+  const LEARN_STEPS = { intro: 1, block: 1, quiz: 1, recap: 1, recapcard: 1 };
   const isGated = (step) => step.t === 'quiz' || (step.t === 'block' && step.b.type === 'guess');
 
   function showStep(i, dir = 'fwd') {
     PL.i = i; closePop();
     const step = PL.steps[i];
+    if (step.t === 'done' || step.t === 'result') completeStop();
     const old = stage.querySelector('.ln-page:not(.is-out)');
     const el = document.createElement('div');
     el.className = 'ln-page ln-page-' + step.t;
@@ -499,60 +670,55 @@
       if (calm() || dir === 'none') old.remove();
       else { el.classList.add('in-' + dir); old.classList.add('is-out', 'out-' + dir); void el.offsetWidth; el.classList.remove('in-' + dir); setTimeout(() => old.remove(), 560); }
     }
-    const dark = step.t === 'gift' || step.t === 'graph';
+    const dark = step.t === 'gift';
     play.classList.toggle('is-dark', dark);
     play.classList.toggle('is-finale', !LEARN_STEPS[step.t]);
     const scr = document.getElementById('screen'); if (scr) scr.classList.toggle('is-dark', dark);
-    takeVis(el);
-    initStep(el, step);
     PL.gate = !isGated(step);
     renderBar();
     renderCTA();
-    if (step.t === 'done' || step.t === 'result') completeStop();
     if (step.t === 'gift') runGift(el);
-    if (step.t === 'graph') runGraph(el);
-    if (step.t === 'done' || step.t === 'result') runDone(el);
-  }
-
-  function stepTitleBits() {
-    const list = stops(), st = PL.stop;
-    return { n: lessonNo(list, st), min: minutes(st) };
   }
 
   function stepHTML(step) {
-    const stop = PL.stop, c = content(stop), shape = stopShape(stop);
+    const stop = PL.stop, c = content(stop), d = courseData(course()), list = stops();
     switch (step.t) {
-      case 'intro': {
-        const b = stepTitleBits();
-        return `<p class="ln-eyebrow">Lesson ${b.n} · ${b.min} min</p>
+      case 'intro':
+        return `<p class="ln-eyebrow">Lesson ${lessonNo(list, stop)} · ${minutes(stop)} min</p>
           <h1 class="ln-h1">${esc(stop.title)}</h1>
-          <div class="ln-hero-vis"><div class="ln-glow" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="${shape}" data-pal="body" style="--k:.64"></div></div>
-          <p class="ln-touch">${ic('hand', 15, 2)} Touch it</p>
+          <div class="ln-hero-art">${artBox(stop, d, 160)}</div>
           <p class="ln-answer">${rich(c.answer)}</p>
+          ${forYouHTML(stop, d)}
           ${PL.mode === 'connect' ? `<p class="ln-hint">${ic('sparkle', 14, 2.4)} Tap a glowing term to branch off to the side.</p>` : ''}`;
-      }
       case 'block': {
         const b = step.b;
-        return `<div class="ln-sechead"><div><p class="ln-eyebrow">${esc(b.eyebrow)}</p><h2 class="ln-h2">${esc(b.title)}</h2></div><div class="ln-mini-vis"><div class="ln-vis" data-vis data-shape="${b.shape || shape}" data-pal="body" style="--k:.34"></div></div></div>
+        return `<div class="ln-sechead"><p class="ln-eyebrow">${esc(b.eyebrow)}</p><h2 class="ln-h2">${esc(b.title)}</h2></div>
           ${b.intro ? `<p class="ln-intro">${rich(b.intro)}</p>` : ''}
           <div class="ln-block" data-type="${b.type}">${BLOCK[b.type] ? BLOCK[b.type](b) : ''}</div>`;
       }
       case 'quiz': {
-        const label = PL.kind === 'review' ? `Review · ${step.k + 1} of ${step.n}` : PL.kind === 'final' ? `Final challenge · ${step.k + 1} of ${step.n}` : `Quick check · ${step.k + 1} of ${step.n}`;
-        return `<div class="ln-sechead"><div><p class="ln-eyebrow">${label}</p><h2 class="ln-h2 ln-qh">${esc(step.q.q)}</h2></div><div class="ln-mini-vis"><div class="ln-vis" data-vis data-shape="qmark" data-pal="cobalt" style="--k:.34"></div></div></div>
-          ${quizHTML(step.q, true)}`;
+        const label = PL.kind === 'review' ? `Review · ${step.k + 1} of ${step.n}` : PL.kind === 'final' ? `Final challenge · ${step.k + 1} of ${step.n}` : PL.kind === 'recap' ? 'One more try' : `Quick check · ${step.k + 1} of ${step.n}`;
+        return `<div class="ln-sechead"><p class="ln-eyebrow">${label}</p><h2 class="ln-h2 ln-qh">${esc(step.q.q)}</h2></div>${quizHTML(step.q, true)}`;
       }
       case 'recap':
-        return `<div class="ln-sechead"><div><p class="ln-eyebrow">Before the checks</p><h2 class="ln-h2">What to keep</h2></div><div class="ln-mini-vis"><div class="ln-vis" data-vis data-shape="${shape}" data-pal="body" style="--k:.34"></div></div></div>
+        return `<div class="ln-sechead"><p class="ln-eyebrow">Before the checks</p><h2 class="ln-h2">What to keep</h2></div>
           <ul class="ln-recap">${(c.recap || []).map((r, k) => `<li style="--d:${k * 90}ms"><span class="ln-recap-ic">${ic('check', 15, 3)}</span><span>${esc(r)}</span></li>`).join('')}</ul>`;
+      case 'recapcard': {
+        const src = list.find((x) => x.id === stop.from) || (d.lessons || []).find((x) => x.id === stop.from) || stop, sc = content(src);
+        return `<p class="ln-eyebrow">Recap · 1 min · Added for you</p>
+          <h1 class="ln-h1">${esc(src.title)}, in three lines</h1>
+          <div class="ln-hero-art is-sm">${artBox(src, d, 112)}</div>
+          <ul class="ln-recap">${(sc.recap || [src.hook]).slice(0, 3).map((r, k) => `<li style="--d:${k * 90}ms"><span class="ln-recap-ic">${ic('check', 15, 3)}</span><span>${esc(r)}</span></li>`).join('')}</ul>
+          <p class="ln-recap-next">${ic('arrow', 15, 2.4)}<span>Then one more try at the check you missed.</span></p>`;
+      }
       case 'done': return doneHTML('lesson');
-      case 'result': return doneHTML('review');
+      case 'result': return doneHTML(PL.kind);
       case 'gift': return giftHTML();
-      case 'graph': return graphHTML();
-      case 'widen': return widenHTML();
+      case 'next': return nextHTML();
     }
     return '';
   }
+  const forYouHTML = (stop, d) => `<aside class="ln-fy"><p class="ln-fy-k">${ic('sparkle', 13, 2.6)}For you</p><p class="ln-fy-t">${esc(forYouOf(stop, d))}</p></aside>`;
 
   // ───────── Quizzes ─────────
   function quizHTML(q, scored) {
@@ -573,10 +739,8 @@
       else o.classList.add('is-dim');
       if (k === i) o.setAttribute('aria-pressed', 'true');
     });
-    box.querySelector('[data-reveal]').innerHTML = `<div class="ln-reveal-card ${right ? 'ok' : 'no'}"><p class="ln-reveal-k"><span class="ln-reveal-badge">${ic(right ? 'check' : 'x', 13, 3.2)}</span>${right ? 'That’s right' : 'Not quite'}</p><p class="ln-body">${right || q.explain.toLowerCase().includes(q.options[q.answer].toLowerCase()) ? '' : `Right answer: <b>${esc(q.options[q.answer])}</b>. `}${rich(q.explain)}</p></div>`;
-    if (box.dataset.scored === '1') { PL.total++; if (right) PL.right++; }
-    const B = brain();
-    if (B) { B.pulse(); const v = box.closest('.ln-page, .ln-card'); const vis = v && v.querySelector('[data-vis]'); if (vis && vis.dataset.shape === 'qmark' && right) B.setShape(PL.kind === 'lesson' ? stopShape(PL.stop) : 'heart', 'body', 900); }
+    box.querySelector('[data-reveal]').innerHTML = `<div class="ln-reveal-card ${right ? 'ok' : 'no'}"><p class="ln-reveal-k"><span class="ln-reveal-badge">${ic(right ? 'check' : 'x', 13, 3.2)}</span>${right ? 'That’s right' : 'Not quite'}</p><p class="ln-body">${right || String(q.explain).toLowerCase().includes(String(q.options[q.answer]).toLowerCase()) ? '' : `Right answer: <b>${esc(q.options[q.answer])}</b>. `}${rich(q.explain)}</p></div>`;
+    if (box.dataset.scored === '1') { PL.total++; if (right) PL.right++; else if (!PL.missed.includes(q)) PL.missed.push(q); }
     PL.gate = true; renderCTA(true);
     const page = box.closest('.ln-card') || box.closest('.ln-page');
     if (page) setTimeout(() => { const r = box.querySelector('.ln-reveal-card'); if (r) revealInto(page, r, page.classList.contains('ln-card') ? 16 : 130); }, still() ? 0 : 120);
@@ -635,7 +799,6 @@
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   const roomCard = (s) => `<p class="ln-roomcard-k">${esc(s.tag)}</p><h3 class="ln-h3">${esc(s.name)}</h3><p class="ln-body">${rich(s.text)}</p>`;
 
-  function initStep(el, step) { /* blocks start in their first state; nothing to do yet */ }
   function currentBlock(t) { const step = PL.steps[PL.i]; return step && step.b && step.b.type === t ? step.b : null; }
   function setSeg(sec, act, i) {
     const s = sec.querySelector(`[data-act="${act}"]`).closest('.ln-seg');
@@ -648,7 +811,6 @@
     const o = b.options[i];
     countTo(sec.querySelector('[data-n="beats"]'), o.beats); countTo(sec.querySelector('[data-n="litres"]'), o.litres);
     const n = sec.querySelector('[data-note]'); n.innerHTML = rich(o.note); pop(n);
-    const B = brain(); if (B) B.pulse();
   }
   function countTo(el, to) {
     const from = +(el.dataset.v || el.textContent.replace(/,/g, '')) || 0; el.dataset.v = to;
@@ -671,7 +833,6 @@
     const card = sec.querySelector('[data-roomcard]'); card.innerHTML = roomCard(s); pop(card);
     sec.querySelectorAll('.ln-roomdots i').forEach((d, k) => d.classList.toggle('is-on', k === i));
     const nx = sec.querySelector('[data-act="room-next"]'); nx.innerHTML = i === b.steps.length - 1 ? `Start again ${ic('shuffle', 15, 2.4)}` : `Next step ${ic('arrow', 16, 2.4)}`;
-    const B = brain(); if (B) B.pulse();
   }
   function setStp(sec, i) {
     const b = currentBlock('steps'); if (!b) return;
@@ -680,17 +841,16 @@
     sec.querySelectorAll('.ln-step').forEach((x, k) => { x.setAttribute('aria-selected', k === i); x.classList.toggle('is-past', k < i); });
     const card = sec.querySelector('[data-stepcard]'); card.innerHTML = `<p class="ln-stepcard-k">Step ${i + 1} of ${b.steps.length} · ${esc(b.steps[i].name)}</p><p class="ln-stepcard-t">${rich(b.steps[i].text)}</p>`; pop(card);
     const nx = sec.querySelector('[data-act="stp-next"]'); nx.innerHTML = i === b.steps.length - 1 ? `Start again ${ic('shuffle', 15, 2.4)}` : `Next ${ic('arrow', 16, 2.4)}`;
-    const B = brain(); if (B) B.pulse();
   }
   const pop = (el) => { el.classList.remove('is-pop'); void el.offsetWidth; el.classList.add('is-pop'); };
 
   // ───────── Card stack ─────────
   function autoCards(c, stop) {
-    const out = [{ idea: c.answer, shape: stopShape(stop) }];
+    const out = [{ idea: c.answer, first: true }];
     (c.blocks || []).forEach((b) => {
-      if (b.type === 'points') b.items.slice(0, 3).forEach((p) => out.push({ idea: `${p[1]}: ${p[2]}`, shape: b.shape }));
-      else if (b.type === 'steps') b.steps.forEach((s) => out.push({ idea: s.text, shape: b.shape, k: s.name }));
-      else if (b.type === 'compare') b.verdict.forEach((v) => out.push({ idea: v, shape: b.shape }));
+      if (b.type === 'points') b.items.slice(0, 3).forEach((p) => out.push({ idea: `${p[1]}: ${p[2]}` }));
+      else if (b.type === 'steps') b.steps.forEach((s) => out.push({ idea: s.text, k: s.name }));
+      else if (b.type === 'compare') b.verdict.forEach((v) => out.push({ idea: v }));
     });
     const ideas = out.slice(0, 5), q = c.quiz || [];
     const res = [];
@@ -699,22 +859,22 @@
     return res;
   }
   function buildCards() {
-    const c = content(PL.stop);
+    const c = content(PL.stop), d = courseData(course());
     const raw = c.cards || autoCards(c, PL.stop);
     PL.cards = raw.map((x) => (x.quiz != null ? Object.assign({ isQ: true }, c.quiz[x.quiz]) : x.q ? Object.assign({ isQ: true }, x) : x));
     PL.ci = 0; PL.mode = 'cards';
-    const ideas = PL.cards.filter((x) => !x.isQ).length; let ideaN = 0, qN = 0;
+    const ideas = PL.cards.filter((x) => !x.isQ).length; let ideaN = 0;
     stage.innerHTML = `<div class="ln-page ln-page-cards"><div class="ln-stack" data-stack>${PL.cards.map((cd, k) => {
-      if (cd.isQ) { qN++; return `<article class="ln-card is-q" data-k="${k}"><div class="ln-card-head"><p class="ln-eyebrow">Quick check</p><div class="ln-card-mini"><div class="ln-vis" data-vis data-shape="qmark" data-pal="cobalt" style="--k:.25"></div></div></div><h3 class="ln-card-q">${esc(cd.q)}</h3>${quizHTML(cd, true)}</article>`; }
+      if (cd.isQ) return `<article class="ln-card is-q" data-k="${k}"><div class="ln-card-head"><p class="ln-eyebrow">Quick check</p></div><h3 class="ln-card-q">${esc(cd.q)}</h3>${quizHTML(cd, true)}</article>`;
       ideaN++;
-      return `<article class="ln-card" data-k="${k}"><div class="ln-card-vis"><div class="ln-glow" aria-hidden="true"></div><span class="ln-card-g">${glyph(cd.shape || stopShape(PL.stop), 'body', 480, 0.8)}</span><div class="ln-vis" data-vis data-shape="${cd.shape || stopShape(PL.stop)}" data-pal="body" style="--k:.7"></div></div>
-        <p class="ln-card-k">${k === 0 ? esc(PL.stop.title) : `Idea ${ideaN} of ${ideas}`}</p><p class="ln-card-idea">${rich(cd.idea)}</p></article>`;
+      return `<article class="ln-card" data-k="${k}"><div class="ln-card-vis">${artBox(PL.stop, d, k === 0 ? 150 : 120)}</div>
+        <p class="ln-card-k">${k === 0 ? esc(PL.stop.title) : `Idea ${ideaN} of ${ideas}`}</p><p class="ln-card-idea">${rich(cd.idea)}</p>${k === 0 ? `<p class="ln-card-fy"><b>For you</b> ${esc(forYouOf(PL.stop, d))}</p>` : ''}</article>`;
     }).join('')}</div><p class="ln-swipe">${ic('hand', 15, 2)} Swipe the card, or tap Next</p></div>`;
-    layoutStack(true);
+    layoutStack();
     bindSwipe(stage.querySelector('[data-stack]'));
     renderBar(); renderCTA();
   }
-  function layoutStack(first) {
+  function layoutStack() {
     const cards = stage.querySelectorAll('.ln-card');
     cards.forEach((el, k) => {
       const d = k - PL.ci; el.classList.toggle('is-top', d === 0); el.classList.toggle('is-gone', d < 0);
@@ -724,11 +884,7 @@
       else { el.style.transform = `translateY(${Math.min(d, 2) * 14}px) scale(${1 - Math.min(d, 2) * 0.05})`; el.style.opacity = d > 2 ? 0 : 1; }
     });
     const top = cards[PL.ci];
-    if (top) {
-      const vis = top.querySelector('[data-vis]');
-      const B = brain(); if (B && vis) { B.moveTo(vis); B.setShape(vis.dataset.shape, vis.dataset.pal, first ? 1200 : 900); }
-      PL.gate = !top.classList.contains('is-q') || !!top.querySelector('.is-answered');
-    }
+    if (top) PL.gate = !top.classList.contains('is-q') || !!top.querySelector('.is-answered');
   }
   function advanceCard(dir) {
     if (!PL || !PL.gate) { nudgeCTA(); return; }
@@ -772,7 +928,7 @@
     bar.querySelector('.ln-psegs').setAttribute('aria-label', `Step ${Math.min(at + 1, n)} of ${n}`);
   }
   function renderCTA(glow) {
-    let label = 'Continue', carved = false, enabled = PL.gate;
+    let label = 'Continue', enabled = PL.gate, second = '';
     if (PL.mode === 'cards') {
       const top = PL.cards[PL.ci];
       label = PL.ci === PL.cards.length - 1 ? 'Finish lesson' : 'Next';
@@ -780,167 +936,246 @@
     } else {
       const step = PL.steps[PL.i], nextStep = PL.steps[PL.i + 1];
       if (isGated(step) && !PL.gate) label = 'Pick an answer';
-      else if (step.t === 'done' || step.t === 'result') label = 'Back to your course';
-      else if (step.t === 'gift') { label = 'See your graph grow'; enabled = !!PL.giftReady; }
-      else if (step.t === 'graph') label = 'See what’s next';
-      else if (step.t === 'widen') { label = 'Back to your course'; carved = true; }
+      else if (step.t === 'done' || step.t === 'result') label = 'Back to your plan';
+      else if (step.t === 'gift') { label = 'See your next course'; enabled = !!PL.giftReady; }
+      else if (step.t === 'next') { label = 'Start your next course'; second = 'Back to my plan'; enabled = !PL.going; }
       else if (nextStep && nextStep.t === 'done') label = 'Finish lesson';
-      else if (nextStep && nextStep.t === 'result') label = 'Finish the review';
+      else if (nextStep && nextStep.t === 'result') label = PL.kind === 'recap' ? 'Finish the recap' : 'Finish the review';
       else if (nextStep && nextStep.t === 'gift') label = 'Finish the course';
     }
-    cta.className = (carved ? 'btn-carved' : 'btn-lit') + ' ln-cta' + (glow && enabled ? ' is-ready' : '');
+    cta.className = 'btn-lit ln-cta' + (glow && enabled ? ' is-ready' : '');
     cta.disabled = !enabled; cta.textContent = label;
+    cta2.hidden = !second; cta2.textContent = second;
+    play.classList.toggle('has-cta2', !!second);
   }
   function nudgeCTA() { cta.classList.remove('is-nudge'); void cta.offsetWidth; cta.classList.add('is-nudge'); }
-  function onCTA() {
+  async function onCTA() {
     if (!PL || cta.disabled) return;
     if (PL.mode === 'cards') return advanceCard(-1);
     const step = PL.steps[PL.i];
-    if (step.t === 'done' || step.t === 'result' || step.t === 'widen') return closePlayer();
+    if (step.t === 'done' || step.t === 'result') {
+      if (PL.leaving) return; PL.leaving = true; cta.disabled = true;
+      const me = PL;
+      if (me.kind === 'lesson') await gate('lesson-done');   // the soft-paywall hook: Learn just waits
+      if (PL === me) closePlayer();
+      return;
+    }
+    if (step.t === 'next') return startNext();
     if (PL.i < PL.steps.length - 1) showStep(PL.i + 1, 'fwd');
   }
 
-  // ───────── Completion ─────────
+  // ───────── Completion + adapting to the checks ─────────
   function markDone(id) {
     const c = course(); if (!c) return;
     c.progress = c.progress || {}; c.progress[id] = 'done';
-    window.Store.set({ courses: S().courses });
+    saveCourses();
   }
   function completeStop() {
     if (PL.completed) return; PL.completed = true;
-    const stop = PL.stop, c = course();
+    const stop = PL.stop, c = course(), d = courseData(c);
+    PL.adapt = adaptToChecks(stop);
     markDone(stop.id);
     window.Bus.emit('lesson:done', { courseId: c.id, lessonId: stop.id });
-    if (stop.kind === 'lesson') {
+    if (isLesson(stop)) {
       const ex = S().explored;
       if (!ex.includes(stop.id)) window.Store.set({ explored: ex.concat([stop.id]) });
-      window.Bus.emit('explored', { id: stop.id, label: stop.title, subject: 'Body', shape: stopShape(stop), palette: 'body', from: 'learn' });
+      window.Bus.emit('explored', { id: stop.id, label: stop.title, subject: d.subject || 'Body', shape: d.shape || 'heart', palette: d.palette || 'body', from: 'learn' });
     }
     PL.justDone = stop.id;
   }
+  // Missed a check: a 1-minute recap is added after this lesson. Aced them: the next stop gets shorter.
+  function adaptToChecks(stop) {
+    if (!isLesson(stop) || !PL.total) return null;
+    const a = adapt(), list = stops(), i = list.findIndex((x) => x.id === stop.id);
+    if (PL.right < PL.total) {
+      const id = 'recap-' + stop.id;
+      if (!a.added.some((r) => r.id === id)) a.added.push({ id, kind: 'recap', title: `Recap of lesson ${lessonNo(list, stop)}`, hook: 'The three things to keep, and one more try.', added: true, after: stop.id, from: stop.id, missed: PL.missed.slice(), because: `You missed a check in “${stop.title}”, so here is a 1 minute recap` });
+      return { kind: 'added', id, missed: PL.total - PL.right };
+    }
+    const nx = list.slice(i + 1).find((x) => x.kind !== 'final' && !x.added);
+    if (nx && !a.tags[nx.id]) {
+      a.mins[nx.id] = Math.max(isLesson(nx) ? 2 : 1, baseMinutes(nx) - (isLesson(nx) ? 2 : 1));
+      a.tags[nx.id] = 'Shortened for you';
+      a.why[nx.id] = `You got every check right in “${stop.title}”, so this one skips the basics`;
+      return { kind: 'short', id: nx.id, title: nx.title };
+    }
+    return { kind: 'aced' };
+  }
   function finishCourse() {
     if (PL.finished) return; PL.finished = true;
-    const stop = PL.stop, c = course(), d = courseData(c), g = d.gift;
+    const stop = PL.stop, c = course(), g = giftOf();
     markDone(stop.id); PL.justDone = stop.id;
     window.Bus.emit('lesson:done', { courseId: c.id, lessonId: stop.id });
     const col = S().collectibles || [];
     if (!col.some((x) => x.id === g.id)) window.Store.set({ collectibles: col.concat([{ id: g.id, title: g.title, shape: g.shape, palette: g.palette }]) });
     window.Bus.emit('course:finished', { courseId: c.id, gift: g });
   }
+  function giftOf() {
+    const d = courseData(course());
+    return d.gift || { id: d.id + '-gift', title: `The ${String(d.title).toLowerCase()} collectible`, sub: 'A one-of-a-kind collectible, made from your course.', shape: d.shape || 'heart', palette: d.palette || 'body' };
+  }
 
   function doneHTML(kind) {
     const list = stops(), st = states(list).map((s, i) => (list[i].id === PL.stop.id ? 'done' : s));
-    const dn = st.filter((x) => x === 'done').length, nx = list[st.indexOf('current')] || list.find((x, i) => st[i] !== 'done');
-    const stats = kind === 'review'
-      ? [[PL.total ? `${PL.right}/${PL.total}` : '–', 'right'], [`${dn} of ${list.length}`, 'course done']]
-      : [[PL.total ? `${PL.right}/${PL.total}` : '–', 'checks right'], [`${PL.seen.size}`, `term${PL.seen.size === 1 ? '' : 's'} tapped`], [`${dn} of ${list.length}`, 'course done']];
-    const title = kind === 'review' ? (PL.right >= PL.total - 1 ? 'Review done. That stuck.' : 'Review done') : 'Lesson done';
+    const dn = st.filter((x) => x === 'done').length, nx = list[st.indexOf('current')];
+    const d = courseData(course());
+    const stats = [[PL.total ? `${PL.right}/${PL.total}` : '–', kind === 'lesson' ? 'checks right' : 'right'], [`${dn} of ${list.length}`, 'plan done']];
+    const title = kind === 'review' ? (PL.right >= PL.total - 1 ? 'Review done. That stuck.' : 'Review done') : kind === 'recap' ? 'Recap done' : 'Lesson done';
+    const ad = PL.adapt;
+    const adLine = !ad ? '' : ad.kind === 'added'
+      ? `<p class="ln-done-ad">${ic('plus', 15, 2.6)}<span>You missed ${ad.missed === 1 ? 'a check' : ad.missed + ' checks'}, so we added a <b>1 minute recap</b> to your plan, right after this lesson.</span></p>`
+      : ad.kind === 'short' ? `<p class="ln-done-ad">${ic('zap', 15, 2.4)}<span>Every check right, so <b>${esc(ad.title)}</b> is now shorter.</span></p>` : '';
     return `<div class="ln-done">
-      <div class="ln-done-vis"><span class="ln-ring-pulse" aria-hidden="true"></span><span class="ln-ring-pulse is-2" aria-hidden="true"></span><div class="ln-glow" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="${kind === 'review' ? 'heart' : stopShape(PL.stop)}" data-pal="body" style="--k:.7"></div></div>
+      <div class="ln-done-art">${artBox(PL.stop.kind === 'recap' ? PL.stop : PL.stop, d, 120)}<span class="ln-done-badge">${ic('check', 20, 3.2)}</span></div>
       <p class="ln-eyebrow">${esc(PL.stop.title)}</p>
       <h1 class="ln-h1 ln-done-t">${title}</h1>
       <div class="ln-done-stats">${stats.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('')}</div>
-      ${nx && nx.id !== PL.stop.id ? `<p class="ln-done-next">${ic('arrow', 15, 2.4)}<span>Next on your path: <b>${esc(nx.title)}</b></span></p>` : ''}
+      ${adLine}
+      ${nx && nx.id !== PL.stop.id ? `<p class="ln-done-next">${ic('arrow', 15, 2.4)}<span>Next in your plan: <b>${esc(nx.title)}</b></span></p>` : ''}
     </div>`;
   }
-  function runDone(el) {
-    const B = brain(); if (!B) return;
-    B.pulse(); after('play', () => B.pulse(), 520); after('play', () => B.pulse(), 1040);
-    burst(184, 300, 90, false);
-  }
 
-  // ───────── The finale: gift, graph, widen ─────────
+  // ───────── The finish: the collectible (particles live here), then your next course ─────────
   function giftHTML() {
-    const g = courseData(course()).gift;
+    const g = giftOf();
     return `<div class="ln-gift">
-      <div class="ln-gift-stage"><div class="ln-gift-halo" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="scatter" data-pal="body" style="--k:.92"></div><div class="ln-gift-glint" aria-hidden="true"></div>
+      <div class="ln-gift-stage"><div class="ln-gift-halo" aria-hidden="true"></div><div class="ln-vis" data-vis data-shape="scatter" data-pal="${esc(g.palette || 'body')}" style="--k:.92"></div><div class="ln-gift-glint" aria-hidden="true"></div>
         <span class="ln-spark s1" aria-hidden="true"></span><span class="ln-spark s2" aria-hidden="true"></span><span class="ln-spark s3" aria-hidden="true"></span><span class="ln-spark s4" aria-hidden="true"></span></div>
       <div class="ln-gift-tx">
         <p class="ln-eyebrow is-light">Course complete</p>
         <h1 class="ln-h1">${esc(g.title)}</h1>
-        <p class="ln-gift-sub">${esc(g.sub)}</p>
+        <p class="ln-gift-sub">${esc(g.sub || 'A one-of-a-kind collectible, made from your course.')}</p>
         <div class="ln-gift-row"><span class="ln-added">${ic('check', 15, 3)} Added to your Profile</span><button type="button" class="ln-share" data-act="share">${ic('share', 15, 2.2)} Share</button></div>
       </div></div>`;
   }
   function runGift(el) {
     finishCourse();
     PL.giftReady = false; renderCTA();
-    const B = brain(); el.classList.remove('is-revealed');
-    if (B) { B.setSpin(false); B.setShape('scatter', 'body', 10); }
-    after('play', () => { if (B) B.setShape('heart', 'body', 2200); }, 350);
-    after('play', () => { el.classList.add('is-formed'); if (B) { B.setSpin(true); B.pulse(); } burst(184, 290, 170, true); }, 2300);
-    after('play', () => { burst(184, 290, 90, true); if (B) B.pulse(); }, 2900);
+    const B = brain(), g = giftOf(), vis = el.querySelector('[data-vis]');
+    const shape = B && B.has && B.has(g.shape) ? g.shape : 'heart';
+    el.classList.remove('is-revealed');
+    if (B && vis) { B.moveTo(vis); B.setMode('idle'); B.setSpin(false); B.setShape('scatter', g.palette || 'body', 10); }
+    after('play', () => { if (B) B.setShape(shape, g.palette || 'body', 2200); }, 350);
+    after('play', () => { el.classList.add('is-formed'); if (B) { B.setSpin(true); B.pulse(); } burst(184, 290, 140, true); }, 2300);
     after('play', () => { el.classList.add('is-revealed'); PL.giftReady = true; renderCTA(true); }, 2700);
-    if (still()) { el.classList.add('is-formed', 'is-revealed'); }
-  }
-  function graphHTML() {
-    const lessons = stops().filter((x) => x.kind === 'lesson');
-    const cx = 164, cy = 168, R = 112, n = lessons.length;
-    const nodes = lessons.map((x, k) => { const a = -Math.PI / 2 + k * 2 * Math.PI / n; return { a, x: cx + R * Math.cos(a), y: cy + R * 0.86 * Math.sin(a), label: L.short[x.id] || x.title }; });
-    let stars = ''; for (let k = 0; k < 34; k++) { const sx = (Math.sin(k * 12.9898) * 43758.5453 % 1 + 1) % 1, sy = (Math.sin(k * 78.233) * 12543.23 % 1 + 1) % 1; stars += `<circle class="ln-star" cx="${(sx * 328).toFixed(1)}" cy="${(sy * 340).toFixed(1)}" r="${(0.8 + (k % 3) * 0.5).toFixed(1)}" style="--d:${(k % 7) * 0.4}s"/>`; }
-    const ghosts = [{ x: 34, y: 318, l: 'Lungs' }, { x: 294, y: 318, l: 'Blood' }];
-    let lines = '', ring = '', dots = '', labs = '';
-    nodes.forEach((p, k) => {
-      const q = nodes[(k + 1) % n];
-      lines += `<path class="ln-gl" pathLength="1" d="M${cx} ${cy}L${p.x.toFixed(1)} ${p.y.toFixed(1)}" style="--d:${300 + k * 140}ms"/>`;
-      ring += `<path class="ln-gl is-ring" pathLength="1" d="M${p.x.toFixed(1)} ${p.y.toFixed(1)}L${q.x.toFixed(1)} ${q.y.toFixed(1)}" style="--d:${900 + k * 110}ms"/>`;
-      dots += `<g class="ln-gn" style="--d:${420 + k * 140}ms;transform-origin:${p.x.toFixed(1)}px ${p.y.toFixed(1)}px"><circle class="ln-gn-h" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5.5"/></g>`;
-      const ca = Math.cos(p.a), anchor = ca > 0.3 ? 'start' : ca < -0.3 ? 'end' : 'middle';
-      const lx = p.x + 13 * ca, ly = p.y + 13 * Math.sin(p.a) * 0.86 + (anchor === 'middle' ? (Math.sin(p.a) > 0 ? 12 : -4) : 4);
-      labs += `<text class="ln-gt" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" style="--d:${520 + k * 140}ms">${esc(p.label)}</text>`;
-    });
-    const gh = ghosts.map((g, k) => `<path class="ln-gl is-ghost" d="M${cx} ${cy}L${g.x} ${g.y}" style="--d:${1700 + k * 160}ms"/><g class="ln-gn is-ghost" style="--d:${1800 + k * 160}ms;transform-origin:${g.x}px ${g.y}px"><circle cx="${g.x}" cy="${g.y}" r="9"/></g><text class="ln-gt is-ghost" x="${g.x}" y="${g.y + 26}" text-anchor="middle" style="--d:${1900 + k * 160}ms">${g.l}</text>`).join('');
-    return `<div class="ln-graph">
-      <p class="ln-eyebrow is-light">Your graph grew</p>
-      <h1 class="ln-h1">A new Body cluster: ${n} ideas</h1>
-      <p class="ln-gift-sub">Every lesson you finished is now a node. The dotted ones are gaps worth filling next.</p>
-      <svg class="ln-graph-svg" viewBox="0 0 328 350" role="img" aria-label="Your knowledge graph with a new Body cluster of ${n} ideas">
-        ${stars}${gh}${lines}${ring}
-        <g class="ln-gn is-core" style="--d:120ms;transform-origin:${cx}px ${cy}px"><circle class="ln-gn-h" cx="${cx}" cy="${cy}" r="26"/><circle cx="${cx}" cy="${cy}" r="15"/></g>
-        <text class="ln-gt is-core" x="${cx}" y="${cy + 38}" text-anchor="middle" style="--d:200ms">Heart</text>
-        ${dots}${labs}
-      </svg></div>`;
-  }
-  function runGraph(el) {
-    const B = brain(); if (B) { B.setSpin(false); }
-    burst(164 + 20, 380, 50, true);
-  }
-  function widenHTML() {
-    const d = courseData(course()), w = d.widen || [];
-    const small = w.filter((x) => !x.big), big = w.find((x) => x.big);
-    return `<div class="ln-widen">
-      <p class="ln-eyebrow">What’s next</p>
-      <h1 class="ln-h1">Widen what you know</h1>
-      <p class="ln-lead">Your heart course connects to these. Each one fills a gap in your graph.</p>
-      <p class="ln-wk">Next door to the heart</p>
-      <div class="ln-wlist">${small.map((x) => `<button type="button" class="ln-wcard" data-act="widen" data-id="${x.id}">
-        <span class="ln-wcard-g">${glyph(L.widenShape[x.id] || 'heart', 'body', 240, 1.15)}</span>
-        <span class="ln-wcard-tx"><b>${esc(x.title)}</b><span>${esc(x.why)}</span></span>
-        <span class="ln-wcard-go">${ic('plus', 18, 2.6)}</span></button>`).join('')}</div>
-      ${big ? `<p class="ln-wk">Or go bigger</p>
-      <button type="button" class="ln-track" data-act="widen" data-id="${big.id}">
-        <span class="ln-track-art" aria-hidden="true"><span class="g1">${glyph('heart', 'glow', 240, 1)}</span><span class="g2">${glyph('split', 'glow', 240, 1)}</span><span class="g3">${glyph('ring', 'glow', 240, 1)}</span></span>
-        <span class="ln-track-k">${ic('route', 14, 2.4)} Track · 3 courses</span>
-        <b class="ln-track-t">${esc(big.title.replace(/^Track:\s*/, ''))}</b>
-        <span class="ln-track-s">${esc(big.why)}</span>
-        <span class="ln-track-row"><span class="is-done">${ic('check', 12, 3.2)} Heart</span><span>Lungs</span><span>Blood</span></span>
-        <span class="ln-track-go">Start the track ${ic('arrow', 16, 2.4)}</span>
-      </button>` : ''}
-    </div>`;
-  }
-  function widenPick(id) {
-    const d = courseData(course()), x = (d.widen || []).find((w) => w.id === id); if (!x) return;
-    if (x.big) { if (!window.Store.isPlus()) window.App.paywall('courses'); else say('Track builder opens here'); return; }
-    newCourse();
+    if (still()) { el.classList.add('is-formed', 'is-revealed'); PL.giftReady = true; renderCTA(); }
   }
 
-  // Particle confetti (canvas, not emoji)
+  // The next course, already shaped by what they did and who they are
+  const ROLE_WORK = { pm: 'product', 'product manager': 'product', designer: 'design', engineer: 'engineering', developer: 'engineering', marketing: 'marketing', marketer: 'marketing', founder: 'startup', finance: 'finance', teacher: 'teaching', researcher: 'research', business: 'business' };
+  function nextSpec() {
+    const c = course(), d = courseData(c), a = adapt(c), p = S().profile, pl = planFor(d);
+    const recap = a.added.find((r) => r.kind === 'recap'), shortened = Object.values(a.tags).includes('Shortened for you');
+    const doneLessons = stops(c).filter(isLesson);
+    const base = d.next || (pl && pl.next) || null;
+    let spec;
+    if (base) spec = Object.assign({}, base);
+    else {
+      const info = p && window.topicInfo ? topicInfo(p) : null;
+      const topic = (info && info.short) || d.title, role = p && String(p.roleText || p.role || '').toLowerCase();
+      const work = ROLE_WORK[role] || (Object.entries(ROLE_WORK).find(([k]) => role && role.includes(k)) || [])[1];
+      const reason = (p && p.reason) || 'life';
+      const title = reason === 'work' ? `Use ${topic} in your ${work ? work + ' ' : ''}work`
+        : reason === 'exam' ? `${cap(topic)}: practice for the exam` : reason === 'career' ? `${cap(topic)} for your next role` : `${cap(topic)}: the next step`;
+      spec = { id: d.id + '-next', title, subject: d.subject, glyph: d.glyph, goalShort: title.replace(/^./, (m) => m.toLowerCase()), summary: `Built for ${p && p.roleText ? 'a ' + p.roleText.toLowerCase() : 'you'}, straight after ${d.title}.` };
+      // With the catalog builder: the same person, pointed at their next outcome, one level up, without the lessons they just did
+      const alt = p && window.outcomesFor && window.buildCourse ? outcomesFor(p).find((o) => o.id !== p.goal) : null;
+      if (alt) {
+        let bid = null;
+        try { bid = buildCourse(Object.assign({}, p, { goal: alt.id, goalText: alt.label, level: { new: 'bit', bit: 'basics', basics: 'deep' }[p.level] || p.level })); } catch (e) { bid = null; }
+        const B = bid && bid !== c.id && window.COURSES[bid];
+        if (B) {
+          const had = new Set((d.lessons || []).map((x) => x.id));
+          let ls = B.lessons.filter((x) => !isLesson(x) || !had.has(x.id));
+          if (ls.filter(isLesson).length < 3) ls = B.lessons.slice();
+          if (reason !== 'work') { spec.title = cap(alt.label); spec.goalShort = alt.short || alt.label.replace(/^./, (m) => m.toLowerCase()); }
+          Object.assign(spec, { id: bid + '-next', subject: B.subject, glyph: (B.lessons.find((x) => x.kind === 'final') || {}).glyph, lessons: ls, gift: B.gift });
+        }
+      }
+    }
+    const lines = spec.because ? spec.because.slice() : [];
+    const built = [
+      `Picks up where “${(doneLessons[doneLessons.length - 1] || {}).title || d.title}” left off`,
+      recap ? `Opens with a refresher on ${shortOf(stops(c).find((x) => x.id === recap.from) || recap).toLowerCase()}, the part you found tricky` : shortened ? 'Moves faster through the basics you got right' : 'Skips what you already know',
+      p && p.roleText ? `Examples from a ${p.roleText.toLowerCase()}’s week, at ${dailyText()}` : `Same ${dailyText()} you picked`,
+    ];
+    if (!spec.because) spec.because = built;
+    else if (recap) spec.because[1] = built[1];
+    spec.because = spec.because.slice(0, 3);
+    return spec;
+  }
+  function nextLessons(spec) {
+    if (spec.lessons) return spec.lessons;
+    const t = spec.title.replace(/^Use /, '').replace(/ in your .*$/, '');
+    return [
+      { id: spec.id + '-l1', title: `Where ${t} fits in your week`, hook: 'Find the three tasks it helps with most.' },
+      { id: spec.id + '-l2', title: 'Your first real task', hook: 'One task, start to finish, with a template you keep.' },
+      { id: spec.id + '-l3', title: 'Check what you get back', hook: 'How to spot what is wrong before anyone else does.' },
+      { id: spec.id + '-review1', kind: 'review', title: 'Quick review', hook: 'Three fast questions.' },
+      { id: spec.id + '-l4', title: 'Make it a habit', hook: 'A five minute routine you can run every day.' },
+      { id: spec.id + '-l5', title: 'Bring your team along', hook: 'Show what works, and what to watch out for.' },
+      { id: spec.id + '-final', kind: 'final', title: 'Final challenge', hook: 'Do one real task, start to finish.' },
+    ];
+  }
+  function nextHTML() {
+    const spec = PL.next || (PL.next = nextSpec()), d = courseData(course());
+    const lessons = nextLessons(spec), nd = { id: spec.id, subject: spec.subject || d.subject, glyph: spec.glyph, title: spec.title, lessons };
+    const mins = lessons.reduce((n, x) => n + (x.kind === 'review' ? 2 : x.kind === 'final' ? 3 : x.min || 4), 0);
+    return `<div class="ln-next">
+      <p class="ln-eyebrow">Your next course</p>
+      <h1 class="ln-h1">Already built, from what you just did</h1>
+      <article class="ln-nc">
+        <div class="ln-nc-top">${artBox({ id: spec.id, glyph: spec.glyph, title: spec.title }, nd, 64, 'ln-nc-art')}<span class="ln-nc-k">${lessons.length} stops · about ${mins} min</span></div>
+        <h2 class="ln-nc-t">${esc(spec.title)}</h2>
+        <p class="ln-nc-s">${esc(spec.summary)}</p>
+        <ul class="ln-nc-why">${spec.because.map((b) => `<li><span class="ln-nc-dot">${ic('check', 12, 3.2)}</span><span>${esc(b)}</span></li>`).join('')}</ul>
+        <ol class="ln-nc-peek">${lessons.filter(isLesson).slice(0, 3).map((x, k) => `<li>${artBox(x, nd, 34)}<span><b>${esc(x.title)}</b></span><span class="ln-nc-n">${k + 1}</span></li>`).join('')}</ol>
+      </article>
+    </div>`;
+  }
+  async function startNext() {
+    if (!PL || PL.going) return;
+    PL.going = true; renderCTA();
+    const me = PL, ok = await gate('next-course');
+    if (PL !== me) return;
+    PL.going = false;
+    if (!ok) { renderCTA(); return; }
+    const id = registerNext(PL.next || nextSpec());
+    if (window.addCourse) window.addCourse(id);
+    else { const s = S(); if (!s.courses.some((c) => c.id === id)) s.courses.push({ id, title: COURSES[id].title, progress: {} }); }
+    revealRan = false;
+    muted = true; window.Store.set({ activeCourse: id, justBuilt: true }); muted = false;
+    window.Bus.emit('course:created', { id });
+    closePlayer({ quiet: true });
+  }
+  // Register the next course. With buildCourse, build from the profile pointed at the new goal; otherwise build it here.
+  function registerNext(spec) {
+    const c = course(), d = courseData(c), p = S().profile;
+    if (window.COURSES[spec.id] && spec.id !== c.id) return spec.id;
+    let built = null;
+    if (!spec.lessons && window.buildCourse && p) {
+      const keep = window.COURSES[c.id];
+      try { built = buildCourse(Object.assign({}, p, { goal: 'next', goalText: spec.title, next: true })); } catch (e) { built = null; }
+      if (keep) window.COURSES[c.id] = keep;
+      if (built === c.id || !window.COURSES[built]) built = null;
+    }
+    const src = built ? window.COURSES[built] : d;
+    const lessons = built ? src.lessons : nextLessons(spec).map((x) => Object.assign({ kind: 'lesson' }, x));
+    window.COURSES[spec.id] = Object.assign({}, src, {
+      id: spec.id, title: spec.title, topic: spec.title, subject: spec.subject || src.subject, glyph: spec.glyph, built: true,
+      summary: spec.summary, goalShort: spec.goalShort || spec.title.replace(/^./, (m) => m.toLowerCase()), lessons, next: null,
+      gift: spec.gift || { id: spec.id + '-gift', title: `The ${spec.title.toLowerCase()} collectible`, sub: 'A one-of-a-kind collectible, made from your course.', shape: src.shape || 'heart', palette: src.palette || 'body' },
+    });
+    return spec.id;
+  }
+
+  // Particle confetti for the collectible only (canvas, not emoji)
   let cfx = null;
   function burst(x, y, n, dark) {
     if (calm() || !confetti) return;
     const DPR = Math.min(2, window.devicePixelRatio || 1);
     if (!cfx) { confetti.width = 368 * DPR; confetti.height = 822 * DPR; cfx = { g: confetti.getContext('2d'), parts: [], raf: 0, DPR }; }
-    const cols = dark ? ['#F783AC', '#FFB3CF', '#FFFFFF', '#FFD43B', '#FF8FB8', '#9FBAFF'] : ['#F783AC', '#D6336C', '#FFB3CF', '#7FA3FF', '#1F5BE0', '#FFD43B'];
+    const cols = ['#F783AC', '#FFB3CF', '#FFFFFF', '#FFD43B', '#FF8FB8', '#FFC9A0'];
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, sp = 2.5 + Math.random() * 7.5;
       cfx.parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 3.2, r: 1.4 + Math.random() * 2.8, c: cols[i % cols.length], life: 1, decay: 0.006 + Math.random() * 0.008, tw: Math.random() * 6 });
@@ -957,7 +1192,6 @@
       const a = Math.max(0, p.life) * (0.7 + 0.3 * Math.sin(p.tw));
       g.globalAlpha = a; g.fillStyle = p.c;
       g.beginPath(); g.arc(p.x * DPR, p.y * DPR, p.r * DPR, 0, 6.283); g.fill();
-      if (cfx.dark && p.r > 3) { g.globalAlpha = a * 0.25; g.beginPath(); g.arc(p.x * DPR, p.y * DPR, p.r * 3 * DPR, 0, 6.283); g.fill(); }
     }
     g.globalAlpha = 1;
     cfx.raf = cfx.parts.length ? requestAnimationFrame(stepConfetti) : 0;
@@ -965,17 +1199,30 @@
   function stopConfetti() { if (cfx) { cancelAnimationFrame(cfx.raf); cfx.raf = 0; cfx.parts = []; cfx.g.clearRect(0, 0, confetti.width, confetti.height); } }
 
   // ───────── Close ─────────
-  function closePlayer() {
+  function closePlayer(o = {}) {
     if (!PL) return;
-    const justDone = PL.justDone;
+    const justDone = PL.justDone, ad = PL.adapt, kind = PL.kind;
     clearT('play'); closePop(); closePanel(); stopConfetti();
     const B = brain(); if (B) { B.setSpin(false); B.setDark(false); B.setMode('idle'); }
     const scr = document.getElementById('screen'); if (scr) scr.classList.remove('is-dark');
     PL = null;
     play.classList.remove('is-in');
     setTimeout(() => { if (!PL) { play.hidden = true; stage.innerHTML = ''; play.className = 'ln-play'; } }, calm() ? 0 : 520);
-    if (window.App && App.setTabBar && (!App.current || App.current() === 'learn')) App.setTabBar(true);
-    renderHome({ justDone });
+    if (!window.App || !App.current || App.current() === 'learn') tabBar(true);
+    renderHome({ justDone: o.quiet ? null : justDone, added: ad && ad.kind === 'added' ? ad.id : null, changed: ad && ad.kind === 'short' ? [ad.id] : [] });
+    if (!o.quiet && justDone) after('home', () => followUps(kind), 1100);
+  }
+  // After a lesson: lesson 1 → save progress + reminder sheets; about lesson 3 → the pace check-in
+  async function followUps(kind) {
+    if (PL || !shown || isReveal()) return;
+    const c = course(), list = stops(c), p = progress(c), a = adapt(c);
+    const lessonsDone = list.filter((x) => isLesson(x) && p[x.id] === 'done').length;
+    if (kind === 'lesson' && lessonsDone >= 1 && S().savedWith == null) {
+      const saved = await saveSheet();
+      if (S().reminder == null && !PL) await reminderSheet(saved); else if (saved) say(saved);
+      return;
+    }
+    if (lessonsDone >= 3 && !a.pace && !a.checkinAsked && !a.later && kind === 'lesson') await checkinSheet();
   }
 
   // ───────── Glowing terms: popover (paced/cards/long) or side panel (connect) ─────────
@@ -1010,59 +1257,36 @@
     if (p._btn) p._btn.classList.remove('is-open');
     p.classList.remove('is-in'); setTimeout(() => p.remove(), still() ? 0 : 180);
   }
-  function openPanel(id, o = {}) {
+  function openPanel(id) {
     const t = L.terms[id]; if (!t) return;
     closePop();
-    const explored = S().explored.includes('dive:' + id);
     panel.innerHTML = `<div class="ln-panel-bd" data-act="panel-close"></div>
       <aside class="ln-panel-sh" role="dialog" aria-modal="true" aria-label="${esc(t.label)}">
         <button type="button" class="ln-round ln-panel-x" data-act="panel-close" aria-label="Close">${ic('x', 18, 2.4)}</button>
-        <p class="ln-eyebrow">${o.dive ? 'Deeper dive' : 'Side path'}</p>
-        <div class="ln-panel-g">${glyph(t.shape || 'heart', 'body', 480, 0.62)}</div>
+        <p class="ln-eyebrow">Side path</p>
+        <div class="ln-panel-g"><span class="ln-art" data-keep-colour>${paint('dive:' + id, 120, { subject: subjOf(courseData(course())), label: t.label })}</span></div>
         <h2 class="ln-h2">${esc(cap(t.label))}</h2>
         <p class="ln-panel-def">${esc(t.def)}</p>
         <p class="ln-body">${esc(t.more || '')}</p>
         <div class="ln-panel-acts">
-          ${o.dive ? `<button type="button" class="btn-lit ln-panel-go" data-act="dive-done" data-term="${id}">${explored ? 'Explored' : 'Got it, add to my graph'}</button>` : ''}
-          <button type="button" class="${o.dive ? 'btn-carved' : 'btn-lit'} ln-panel-go" data-act="ask" data-term="${id}">Ask about this</button>
-          ${o.dive ? '' : '<button type="button" class="btn-carved ln-panel-go" data-act="panel-close">Back to the lesson</button>'}
+          <button type="button" class="btn-lit ln-panel-go" data-act="ask" data-term="${id}">Ask about this</button>
+          <button type="button" class="btn-carved ln-panel-go" data-act="panel-close">Back to the lesson</button>
         </div>
       </aside>`;
-    panel.hidden = false; panel.dataset.dive = o.dive ? '1' : '';
-    if (o.dive && window.App && App.setTabBar) App.setTabBar(false);
+    panel.hidden = false;
     if (still()) panel.classList.add('is-open'); else requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('is-open')));
-    if (!o.dive) seeTerm(id);
+    seeTerm(id);
   }
   function closePanel() {
     if (!panel || panel.hidden) return;
-    const wasDive = panel.dataset.dive === '1';
     panel.classList.remove('is-open');
     setTimeout(() => { if (!panel.classList.contains('is-open')) { panel.hidden = true; panel.innerHTML = ''; } }, still() ? 0 : 420);
-    if (wasDive && !PL && window.App && App.setTabBar && (!App.current || App.current() === 'learn')) App.setTabBar(true);
-  }
-  function diveDone(id) {
-    const ex = S().explored, key = 'dive:' + id, t = L.terms[id];
-    if (!ex.includes(key)) {
-      window.Store.set({ explored: ex.concat([key]) });
-      window.Bus.emit('explored', { id: key, label: cap(t.label), subject: 'Body', shape: t.shape || 'heart', palette: 'body', from: 'learn' });
-      say(`${cap(t.label)} added to your graph`);
-    }
-    closePanel(); if (!PL) renderHome({ keepScroll: true });
   }
   function askAbout(id) {
     const t = L.terms[id]; if (!t) return;
     closePop(); closePanel();
     window.Bus.emit('ask:open', { question: t.ask || `Tell me more about ${t.label}` });
     if (window.App && App.showTab) App.showTab('ask');
-  }
-
-  // ───────── Particle visual ─────────
-  function takeVis(scope) {
-    const v = scope.querySelector('[data-vis]'), B = brain();
-    if (!v || !B) return;
-    B.moveTo(v); B.setMode('idle');
-    if (!(PL && PL.steps[PL.i] && PL.steps[PL.i].t === 'gift')) { B.setDark(false); }
-    B.setShape(v.dataset.shape || 'heart', v.dataset.pal || 'body', 1300);
   }
 
   // ═════════════════════════ CLICKS ═════════════════════════
@@ -1072,22 +1296,24 @@
     if (!t || t.disabled) return;
     const act = t.dataset.act, i = +t.dataset.i, sec = t.closest('.ln-block');
     switch (act) {
-      case 'open': openStop(t.dataset.id); break;
+      case 'open': if (isReveal()) { nudgeGo(); break; } openStop(t.dataset.id); break;
+      case 'go': onGo(); break;
       case 'switch': openSheet(); break;
       case 'streak': { const n = S().streak; say(`${n}-day streak. Learn tomorrow to make it ${n + 1}`); break; }
       case 'build': if (window.App && App.showOnboarding) App.showOnboarding(0); break;
-      case 'widen-open': {
-        const list = stops(), fin = list.find((x) => x.kind === 'final');
-        if (fin) { startQuiz('final', fin, { at: 'widen' }); PL.finished = true; PL.completed = true; }
+      case 'chap': {
+        if (isReveal()) break;
+        const k = +t.dataset.ch, li = t.closest('.ln-ch-i'), open = !li.classList.contains('is-open');
+        if (!chOpen) { chOpen = new Set(); home.querySelectorAll('.ln-ch-i.is-open').forEach((x) => chOpen.add(+x.querySelector('[data-ch]').dataset.ch)); }
+        if (open) chOpen.add(k); else chOpen.delete(k);
+        li.classList.toggle('is-open', open); t.setAttribute('aria-expanded', String(open));
+        li.querySelector('.ln-ch-body').hidden = !open;
         break;
       }
-      case 'dive': {
-        if (t.classList.contains('is-locked')) { t.classList.remove('is-nope'); void t.offsetWidth; t.classList.add('is-nope'); say('This deeper dive opens after its lesson'); break; }
-        openPanel(t.dataset.term, { dive: true }); break;
-      }
-      case 'dive-done': diveDone(t.dataset.term); break;
+      case 'note-x': { const a = adapt(); a.note = null; const n = t.closest('.ln-adnote'); if (n) n.remove(); break; }
       case 'close': closePlayer(); break;
       case 'cta': onCTA(); break;
+      case 'cta2': closePlayer({ quiet: true }); break;
       case 'answer': answer(t); break;
       case 'term': {
         if (popEl && popEl._btn === t) { closePop(); break; }
@@ -1104,113 +1330,130 @@
       case 'stp': setStp(sec, i); break;
       case 'stp-next': setStp(sec, (+sec.dataset.si || 0) + 1); break;
       case 'share': say('Your share card is ready to send'); break;
-      case 'widen': widenPick(t.dataset.id); break;
     }
   }
+  // In the reveal, the plan is for reading: the one action is Start learning
+  function nudgeGo() { goBtn.classList.remove('is-nudge'); void goBtn.offsetWidth; goBtn.classList.add('is-nudge'); }
 
   // ═════════════════════════ MOUNT / SHOW / HIDE ═════════════════════════
-  // Our own particle form: four chambers (two small atria on top, two big ventricles below)
-  function defineShapes() {
-    const B = brain(); if (!B || !B.defineIcon || B.has('ln-rooms')) return;
-    B.defineIcon('ln-rooms', (x, S) => {
-      const k = S / 220, rr = (a, b, w, h, r) => { x.beginPath(); x.roundRect(a * k, b * k, w * k, h * k, [].concat(r).map((v) => v * k)); x.fill(); };
-      rr(36, 26, 68, 58, 24); rr(116, 26, 68, 58, 24); rr(36, 94, 68, 98, [12, 12, 34, 40]); rr(116, 94, 68, 98, [12, 12, 40, 34]);
-    });
-  }
-
   function mount(el) {
-    viewEl = el; defineShapes();
-    root = document.createElement('div'); root.className = 'ln-root';
+    viewEl = el;
+    root = document.createElement('div'); root.className = 'ln-root' + (window.THEME === 'living' ? ' is-living' : '');
     root.innerHTML = `
       <div class="ln-home" data-home></div>
       <div class="ln-topfade" aria-hidden="true"></div>
-      <button type="button" class="ln-float" data-act="open" aria-hidden="true" tabindex="-1"></button>
+      <div class="ln-dock" hidden><button type="button" class="btn-lit ln-go" data-act="go">Start learning</button></div>
       <div class="ln-play" hidden>
         <div class="ln-stage" data-stage></div>
         <header class="ln-pbar">
-          <button type="button" class="ln-round" data-act="close" aria-label="Close lesson">${ic('x', 20, 2.4)}</button>
+          <button type="button" class="ln-round" data-act="close" aria-label="Close">${ic('x', 20, 2.4)}</button>
           <div class="ln-psegs" role="progressbar"></div>
           <span class="ln-pcount"></span>
         </header>
         <div class="ln-tagline" aria-live="polite"></div>
-        <div class="ln-pfoot"><button type="button" class="btn-lit ln-cta" data-act="cta">Continue</button></div>
+        <div class="ln-pfoot"><button type="button" class="btn-lit ln-cta" data-act="cta">Continue</button><button type="button" class="ln-cta2" data-act="cta2" hidden></button></div>
         <canvas class="ln-confetti" aria-hidden="true"></canvas>
       </div>
       <div class="ln-panel" hidden></div>`;
     el.appendChild(root);
-    home = root.querySelector('[data-home]'); fl = root.querySelector('.ln-float'); play = root.querySelector('.ln-play'); stage = root.querySelector('[data-stage]');
-    bar = root.querySelector('.ln-pbar'); foot = root.querySelector('.ln-pfoot'); cta = root.querySelector('.ln-cta');
+    home = root.querySelector('[data-home]'); dock = root.querySelector('.ln-dock'); goBtn = root.querySelector('.ln-go');
+    play = root.querySelector('.ln-play'); stage = root.querySelector('[data-stage]');
+    bar = root.querySelector('.ln-pbar'); cta = root.querySelector('.ln-cta'); cta2 = root.querySelector('.ln-cta2');
     tagline = root.querySelector('.ln-tagline'); panel = root.querySelector('.ln-panel'); confetti = root.querySelector('.ln-confetti');
     root.addEventListener('click', onClick);
-    let flRaf = 0;
-    home.addEventListener('scroll', () => { if (!flRaf) flRaf = requestAnimationFrame(() => { flRaf = 0; syncFloat(); }); }, { passive: true });
     stage.addEventListener('scroll', () => { if (popEl) closePop(); }, { passive: true, capture: true });
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape' || viewEl.hidden) return;
-      if (popEl) closePop(); else if (!panel.hidden) closePanel(); else if (sheet) closeSheet(); else if (PL) closePlayer();
+      if (popEl) closePop(); else if (!panel.hidden) closePanel(); else if (sheet) { if (sheet._finish) sheet._finish(null); else closeSheet(); } else if (PL) closePlayer();
     });
 
     const B = window.Bus;
     B.on('variant:change', ({ key }) => {
+      if (key === 'roadmap') { chOpen = null; if (shown && !PL) renderHome(); return; }
       if (key !== 'lesson' || !PL || PL.kind !== 'lesson' || PL.completed) return;
       startLesson(PL.stop, true);
     });
     B.on('store:change', ({ patch }) => {
-      if (!shown) return;
+      if (!shown || muted) return;
       if ('style' in patch) {
         if (PL && PL.kind === 'lesson' && !PL.completed && S().variants.lesson === '3') startLesson(PL.stop, true);
         if (!PL) renderHome();
-      } else if (!PL && ('courses' in patch || 'activeCourse' in patch || 'goal' in patch || 'span' in patch)) renderHome();
+      } else if (!PL && ('courses' in patch || 'activeCourse' in patch || 'goal' in patch || 'span' in patch || 'justBuilt' in patch)) {
+        if ('justBuilt' in patch && patch.justBuilt) revealRan = false;
+        if ('activeCourse' in patch) chOpen = null;
+        renderHome();
+        if ('justBuilt' in patch && !patch.justBuilt) tabBar(true);
+      }
     });
-    B.on('course:created', () => { if (shown && !PL) renderHome(); });
+    B.on('course:created', () => { revealRan = false; if (shown && !PL) renderHome(); });
   }
 
   function show() {
     shown = true;
     const B = brain(); if (B) { B.setSpin(false); B.setDark(false); B.setMode('idle'); }
     if (PL) {
-      if (window.App && App.setTabBar) App.setTabBar(false);
+      tabBar(false);
       const step = PL.steps && PL.steps[PL.i];
-      if (PL.mode === 'cards') layoutStack(); else { const pg = stage.querySelector('.ln-page:not(.is-out)'); if (pg) takeVis(pg); }
-      if (step && (step.t === 'gift' || step.t === 'graph')) { const scr = document.getElementById('screen'); if (scr) scr.classList.add('is-dark'); }
+      if (PL.mode === 'cards') layoutStack();
+      if (step && step.t === 'gift') { const scr = document.getElementById('screen'); if (scr) scr.classList.add('is-dark'); const v = stage.querySelector('[data-vis]'); if (B && v) B.moveTo(v); }
     } else renderHome();
     if (!hooksRan) { hooksRan = true; setTimeout(testHooks, 60); }
   }
   function hide() {
-    shown = false; closePop(); closeSheet(true);
-    if (panel && !panel.hidden && panel.dataset.dive === '1') closePanel();
+    shown = false; closePop();
+    if (sheet) { if (sheet._finish) sheet._finish(null); else closeSheet(true); }
   }
 
   // ───────── URL params for demos and screenshots ─────────
-  // ?finish=1|gift|graph|widen · ?play=<stopId> · ?review=1 · ?done=N · ?step=N · ?card=N · ?answer=right|wrong · ?pop=<term> · ?panel=<term> · ?sheet=courses · ?dive=<term> · ?empty=1
+  // ?reveal=1 · ?done=N · ?added=1 · ?pace=easy|right|hard · ?checkin=1 · ?after=1 (save + reminder sheets)
+  // ?finish=1|gift|next · ?play=<stopId> · ?review=1 · ?step=N · ?card=N · ?answer=right|wrong · ?pop=<term> · ?panel=<term> · ?sheet=courses · ?empty=1
+  // (?roadmap=stack|timeline|chapters|path is read by the Store)
   function testHooks() {
     if (P.has('empty') || !course()) return;
-    const list = stops();
-    if (P.has('done')) { const n = Math.min(list.length, +P.get('done') || 0); const c = course(); c.progress = c.progress || {}; list.slice(0, n).forEach((x) => { c.progress[x.id] = 'done'; }); window.Store.set({ courses: S().courses }); renderHome(); }
+    if (P.has('reveal')) { revealRan = false; window.Store.set({ justBuilt: true }); }
+    let list = stops();
+    const c = course();
+    if (P.has('done')) {
+      const n = Math.min(list.length, +P.get('done') || 0); c.progress = c.progress || {};
+      list.slice(0, n).forEach((x) => { c.progress[x.id] = 'done'; });
+    }
+    if (P.has('added')) {
+      const a = adapt(c), p = progress(c);
+      const from = list.filter((x) => isLesson(x) && p[x.id] === 'done').pop() || list.find(isLesson);
+      if (from && !a.added.some((r) => r.from === from.id)) {
+        const q = (content(from).quiz || [])[0];
+        a.added.push({ id: 'recap-' + from.id, kind: 'recap', title: `Recap of lesson ${lessonNo(list, from)}`, hook: 'The three things to keep, and one more try.', added: true, after: from.id, from: from.id, missed: q ? [q] : [], because: `You missed a check in “${from.title}”, so here is a 1 minute recap` });
+      }
+    }
+    saveCourses(); renderHome();
+    if (P.get('pace')) applyPace(P.get('pace'));
     if (P.get('sheet') === 'courses') openSheet();
-    if (P.get('dive')) openPanel(P.get('dive'), { dive: true });
+    if (P.has('checkin')) checkinSheet();
+    if (P.has('after')) followUps('lesson');
+    list = stops();
     const fin = P.get('finish');
     if (fin) {
       const f = list.find((x) => x.kind === 'final');
-      if (f) { const at = { gift: 'gift', graph: 'graph', widen: 'widen' }[fin]; startQuiz('final', f, at ? { at } : {}); if (at === 'graph' || at === 'widen') finishCourse(); }
+      if (f) { const at = { gift: 'gift', next: 'next' }[fin]; startQuiz('final', f, at ? { at } : {}); if (at === 'next') finishCourse(); }
     } else if (P.has('review')) {
       const r = list.find((x) => x.kind === 'review'); if (r) startQuiz('review', r);
     } else if (P.get('play')) {
-      const s = list.find((x) => x.id === P.get('play')) || list[0]; if (s.kind === 'lesson') startLesson(s); else openStop(s.id, { force: true });
+      const s = list.find((x) => x.id === P.get('play')) || list[0]; if (isLesson(s)) startLesson(s); else openStop(s.id, { force: true });
     }
     if (!PL) return;
     if (PL.mode === 'cards' && P.has('card')) { const n = +P.get('card') || 0; for (let k = 0; k < n && PL.ci < PL.cards.length - 1; k++) { PL.gate = true; PL.ci++; } layoutStack(); renderBar(); renderCTA(); }
     if (PL.mode !== 'cards' && P.has('step')) { const n = Math.min(PL.steps.length - 1, +P.get('step') || 0); if (n) showStep(n, 'none'); }
-    const a = P.get('answer');
-    if (a) {
+    const ans = P.get('answer');
+    if (ans) {
       const scope = PL.mode === 'cards' ? stage.querySelector('.ln-card.is-top') : stage.querySelector('.ln-page:not(.is-out)');
       const box = scope && scope.querySelector('[data-quiz]');
-      if (box) { const q = PL.q[box.dataset.quiz]; const k = a === 'right' ? q.answer : (q.answer + 1) % q.options.length; const b = box.querySelector(`[data-i="${k}"]`); if (b) answer(b); }
+      if (box) { const q = PL.q[box.dataset.quiz]; const k = ans === 'right' ? q.answer : (q.answer + 1) % q.options.length; const b = box.querySelector(`[data-i="${k}"]`); if (b) answer(b); }
     }
-    if (P.get('block')) { const sec = stage.querySelector('.ln-page:not(.is-out) .ln-block'); const k = +P.get('block'); if (sec) { const t = sec.dataset.type; if (t === 'scale') setScale(sec, k); if (t === 'cmp' || t === 'compare') setCompare(sec, k); if (t === 'rooms') setRoom(sec, k); if (t === 'steps') setStp(sec, k); } }
+    if (P.get('block')) { const sec = stage.querySelector('.ln-page:not(.is-out) .ln-block'); const k = +P.get('block'); if (sec) { const t = sec.dataset.type; if (t === 'scale') setScale(sec, k); if (t === 'compare') setCompare(sec, k); if (t === 'rooms') setRoom(sec, k); if (t === 'steps') setStp(sec, k); } }
     const pt = P.get('pop') || P.get('panel');
     if (pt) { const b = stage.querySelector(`.ln-page:not(.is-out) [data-term="${pt}"], .ln-card.is-top [data-term="${pt}"]`); if (b) { if (P.get('panel')) openPanel(pt); else setTimeout(() => openPop(b), 80); } }
   }
 
-  window.Learn = { mount, show, hide };
+  // A small hook for other modules and tests
+  window.Learn = { mount, show, hide, stops: () => stops(), adapt: () => adapt(), followUps, applyPace };
 })();

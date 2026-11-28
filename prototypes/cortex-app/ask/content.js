@@ -340,7 +340,7 @@ window.ASK_CONTENT = (function () {
   };
 
   // ───────── Homes ─────────
-  const wonder = { id: 'purr', eyebrow: 'Today’s wonder', hint: 'Poke it, or tap to open' };
+  const wonder = { id: 'purr', eyebrow: 'Today’s wonder', hint: 'Tap to open' };
   const suggestions = ['croc', 'leaf', 'photo', 'octo'];
   // Your past questions (demo history). Seeded branches are terms you already explored.
   const history = [
@@ -350,10 +350,10 @@ window.ASK_CONTENT = (function () {
   // C · talk mode: what the simulated mic "hears"
   const talk = { transcript: 'What’s the difference between a crocodile and an alligator?' };
   // C · show mode: the sample object the simulated camera sees
-  const show = { object: 'a leaf', say: 'That’s a leaf. Want to know why it changes colour?', ask: 'leaf', bub: 'Ooh, a leaf!' };
+  const show = { object: 'a leaf', say: 'That’s a leaf. Want to know why it changes colour?', ask: 'leaf', bub: 'Ooh, a leaf.' };
   // C · the pixel character's home: what it says, and the pills under the greeting
   const charC = {
-    hi: 'Hi!',
+    hi: 'Hi',
     title: 'Hi, I’m Cortex',
     sub: 'Ask me anything. Type, talk or show me.',
     pills: ['purr', 'croc'],
@@ -363,12 +363,12 @@ window.ASK_CONTENT = (function () {
     release: 'Release to send', tapListening: 'Listening…',
     noRush: 'No rush.',
     seeing: 'Show me something.',
-    pokes: ['Hey, that tickles.', 'Hi again!', 'Ask me anything.', 'I’m all ears.'],
+    pokes: ['Hey, that tickles.', 'Hi again.', 'Ask me anything.', 'I’m all ears.'],
   };
 
   // ───────── Generic answers: what each question type becomes ─────────
   const kinds = {
-    explain: { name: 'a how-it-works question', gets: 'a visual you can poke, then the idea step by step', shape: 'burst', near: ['purr', 'leaf'] },
+    explain: { name: 'a how-it-works question', gets: 'a picture of it, then the idea step by step', shape: 'burst', near: ['purr', 'leaf'] },
     compare: { name: 'a this-or-that question', gets: 'a side-by-side card that shows the difference', shape: 'split', near: ['croc'] },
     scale: { name: 'a how-big question', gets: 'a zoom from small to huge, all to scale', shape: 'target', near: ['sun'] },
     myth: { name: 'an is-it-true question', gets: 'a clear myth-or-fact verdict, with the evidence', shape: 'qmark', near: ['brain'] },
@@ -378,11 +378,11 @@ window.ASK_CONTENT = (function () {
 
   // ───────── What the mascot becomes for each answer (see mascot/mascot.js topics) ─────────
   const mascot = {
-    answers: { purr: 'cat', leaf: 'leaf', croc: 'crocodile', sun: 'planet', brain: 'brain', photo: 'camera', octo: 'octopus' },
+    answers: { purr: 'cat', leaf: 'leaf', croc: 'crocodile', sun: 'sun', brain: 'brain', photo: 'camera', octo: 'octopus' },
     terms: {
       larynx: 'music', vibration: 'music', hertz: 'music', vocalfolds: 'music', solicit: 'cat', roar: 'cat',
       chlorophyll: 'leaf', carotenoids: 'leaf', anthocyanins: 'leaf', crocodilians: 'crocodile', saltglands: 'crocodile', everglades: 'crocodile',
-      light: 'planet', supergiant: 'planet', fusion: 'atom', fmri: 'brain', energy: 'brain', glia: 'brain',
+      light: 'sun', supergiant: 'sun', fusion: 'atom', fmri: 'brain', energy: 'brain', glia: 'brain',
       hearts: 'heart', hemocyanin: 'octopus', chromatophores: 'octopus', exposure: 'camera', aperture: 'camera', thirds: 'camera',
     },
     kinds: { explain: 'atom', compare: null, scale: 'planet', myth: 'brain', course: 'book', artifact: 'heart' },

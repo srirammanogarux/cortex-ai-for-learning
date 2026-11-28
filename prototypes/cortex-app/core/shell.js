@@ -178,7 +178,7 @@
       const p = per.profile, id = buildCourse(p);
       Store.set({ courses: [], activeCourse: null });
       addCourse(id);
-      Store.set({ style: 'roadmap', topic: p.topicLabel, goal: p.goal, span: p.span, daily: p.daily, profile: p, paywallSeen: true, activeCourse: id });
+      Store.set({ style: 'roadmap', topic: p.topicLabel, goal: p.goal, span: p.span, daily: typeof p.daily === 'number' ? p.daily + ' min a day' : p.daily, profile: p, paywallSeen: true, activeCourse: id });
       return;
     }
     if (!s.courses.length) { addCourse('heart'); Store.set({ style: s.style || 'connect', topic: 'How the human heart works', goal: s.goal || 'how', span: s.span || 'twoweeks', daily: '10 min a day', paywallSeen: true }); }

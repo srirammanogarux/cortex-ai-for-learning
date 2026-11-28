@@ -298,14 +298,65 @@ window.LEARN = (function () {
     { q: 'About how many times does your heart beat in a day?', options: ['About 100,000', 'About 10,000', 'About 1 million'], answer: 0, explain: 'About 100,000. You’ve earned your heart.' },
   ];
 
-  // Quick style: lessons grouped into named packs
-  const packs = { pump: 'The basics', rooms: 'The basics', spark: 'The beat and the flow', circuits: 'The beat and the flow', pressure: 'Pressure and rhythm', wrong: 'Pressure and rhythm', attack: 'Trouble and care', strong: 'Trouble and care', cycle: 'One beat, step by step' };
-
-  // Short names for the graph constellation
+  // Short names (graph labels, recap titles)
   const short = { pump: 'The pump', rooms: '4 rooms', spark: 'The spark', circuits: '2 circuits', pressure: 'Pressure', wrong: 'Rhythm', attack: 'Heart attack', strong: 'Keeping fit', cycle: 'The cycle' };
 
-  // Widen suggestions: particle shapes for their glyphs
-  const widenShape = { lungs: 'split', blood: 'ring', track: 'heart' };
+  // The plan, personalised. Placeholder lines for the heart course until data/courses-catalog.js (buildCourse) supplies them.
+  // because: why this stop is in *your* plan · forYou: the "For you" callout inside the lesson · glyph: an OrbGlyphs drawing.
+  const plan = {
+    heart: {
+      summary: { how: 'Built for someone who wants to know how their heart actually works.', condition: 'Built for someone trying to understand a heart condition.', healthy: 'Built for someone who wants to keep their heart healthy.', exam: 'Built for a student revising the heart for an exam.' },
+      goalShort: { how: 'understand how your heart works', condition: 'understand a heart condition', healthy: 'keep your heart healthy', exam: 'know the heart for your exam' },
+      because: {
+        pump: 'Starts with the one fact everything else hangs on',
+        rooms: 'You need the layout before the rhythm makes sense',
+        spark: 'Explains the beat you can feel in your wrist',
+        circuits: 'Joins the heart to your lungs, so the loop clicks',
+        review1: 'Brings back the first four ideas before they fade',
+        pressure: 'Turns a blood pressure reading into plain words',
+        wrong: 'Covers the rhythm problems people ask about most',
+        attack: 'So you know what is happening if it ever matters',
+        strong: 'What actually helps, for your own heart',
+        cycle: 'Puts every part together in one beat',
+        review2: 'A last pass on what you are most likely to forget',
+        final: 'Proves it stuck, and earns you the living heart',
+      },
+      forYou: {
+        pump: 'You said you want to know how it really works. This is the base every other lesson builds on.',
+        rooms: 'Picture your own heart as you go. The left side is the one doing the long, hard push.',
+        spark: 'Put two fingers on your wrist while you read. Every tap you feel started in one small patch of cells.',
+        circuits: 'This is the lesson that makes the rest click for most people. Take it slowly.',
+        pressure: 'Next time someone reads you two numbers, you will know exactly what each one means.',
+        wrong: 'Most skipped beats are harmless. This lesson shows you which ones are worth a check.',
+        attack: 'The one thing to keep from this lesson: call for help straight away.',
+        strong: 'Pick one habit from this lesson to try this week. One is enough.',
+        cycle: 'This joins everything you have learned into one 0.8 second beat.',
+      },
+      glyph: { pump: 'pump', rooms: 'rooms', spark: 'spark', circuits: 'circuits', pressure: 'gauge', wrong: 'monitor', attack: 'broken', strong: 'dumbbell', cycle: 'cycle', final: 'heartbeat' },
+      chapters: [
+        { name: 'The pump', ids: ['pump', 'rooms'] },
+        { name: 'The beat and the flow', ids: ['spark', 'circuits', 'review1'] },
+        { name: 'When things go wrong', ids: ['pressure', 'wrong', 'attack', 'strong', 'cycle', 'review2'] },
+        { name: 'Finish line', ids: ['final'] },
+      ],
+      // The course that comes after this one, already shaped by what you did
+      next: {
+        id: 'lungs', title: 'How your lungs work', subject: 'Body', glyph: 'lungs', goalShort: 'understand how your lungs work',
+        summary: 'Built for someone who just learned how their heart works.',
+        gift: { id: 'living-lungs', title: 'The living lungs', sub: 'The second piece of your body collection.', shape: 'split', palette: 'body' },
+        because: ['Picks up the short loop from your heart course, right where it stopped', 'Goes faster through the basics you got right', 'Same 10 minutes a day you picked'],
+        lessons: [
+          { id: 'lungs-air', title: 'The air you breathe in', hook: 'About 11,000 litres a day, mostly without a thought.', glyph: 'lungs', because: 'Starts from the short loop you just learned' },
+          { id: 'lungs-tree', title: 'A tree turned upside down', hook: 'Windpipe, bronchi, and about 300 million tiny air sacs.', glyph: 'tree', because: 'The same branching idea as your arteries' },
+          { id: 'lungs-swap', title: 'The oxygen swap', hook: 'Where the right side of your heart hands off its blood.', glyph: 'drop', because: 'Picks up exactly where the heart course stopped' },
+          { id: 'lungs-review', kind: 'review', title: 'Quick review', hook: 'Three fast questions.', because: 'Locks in the first three ideas' },
+          { id: 'lungs-breath', title: 'Who decides when you breathe', hook: 'The brainstem, carbon dioxide, and a reflex you can override.', glyph: 'brain', because: 'Like the heart, it runs itself. Mostly' },
+          { id: 'lungs-strong', title: 'Keeping them clear', hook: 'Smoke, exercise and air: what the evidence says.', glyph: 'leaf', because: 'You liked the practical lesson on your heart' },
+          { id: 'lungs-final', kind: 'final', title: 'Final challenge', hook: 'Heart and lungs, joined up.', glyph: 'lungs', because: 'Earns the second piece of your body collection' },
+        ],
+      },
+    },
+  };
 
-  return { terms, lessons, review, final, packs, short, widenShape };
+  return { terms, lessons, review, final, short, plan };
 })();

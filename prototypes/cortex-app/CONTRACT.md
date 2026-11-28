@@ -182,3 +182,15 @@ The brain buddy. It is a sidekick, not the hero: it shows what the app is doing 
 `variants.paywall === 'onboarding'`: the shell opens a dismissible paywall about 2.6s after landing on the plan.
 
 **Personas:** `window.PERSONAS = { priya: { name, age, blurb, profile: {…} }, arjun, maya, tom, lena }`, defined in `data/personas.js` (owned by Onboarding). `?tab=…` uses `ensureDemo()`, which builds the course for `variants.persona` with `buildCourse`. Switching persona in the side panel while you're on a tab rebuilds that persona's course.
+
+**v5 integration notes:**
+- **`onboarding:done` payload:** `{ style: 'roadmap', topic, goal, span, daily: '10 min a day', courseId, profile }`.
+  - `profile.daily` is a number (minutes).
+  - Span ids are `week | twoweeks | month`.
+- **New Store keys from Learn:** `savedWith`, `reminder`, and `courses[i].adapt` (per-course adaptations).
+- **`lessons[i].glyph`** is an OrbGlyphs **motif** name (e.g. `sine`, `neuron`).
+- **`courseFor(text)`** returns `'custom'` for unknown text.
+- **Mascot:** `A` (Line) is the default and `F` (Particle) is the alternative; B–E stay only in `living/mascot.html`.
+  - New `sun` topic and `m.setLit(0..1)`.
+  - In Ask answers the mascot itself is the explainer: it works small, then grows to about 220px and draws the topic. One character per answer.
+- **Streak:** `streak/streak.js` exposes `window.Streak.flame / chip / widget / moment`. Lab: `living/streak.html`. It's not wired into the app yet.

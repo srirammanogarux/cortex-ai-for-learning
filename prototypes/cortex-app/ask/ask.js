@@ -166,6 +166,19 @@
     return (glyphCache[key] = s + '</svg>');
   }
 
+  // ───────── Painted icons (OrbGlyphs, style ii) for map nodes, the trail and the popover ─────────
+  const SUBJ = { animals: 'nature', nature: 'nature', space: 'space', mind: 'mind', skills: 'arts', body: 'body', physics: 'tech', places: 'society', tech: 'tech', arts: 'arts', society: 'society', history: 'history' };
+  const subjOf = (s) => SUBJ[String(s || '').toLowerCase()] || 'mind';
+  function paint(id, subject, size, label) {
+    if (!window.OrbGlyphs) return glyph('brain', 'cobalt', 220, 0.04);
+    return OrbGlyphs.svg('ask:' + String(id).replace(/^q:/, ''), 'ii', subjOf(subject), size, { label: label || '' });
+  }
+  function parkBrain() {
+    const park = document.getElementById('brainPark');
+    if (park && window.Brain) Brain.moveTo(park);
+    BR.host = null;
+  }
+
   // ───────── The one brain canvas ─────────
   const BR = {
     host: null, lobes: 0,
@@ -465,8 +478,8 @@
   let cur = null;           // the open convo
   const EXP = new Set();    // explored keys (answers + terms): explored terms change style
   const emitted = new Set();
-  let pendingBranch = null, mapView = null, histView = null, bView = null;
-  const locked = new Set();
+  let mapView = null, histView = null, bView = null;
+  let gating = false; // one free-limit check at a time
   let cState = { mode: 'type', timers: [] };
 
   // A convo is one tree: the root question and every branch off it. Each node owns one chat page.
@@ -475,14 +488,14 @@
     const c = { key, nodes: new Map(), current: null, past: !!o.past, when: o.when || 'Just now', src: o.src };
     const label = a ? a.label : shortQ(o.q || key);
     c.nodes.set(key, { id: key, kind: a ? 'answer' : 'generic', parent: null, label, crumb: a ? a.short : shortQ(o.q || key, 22),
-      q: o.q || (a ? a.q : key), shape: a ? a.shape : (C.kinds[o.type] || {}).shape || 'qmark', palette: a ? a.palette : 'cobalt', type: o.type, page: null, past: !!o.past });
+      q: o.q || (a ? a.q : key), shape: a ? a.shape : (C.kinds[o.type] || {}).shape || 'qmark', palette: a ? a.palette : 'cobalt', subject: a ? a.subject : '', type: o.type, page: null, past: !!o.past });
     convos.set(key, c);
     order = [key].concat(order.filter((k) => k !== key));
     return c;
   }
   function addBranchNode(c, tid, parentId, o = {}) {
     const t = T[tid];
-    const n = { id: tid, kind: 'term', parent: parentId, label: cap(t.label), crumb: t.label, q: t.q, shape: t.shape, palette: t.palette, page: null, past: !!o.past };
+    const n = { id: tid, kind: 'term', parent: parentId, label: cap(t.label), crumb: t.label, q: t.q, shape: t.shape, palette: t.palette, subject: t.subject, page: null, past: !!o.past };
     c.nodes.set(tid, n);
     return n;
   }
@@ -607,7 +620,7 @@
         <div class="ak-tc" data-tc>
           <div class="ak-tc-face ak-tc-front" data-act="flip" aria-hidden="true">
             <div class="ak-tc-top"><b>${esc(b.name)}</b><span>${esc(b.tag)}</span></div>
-            <div class="ak-tc-art">${glyph('ak-octo', 'arts', 900, 0.022)}</div>
+            <div class="ak-tc-art" data-keep-colour>${paint('octo', 'Animals', 150, 'octopus')}</div>
             <div class="ak-tc-stats">${b.stats.map(([n, l]) => `<div><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div>
             <p class="ak-tc-no">${esc(b.no)}</p>
           </div>
@@ -642,61 +655,62 @@
   }
   function turnHTML(spec) {
     wi = 0;
-    let lead, blocks = '', foot = '', shape, palette;
+    let lead, blocks = '', foot = '';
     if (spec.kind === 'answer') {
-      const a = spec.a; shape = a.shape; palette = a.palette;
+      const a = spec.a;
       lead = a.lead;
       blocks = a.blocks.map((b, k) => `<section class="ak-sec${['course', 'card', 'verdict'].includes(b.type) ? ' is-bare' : ''}" data-type="${b.type}" data-b="${k}">${R[b.type](b)}</section>`).join('');
       if (a.sources) foot = `<p class="ak-src">Sources: ${esc(a.sources)}</p>`;
     } else if (spec.kind === 'term') {
-      const t = spec.t; shape = t.shape; palette = t.palette; lead = t.lead;
+      const t = spec.t; lead = t.lead;
       if (t.block) blocks += `<section class="ak-sec" data-type="${t.block.type}" data-tb="1">${R[t.block.type](t.block)}</section>`;
       if (t.points) blocks += `<section class="ak-sec" data-type="points">${pointsHTML(t.points)}</section>`;
     } else {
-      const k = C.kinds[spec.type] || C.kinds.explain; shape = k.shape; palette = 'cobalt';
+      const k = C.kinds[spec.type] || C.kinds.explain;
       lead = `That’s ${k.name}. Here I’d answer it with ${k.gets}.`;
       blocks = `<section class="ak-sec" data-type="near"><header class="ak-sec-head"><p class="ak-eyebrow">Ready in this demo</p><h3 class="ak-h3">The closest answer I have</h3><p class="ak-intro">This prototype has a few answers fully built. The real app makes one for any question.</p></header>
         <div class="ak-rows">${k.near.map((id) => row(A[id].q, `data-act="ask" data-q="${id}"`)).join('')}</div></section>`;
     }
     const [l1, l2] = splitFirst(lead);
     const first = rich(l1, true), rest = l2 ? ' <span class="ak-lead-2">' + rich(l2, true) + '</span>' : '';
-    return { shape, palette, html: `
+    // The mascot is the picture: it works where you can see it, then becomes the topic and stays.
+    return { html: `
       <div class="ak-q"><p>${esc(spec.q)}</p></div>
       <div class="ak-a">
-        ${window.Mascot ? '<div class="ak-status"><span class="ak-status-ms" aria-hidden="true"></span><p class="ak-status-t" aria-live="polite"></p></div>' : ''}
-        <div class="ak-vis"><div class="ak-host" data-glyph="1" data-shape="${shape}" data-palette="${palette}"></div><p class="ak-think" aria-live="polite">Thinking</p><p class="ak-touch">${ic('hand', 14, 2)} Touch it</p></div>
+        <div class="ak-hero" data-act="hero" role="img" aria-label="Cortex"><div class="ak-hero-in"><div class="ak-hero-ms"></div></div></div>
+        <p class="ak-status-t" aria-live="polite"></p>
         <p class="ak-lead"><span class="ak-lead-1">${first}</span>${rest}</p>
         <div class="ak-rest">${blocks}${foot}</div>
-        <div class="ak-lockpill"><button type="button" class="ak-unlock" data-act="unlock">${ic('lock', 16, 2.4)} Unlock with Plus</button></div>
       </div>` };
   }
   const row = (q, attrs, done = false) => `<button type="button" class="ak-row${done ? ' is-done' : ''}" ${attrs}><span class="ak-row-ic">${ic(done ? 'check' : 'sparkle', 18, done ? 2.6 : 2)}</span><span class="ak-row-q">${esc(q)}</span><span class="ak-row-chev">${ic('chev', 18, 2.2)}</span></button>`;
 
-  // Add a turn to a page and play it: the bubble, the character thinking, the morph, the answer streaming in.
+  // Add a turn to a page and play it: the bubble, the mascot working, becoming the topic, the answer streaming in.
   function addTurn(node, spec, o = {}) {
     const page = node.page, th = page.querySelector('.ak-thread');
     const t = turnHTML(spec);
     const el = document.createElement('div'); el.className = 'ak-turn'; el.innerHTML = t.html;
     th.appendChild(el);
-    const turn = { el, spec, node, shape: t.shape, palette: t.palette, host: el.querySelector('.ak-host'), key: spec.kind === 'answer' ? spec.a.id : spec.kind === 'term' ? spec.tid : null, isTerm: spec.kind === 'term' };
+    const turn = { el, spec, node, topic: turnTopic(spec), key: spec.kind === 'answer' ? spec.a.id : spec.kind === 'term' ? spec.tid : null, isTerm: spec.kind === 'term', timers: [] };
     node.turns.push(turn);
     initBlocks(el, turn);
     play(turn, o);
     return turn;
   }
-  // The mascot docks beside the status line and narrates: thinking → searching → reading → connecting → ready,
-  // becomes the answer's topic as the answer forms, then steps aside.
+  // What the mascot becomes for each answer (ask/content.js → mascot)
   const MT = C.mascot || { answers: {}, terms: {}, kinds: {} };
   function turnTopic(spec) {
     if (spec.kind === 'answer') return MT.answers[spec.a.id] || null;
     if (spec.kind === 'term') return MT.terms[spec.tid] || null;
     return MT.kinds[spec.type] || null;
   }
-  function narrate(turn, o, instant) {
-    const host = turn.el.querySelector('.ak-status-ms'), lbl = turn.el.querySelector('.ak-status-t');
-    if (!host || !lbl || !window.Mascot) return;
-    turn.el.classList.add('has-ms');
-    const spec = turn.spec, topic = turnTopic(spec);
+  const HERO = 220;
+  // One character per answer. It thinks → searches → reads → connects ideas where you can see it (small),
+  // then grows and draws the topic big as the answer's picture, and stays there, idling.
+  //   o.noThink: skip thinking and searching · o.startTopic: it already is the topic (Show me) · o.instant: settled
+  function play(turn, o) {
+    const el = turn.el, instant = o.instant || still(), spec = turn.spec, topic = turn.topic;
+    const hero = el.querySelector('.ak-hero'), host = el.querySelector('.ak-hero-ms'), lbl = el.querySelector('.ak-status-t');
     const n = spec.kind === 'answer' && spec.a.sources ? spec.a.sources.split('·').filter((x) => x.trim()).length : 0;
     const subject = spec.kind === 'answer' ? spec.a.subject : spec.kind === 'term' ? spec.t.subject : '';
     const srcs = n ? `${n} source${n > 1 ? 's' : ''}` : '';
@@ -704,68 +718,49 @@
     const done = spec.kind === 'generic' ? 'Here’s the closest I have' : 'Here’s what I found';
     const rest = subject ? [subject, srcs].filter(Boolean).join(' · ') : done;
     const say = (t, busy) => { lbl.textContent = t; lbl.classList.toggle('is-busy', !!busy); };
-    if (instant) { turn.ms = Mascot.create(host, { size: 48, state: 'aside', topic, decorative: true }); say(rest); return; }
-    const think = !o.noThink;
-    const m = turn.ms = Mascot.create(host, { size: 48, state: think ? 'thinking' : 'reading', topic: think ? null : topic, decorative: true });
-    const steps = think
-      ? [[0, 'thinking', 'Thinking'], [650, 'searching', 'Searching'], [1150, 'reading', reading], [1750, 'analysing', 'Connecting ideas', true], [2650, 'ready', done], [4200, 'aside', rest]]
-      : [[0, 'reading', reading], [750, 'analysing', 'Connecting ideas', true], [1500, 'ready', done], [3000, 'aside', rest]];
-    steps.forEach(([ms, st, text, morph]) => setTimeout(() => {
-      m.setState(st); say(text, st !== 'ready' && st !== 'aside');
-      if (morph && topic) m.setTopic(topic);
+    const named = (tp) => { const L = tp && window.Mascot && Mascot.LABELS[tp]; hero.setAttribute('aria-label', L ? `Cortex, drawn as ${/^[aeiou]/i.test(L) ? 'an' : 'a'} ${L.toLowerCase()}` : 'Cortex'); };
+    const finish = () => { el.classList.add('is-done'); reveal(turn); };
+    if (!window.Mascot) {
+      host.innerHTML = paint(turn.key || 'q', subject, 168, spec.q);
+      el.classList.add('is-q', 'is-shown', 'is-big', 'is-instant'); say(rest); finish(); return;
+    }
+    if (instant) {
+      turn.ms = Mascot.create(host, { size: HERO, state: 'idle', topic, decorative: true });
+      el.classList.add('is-q', 'is-shown', 'is-big', 'is-instant'); say(rest); named(topic); finish(); settled(turn); return;
+    }
+    const from = !!o.startTopic, full = !from && !o.noThink;
+    const m = turn.ms = Mascot.create(host, { size: HERO, state: full ? 'thinking' : 'reading', topic: from ? topic : null, decorative: true });
+    if (from) { el.classList.add('is-big'); named(topic); }
+    requestAnimationFrame(() => el.classList.add('is-q'));
+    const steps = full
+      ? [[0, 'thinking', 'Thinking', 1], [600, 'searching', 'Searching', 1], [1150, 'reading', reading, 1], [1750, 'analysing', 'Connecting ideas', 1], [2350, 'ready', done, 0, 1]]
+      : [[0, 'reading', reading, 1], [650, 'analysing', 'Connecting ideas', 1], [1300, 'ready', done, 0, 1]];
+    const T = turn.timers, at = (fn, ms) => T.push(setTimeout(fn, ms));
+    steps.forEach(([ms, st, text, busy, become]) => at(() => {
+      if (!turn.ms) return;
+      m.setState(st); say(text, busy);
+      if (!become) return;
+      el.classList.add('is-big');
+      if (topic && m.topic !== topic) m.setTopic(topic, { ms: 1400 });
+      named(topic);
+      at(() => el.classList.add('is-shown'), 380);
+      at(finish, 1300);
+      at(() => { m.setState('idle'); say(rest); settled(turn); }, 2100);
     }, ms));
   }
-  function play(turn, o) {
-    const el = turn.el, instant = o.instant || still();
-    const gate = !!o.gate;
-    narrate(turn, o, instant);
-    if (instant) {
-      el.classList.add('is-q', 'is-shown', 'is-done', 'is-instant');
-      BR.take(turn.host, turn.shape, turn.palette, o.instant ? 900 : 10);
-      if (turn.key === 'brain') BR.setLobes(0.4);
-      if (gate && !isPlus()) lock(turn, true); else reveal(turn);
-      return;
-    }
-    requestAnimationFrame(() => el.classList.add('is-q'));
-    const think = !o.noThink;
-    BR.take(turn.host, think ? 'brain' : turn.shape, think ? 'cobalt' : turn.palette, think ? 700 : 900);
-    BR.mode('idle');
-    if (think) { el.classList.add('is-thinking'); BR.mode('think'); }
-    later(() => {
-      el.classList.remove('is-thinking'); el.classList.add('is-shown');
-      BR.mode('idle'); BR.shape(turn.shape, turn.palette, 1500); BR.pulse();
-      if (turn.key === 'brain') later(() => BR.setLobes(0.4), 900);
-      later(() => {
-        if (gate && !isPlus()) lock(turn);
-        else { el.classList.add('is-done'); reveal(turn); }
-      }, gate ? 1500 : 900);
-    }, think ? 1150 : 120);
-  }
+  function settled(turn) { if (turn.key === 'brain' && turn.ms) turn.ms.setLit(0.4); }
   function reveal(turn) {
     if (turn.spec.kind === 'generic') return;
     markExplored(turn.key, turn.isTerm);
   }
-  // Free plan: the answer starts to form, then blurs, then the paywall opens. Never a locked box up front.
-  function lock(turn, quiet) {
-    turn.el.classList.add('is-locked');
-    locked.add(turn);
-    const rest = turn.el.querySelector('.ak-rest'), pill = turn.el.querySelector('.ak-lockpill');
-    if (rest && pill) pill.style.top = (rest.offsetTop + 36) + 'px';
-    if (quiet) { turn.el.classList.add('is-pill'); return; }
-    later(() => {
-      if (!locked.has(turn)) return;
-      const a = app();
-      if (a && a.paywall && !isPlus()) a.paywall('ask'); else turn.el.classList.add('is-pill');
-    }, 650);
-  }
-  function unlockAll() {
-    locked.forEach((turn) => {
-      turn.el.classList.remove('is-locked', 'is-pill');
-      turn.el.classList.add('is-unlocking', 'is-done');
-      setTimeout(() => turn.el.classList.remove('is-unlocking'), 900);
-      reveal(turn);
-    });
-    locked.clear();
+  // The mascot reacts to what you do in its answer: a nod, a happy hop for a right answer, a tilt for a wrong one
+  function react(elIn, kind) {
+    const turnEl = elIn && elIn.closest('.ak-turn'), turn = turnEl && findTurn(turnEl), m = turn && turn.ms;
+    if (!m) return;
+    if (kind === 'nod' || kind === 'hop') { m.play(kind); return; }
+    clearTimeout(turn.reactT);
+    m.setState(kind === 'right' ? 'happy' : 'curious', { restart: true });
+    turn.reactT = setTimeout(() => { if (turn.ms) turn.ms.setState('idle'); }, 1700);
   }
   function markExplored(key, isTerm) {
     if (!key) return;
@@ -808,7 +803,7 @@
     });
     const right = i === b.answer;
     sec.querySelector('[data-reveal]').innerHTML = `<div class="ak-reveal ${right ? 'ok' : 'no'}"><p class="ak-reveal-k">${ic(right ? 'check' : 'alert', 16, 2.6)}${right ? 'You got it' : 'Not quite'}</p><p class="ak-body">${rich(b.explain)}</p><button type="button" class="ak-link" data-act="guess-reset">Try again</button></div>`;
-    BR.pulse();
+    react(sec, right ? 'right' : 'wrong');
   }
   function resetGuess(sec) {
     sec.classList.remove('is-answered');
@@ -833,14 +828,15 @@
     const b = blockData(sec.querySelector('[data-lx]'));
     sec.querySelector('[data-cap]').textContent = on ? b.on : b.idle;
     sec.querySelector('[data-lx]').classList.toggle('is-on', on);
-    const turn = findTurn(sec.closest('.ak-turn'));
-    if (turn && BR.host === turn.host) BR.mode(on ? 'listen' : 'idle');
+    const turn = findTurn(sec.closest('.ak-turn')), m = turn && turn.ms; // the cat listens while it purrs
+    if (m) { m.setState(on ? 'listening' : 'idle'); if (!on) m.setLevel(0); }
     if (on && !st.raf) { st.t0 = performance.now(); loop(); }
     function loop() {
       const now = performance.now(), t = (now - st.t0) / 1000;
       const amp = st.on ? 1 : Math.max(0, 1 - (now - (st.off || now)) / 300);
       const open = st.on ? 0.06 + 0.5 * Math.abs(Math.sin(t * Math.PI * 2.5)) : lerp(1, 0.3, amp);
       drawLarynx(sec, open, t);
+      if (m && st.on) m.setLevel(0.35 + 0.5 * open);
       // the waveform: low and steady while purring
       let d = ''; for (let x = 0; x <= 300; x += 4) { const y = 20 + (st.on ? 12 * Math.sin((x / 300) * 6.283 * 5 - t * 9) * Math.sin(x / 300 * Math.PI) : 0); d += `${x ? 'L' : 'M'}${x} ${y.toFixed(1)}`; }
       sec.querySelector('[data-wave]').setAttribute('d', d);
@@ -868,7 +864,7 @@
     sec.querySelector('[data-s0]').style.stopColor = s.col[0]; sec.querySelector('[data-s1]').style.stopColor = s.col[1];
     ['chl', 'car', 'ant'].forEach((k) => { sec.querySelector(`[data-bar="${k}"]`).style.transform = `scaleX(${s[k]})`; });
     const cp = sec.querySelector('[data-cap]'); cp.textContent = s.cap; pop(cp);
-    BR.pulse();
+    react(sec, 'nod');
   }
   function setCompare(sec, b, i) {
     setSeg(sec, 'cmp', i);
@@ -894,8 +890,8 @@
     const right = i === rd.answer;
     el.querySelectorAll('[data-act="spot"]').forEach((o, k) => { o.disabled = true; if (k === rd.answer) { o.classList.add('is-right'); o.querySelector('.ak-opt-mark').innerHTML = ic('check', 16, 2.8); } else if (k === i) { o.classList.add('is-wrong'); o.querySelector('.ak-opt-mark').innerHTML = ic('x', 16, 2.8); } else o.classList.add('is-dim'); });
     if (right) el.dataset.score = (+el.dataset.score || 0) + 1;
+    react(el, right ? 'right' : 'wrong');
     el.querySelector('[data-fb]').innerHTML = `${right ? 'Yes.' : 'Not this time.'} ${rd.snout === 'u' ? 'A wide, rounded U is an alligator.' : 'A narrow, pointed V is a crocodile.'} <button type="button" class="ak-link" data-act="spot-next">${r + 1 < b.rounds.length ? 'Next' : 'See score'}</button>`;
-    BR.pulse();
   }
   // Scale zoom: every body drawn to scale; zooming out shrinks the last one to a dot
   function scaleLayout(b, fi) {
@@ -936,7 +932,7 @@
     setSeg(sec, 'zoom', i);
     const st = sec._sc; const from = st.z, to = i;
     const cp = sec.querySelector('[data-cap]'); cp.textContent = b.steps[i].cap; pop(cp);
-    BR.pulse();
+    react(sec, 'nod');
     if (still()) { st.z = to; drawScale(sec, b, to); return; }
     cancelAnimationFrame(st.raf);
     const t0 = performance.now(), dur = 900 + Math.abs(to - from) * 250;
@@ -951,9 +947,8 @@
   }
   function setLobesBlock(sec, b, i) {
     setSeg(sec, 'lobes', i);
-    const turn = findTurn(sec.closest('.ak-turn'));
-    if (turn && BR.host !== turn.host) BR.take(turn.host, 'brain', 'mind', 600);
-    BR.setLobes(b.options[i][1]); BR.pulse();
+    const turn = findTurn(sec.closest('.ak-turn')); // the brain mascot lights up: one task, or a whole day
+    if (turn && turn.ms) { turn.ms.setLit(b.options[i][1]); turn.ms.play('nod'); }
     const cp = sec.querySelector('[data-cap]'); cp.textContent = b.options[i][2]; pop(cp);
   }
   function renderMyth(el, b) {
@@ -976,7 +971,7 @@
     if (right) el.dataset.score = +el.dataset.score + 1;
     el.querySelectorAll('[data-act="mc"]').forEach((o, j) => { o.disabled = true; if (j === ans) { o.classList.add('is-right'); o.querySelector('.ak-opt-mark').innerHTML = ic('check', 16, 2.8); } else if (j === i) { o.classList.add('is-wrong'); o.querySelector('.ak-opt-mark').innerHTML = ic('x', 16, 2.8); } else o.classList.add('is-dim'); });
     el.querySelector('[data-mcout]').innerHTML = `<p class="ak-mc-why"><b>${it[1] ? 'Fact.' : 'Myth.'}</b> ${rich(it[2])}</p><button type="button" class="ak-link" data-act="mc-next">${k + 1 < b.items.length ? 'Next' : 'See score'}</button>`;
-    BR.pulse();
+    react(el, right ? 'right' : 'wrong');
   }
   function drawWave(p, f) {
     let d = ''; for (let x = 0; x <= 300; x += 3) { const y = 45 + 30 * Math.sin((x / 300) * 6.283 * f); d += `${x ? 'L' : 'M'}${x} ${y.toFixed(1)}`; }
@@ -1022,18 +1017,15 @@
     const id = btn.dataset.term, t = T[id]; if (!t) return;
     closePop();
     const turnEl = btn.closest('.ak-turn'), tr = turnEl && findTurn(turnEl);
-    const inLocked = turnEl && turnEl.classList.contains('is-locked');
-    if (inLocked) { const a = app(); if (a && a.paywall) a.paywall('ask'); return; }
     const node = cur && cur.nodes.get(cur.current);
     const here = node && node.id === id, has = cur && cur.nodes.has(id);
-    const isRootLevel = node && !node.parent;
     let note = '';
-    if (!here && !has && isRootLevel && !isPlus()) {
-      const left = Math.max(0, 3 - ((Store.get().branchesUsed || {})[cur.key] || 0));
-      note = left ? `Free plan: ${left} of 3 branches left on this question` : 'You’ve used your 3 free branches on this question';
+    if (!here && !has && !isPlus() && window.Store) {
+      const lim = freeLim('branches'), left = Math.max(0, lim - ((Store.get().branchesUsed || {})[cur.key] || 0));
+      note = left ? `${left} of ${lim} free branches left on this question` : `You’ve used your ${lim} free branches on this question`;
     }
     popEl = document.createElement('div'); popEl.className = 'ak-pop'; popEl.setAttribute('role', 'dialog'); popEl.setAttribute('aria-label', t.label);
-    popEl.innerHTML = `<p class="ak-pop-k"><span class="ak-term-ic">${ic(EXP.has(id) ? 'check' : 'sparkle', 14, 2.3)}</span>${esc(cap(t.label))}</p><p class="ak-pop-def">${esc(t.def)}</p>
+    popEl.innerHTML = `<p class="ak-pop-k"><span class="ak-pop-ic" data-keep-colour>${paint(id, t.subject, 34, t.label)}</span>${esc(cap(t.label))}${EXP.has(id) ? `<span class="ak-pop-seen">${ic('check', 13, 2.8)}</span>` : ''}</p><p class="ak-pop-def">${esc(t.def)}</p>
       ${here ? `<p class="ak-pop-here">${ic('check', 15, 2.6)} You’re here</p>` : `<div class="ak-pop-row"><button type="button" class="ak-lit-sm" data-act="branch" data-term="${id}">${ic('branch', 17, 2.2)} <span>${has ? 'Open again' : 'Branch here'}</span></button>${has ? `<span class="ak-pop-note is-done">${ic('check', 14, 2.6)} Explored</span>` : ''}</div>${note ? `<p class="ak-pop-free">${note}</p>` : ''}`}`;
     root.appendChild(popEl);
     const r = localPt(btn), W = 300, Hh = popEl.offsetHeight;
@@ -1053,18 +1045,30 @@
   }
 
   // ───────── Branching ─────────
-  function branch(tid, fromEl) {
-    if (!cur) return;
-    const node = cur.nodes.get(cur.current); if (!node || node.id === tid) return;
+  // The shell owns the free limits: one gate per new question, one per new branch. Revisits never ask.
+  const freeLim = (k) => (window.FREE_LIMITS && FREE_LIMITS[k]) || 4;
+  function gate(moment, opts) {
+    const a = app();
+    if (isPlus() || !a || !a.gate) return Promise.resolve(true);
+    return Promise.resolve(a.gate(moment, opts)).catch(() => true);
+  }
+  function freeLeftText() {
+    if (isPlus() || !window.Store || !app() || !app().gate) return '';
+    const n = Math.max(0, freeLim('asks') - (Store.get().asksUsed || 0));
+    return n ? `${n} free question${n === 1 ? '' : 's'} left` : 'No free questions left';
+  }
+  function refreshFree() { if (root) root.querySelectorAll('[data-free]').forEach((e) => { e.textContent = freeLeftText(); }); }
+  async function branch(tid, fromEl) {
+    if (!cur || gating) return;
+    const c = cur, node = c.nodes.get(c.current); if (!node || node.id === tid) return;
     const o = fromEl && fromEl.isConnected ? localPt(fromEl) : { x: SW / 2, y: SH / 2 };
     closePop();
-    if (cur.nodes.has(tid)) { goNode(tid, { dir: 'in', o }); return; }
-    if (!node.parent && !isPlus()) {
-      const bu = Object.assign({}, Store.get().branchesUsed || {}), used = bu[cur.key] || 0;
-      if (used >= 3) { pendingBranch = { tid, o, convo: cur.key }; const a = app(); if (a && a.paywall) a.paywall('branch'); return; }
-      bu[cur.key] = used + 1; Store.set({ branchesUsed: bu });
-    }
-    addBranchNode(cur, tid, node.id);
+    if (c.nodes.has(tid)) { goNode(tid, { dir: 'in', o }); return; }
+    gating = true;
+    const ok = await gate('branch', { qid: c.key });
+    gating = false;
+    if (!ok || cur !== c || view !== 'chat' || c.nodes.has(tid)) return;
+    addBranchNode(c, tid, c.current);
     goNode(tid, { dir: 'in', o });
   }
 
@@ -1082,11 +1086,8 @@
     const fresh = ensurePage(n);
     cur.current = id;
     const enter = n.page, leave = prev ? prev.page : null;
-    if (fresh) addTurn(n, turnSpec(n), { instant: n.past || o.instant, gate: n.kind !== 'term' && o.gate, noThink: o.noThink });
-    else {
-      const last = n.turns[n.turns.length - 1];
-      if (last) { BR.take(last.host, last.shape, last.palette, 1100); BR.mode('idle'); if (last.key === 'brain') BR.setLobes(0.4); }
-    }
+    if (fresh) addTurn(n, turnSpec(n), { instant: n.past || o.instant, noThink: o.noThink });
+    else { const last = n.turns[n.turns.length - 1]; if (last && last.ms && !still()) last.ms.play('nod'); }
     if (o.dir === 'out' && leave) {
       const term = enter.querySelector(`.ak-term[data-term="${prev.id}"]`);
       enter.classList.remove('is-off');
@@ -1143,7 +1144,7 @@
     const path = pathTo(cur, cur.current);
     trailEl.innerHTML = path.map((n, k) => {
       const last = k === path.length - 1;
-      return `${k ? `<span class="ak-trail-sep" aria-hidden="true">${ic('chev', 13, 2.4)}</span>` : ''}<button type="button" class="ak-crumb${last ? ' is-cur' : ''}${last && dir === 'in' ? ' is-new' : ''}" data-act="crumb" data-id="${n.id}"${last ? ' aria-current="page"' : ''}>${esc(k ? n.crumb : n.crumb)}</button>`;
+      return `${k ? `<span class="ak-trail-sep" aria-hidden="true">${ic('chev', 13, 2.4)}</span>` : ''}<button type="button" class="ak-crumb${last ? ' is-cur' : ''}${last && dir === 'in' ? ' is-new' : ''}" data-act="crumb" data-id="${n.id}"${last ? ' aria-current="page"' : ''}><span class="ak-crumb-ic" data-keep-colour>${paint(n.id, n.subject, 22, n.label)}</span>${esc(n.crumb)}</button>`;
     }).join('');
     requestAnimationFrame(() => trailEl.scrollTo({ left: trailEl.scrollWidth, behavior: still() ? 'auto' : 'smooth' }));
     backBtn.setAttribute('aria-label', path.length > 1 ? 'Back' : 'Back to Ask home');
@@ -1151,13 +1152,23 @@
 
   // ───────── Open a question ─────────
   // src: 'wonder' (free for everyone) · 'history' (yours already) · anything else is a new ask (Plus, or a preview on free)
-  function openQuestion(text, o = {}) {
-    const c0 = classify(text);
-    const key = c0.id || 'q:' + c0.q.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-    let c = convos.get(key), fresh = false;
-    if (!c) { c = newConvo(key, { q: c0.id ? (A[String(text).trim()] ? A[c0.id].q : String(text).trim()) : c0.q, type: c0.type, src: o.src }); fresh = true; }
-    else order = [key].concat(order.filter((k) => k !== key));
-    enterChat(c, { o: o.o, src: o.src, fresh, gate: fresh && o.src !== 'wonder' && !isPlus(), noThink: o.noThink, instant: o.instant });
+  const keyOf = (c0) => c0.id || 'q:' + c0.q.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+  // A new question asks the shell first (today's wonder is free). Resolves false if it stayed shut.
+  async function openQuestion(text, o = {}) {
+    const c0 = classify(text), key = keyOf(c0);
+    let c = convos.get(key);
+    if (!c) {
+      if (o.src !== 'wonder' && !o.gated) {
+        if (gating) return false;
+        gating = true; const ok = await gate('ask'); gating = false;
+        refreshFree();
+        if (!ok) return false;
+        c = convos.get(key);
+      }
+      if (!c) c = newConvo(key, { q: c0.id ? (A[String(text).trim()] ? A[c0.id].q : String(text).trim()) : c0.q, type: c0.type, src: o.src });
+    } else order = [key].concat(order.filter((k) => k !== key));
+    enterChat(c, { o: o.o, src: o.src, noThink: o.noThink, instant: o.instant, startTopic: o.startTopic });
+    return true;
   }
   function enterChat(c, o = {}) {
     const wasChat = view === 'chat';
@@ -1172,8 +1183,8 @@
     const fresh = ensurePage(n);
     c.current = target;
     const enter = n.page;
-    if (fresh) addTurn(n, turnSpec(n), { instant: n.past || o.instant, gate: o.gate, noThink: o.noThink });
-    else { const last = n.turns[n.turns.length - 1]; if (last) { BR.take(last.host, last.shape, last.palette, 1100); BR.mode('idle'); if (last.key === 'brain') BR.setLobes(0.4); } }
+    if (fresh) addTurn(n, turnSpec(n), { instant: n.past || o.instant, noThink: o.noThink, startTopic: o.startTopic });
+    else { const last = n.turns[n.turns.length - 1]; if (last && last.ms && !still()) last.ms.play('nod'); }
     if (wasChat) fadeSwap(enter, null);
     else {
       chatEl.classList.add('is-entering'); requestAnimationFrame(() => requestAnimationFrame(() => chatEl.classList.remove('is-entering')));
@@ -1203,17 +1214,19 @@
   }
 
   // Follow-up typed in the chat: a new turn on the current page
-  function followUp(text) {
-    const node = cur && cur.nodes.get(cur.current); if (!node) return;
+  async function followUp(text) {
+    const node = cur && cur.nodes.get(cur.current); if (!node || gating) return;
+    gating = true; const ok = await gate('ask'); gating = false; refreshFree();
+    if (!ok || view !== 'chat' || !cur || cur.nodes.get(cur.current) !== node) return;
     const c0 = classify(text);
     const spec = c0.id ? { kind: 'answer', a: A[c0.id], q: text } : { kind: 'generic', type: c0.type, q: text };
-    const turn = addTurn(node, spec, { gate: !isPlus() });
+    const turn = addTurn(node, spec, {});
     later(() => smoothScrollTo(node.page, turn.el), 40);
   }
 
   // ───────── Mini-map + zoom-out map ─────────
   function convoMapData() {
-    return [...cur.nodes.values()].map((n) => ({ id: n.id, label: n.kind === 'answer' ? A[n.id].q : n.kind === 'term' ? n.label : n.q, parent: n.parent, shape: n.shape, palette: n.palette }));
+    return [...cur.nodes.values()].map((n) => ({ id: n.id, label: n.kind === 'answer' ? A[n.id].q : n.kind === 'term' ? n.label : n.q, parent: n.parent, shape: n.shape, palette: n.palette, subject: n.subject }));
   }
   function renderMini(pulse) {
     if (!cur || !miniBtn) return;
@@ -1231,9 +1244,12 @@
   function openMap(fromPinch) {
     if (!cur || (mapView && mapView.isOpen())) return;
     closePop();
-    if (!mapView) mapView = makeMap(mapHost, { overlay: true, title: 'This question', onPick: (id) => goNode(id, { dir: 'jump' }), onClose: () => chatEl.classList.remove('is-mapped') });
+    if (!mapView) mapView = makeMap(mapHost, { overlay: true, liveRoot: true, title: 'This question', onPick: (id) => goNode(id, { dir: 'jump' }), onClose: () => { chatEl.classList.remove('is-mapped'); parkBrain(); } });
     const nodes = convoMapData();
     mapView.setData(nodes, cur.current);
+    // the centre stays particles: the live brain canvas, shaped like the question
+    const r0 = rootOf(cur), h = mapView.rootHost();
+    if (h && window.Brain) { const g0 = h.querySelector('.ak-glyph'); if (g0) g0.remove(); Brain.moveTo(h); BR.host = h; BR.shape(r0.shape, r0.palette, 10); BR.mode('idle'); }
     mapView.setTitle(rootOf(cur).crumb, `${nodes.length} ${nodes.length === 1 ? 'idea' : 'ideas'} · tap one to jump in`);
     chatEl.classList.add('is-mapped');
     mapView.open(localPt(miniBtn));
@@ -1248,10 +1264,10 @@
     order.slice().reverse().forEach((k) => {
       const c = convos.get(k); if (!c) return;
       const r = rootOf(c); if (!hasSeen(c)) return;
-      out.push({ id: k, label: r.kind === 'answer' ? A[k].q : r.q, parent: withHub ? '@you' : null, shape: r.shape, palette: r.palette, convo: k, node: k });
-      c.nodes.forEach((n) => { if (n.parent) out.push({ id: k + '/' + n.id, label: n.label, parent: n.parent === k ? k : k + '/' + n.parent, shape: n.shape, palette: n.palette, convo: k, node: n.id }); });
+      out.push({ id: k, label: r.kind === 'answer' ? A[k].q : r.q, parent: withHub ? '@you' : null, shape: r.shape, palette: r.palette, subject: r.subject, convo: k, node: k });
+      c.nodes.forEach((n) => { if (n.parent) out.push({ id: k + '/' + n.id, label: n.label, parent: n.parent === k ? k : k + '/' + n.parent, shape: n.shape, palette: n.palette, subject: n.subject, convo: k, node: n.id }); });
     });
-    if (withHub && !convos.has(C.wonder.id) && A[C.wonder.id]) out.push({ id: '@wonder', label: A[C.wonder.id].q, parent: '@you', shape: A[C.wonder.id].shape, palette: A[C.wonder.id].palette, tag: 'Today’s wonder', convo: C.wonder.id, node: C.wonder.id });
+    if (withHub && !convos.has(C.wonder.id) && A[C.wonder.id]) out.push({ id: '@wonder', label: A[C.wonder.id].q, parent: '@you', shape: A[C.wonder.id].shape, palette: A[C.wonder.id].palette, subject: A[C.wonder.id].subject, tag: 'Today’s wonder', convo: C.wonder.id, node: C.wonder.id });
     return out;
   }
   const hasSeen = (c) => c.past || c.nodes.get(c.key).page; // seeded history, or opened this session
@@ -1364,8 +1380,13 @@
         e.b.classList.toggle('is-here', n.id === currentId); e.b.classList.toggle('is-up', !!n.up); e.b.classList.toggle('is-hub', !!n.hub); e.b.classList.toggle('is-wonder', !!n.tag);
         e.b.className = e.b.className.replace(/\bd\d\b/g, '').trim() + ' d' + Math.min(n.depth, 3);
         const bub = e.b.querySelector('.ak-mn-bub');
+        // the centre (the hub, or the question at the root) stays particles; every idea around it is painted
+        const centre = n.hub || n.depth === 0;
+        e.b.classList.toggle('is-painted', !centre);
         if (n.hub && opts.liveHub) { if (!bub.querySelector('.ak-mn-host')) bub.innerHTML = '<span class="ak-mn-host"></span>'; }
-        else if (e.glyphFor !== n.shape + n.palette) { e.glyphFor = n.shape + n.palette; bub.innerHTML = glyph(n.shape, n.palette, n.depth === 0 ? 420 : 300, 0.03); }
+        else if (centre && opts.liveRoot) { const key = 'L' + n.shape + n.palette; if (e.glyphFor !== key || !bub.querySelector('.ak-mn-host')) { e.glyphFor = key; bub.innerHTML = `<span class="ak-mn-host"><span class="ak-glyph">${glyph(n.shape, n.palette, 420, 0.03)}</span></span>`; } }
+        else if (centre) { const key = 'P' + n.shape + n.palette; if (e.glyphFor !== key) { e.glyphFor = key; bub.innerHTML = glyph(n.shape, n.palette, 420, 0.03); } }
+        else { const key = 'O' + (n.node || n.id) + n.subject; if (e.glyphFor !== key) { e.glyphFor = key; bub.setAttribute('data-keep-colour', ''); bub.innerHTML = paint(n.node || n.id, n.subject, Math.round(s * 0.74), n.label); } }
         e.b.querySelector('.ak-mn-txt').textContent = n.label;
         e.b.querySelector('.ak-mn-tag').textContent = n.tag || (n.id === currentId && opts.overlay ? 'You are here' : '');
         e.b.setAttribute('aria-label', n.hub ? 'You. Ask something new' : `${n.label}${n.id === currentId ? ', you are here' : ''}. Open`);
@@ -1378,6 +1399,7 @@
       render();
     }
     function hubHost() { const e = els.get('@you'); return e ? e.b.querySelector('.ak-mn-host') : null; }
+    function rootHost() { const e = L && L.root && els.get(L.root.id); return e ? e.b.querySelector('.ak-mn-host') : null; }
     function render(v) {
       if (!L) return;
       v = v || { fx: cam.fx, fy: cam.fy, z: cam.z, fade: 1, target: null, others: 1 };
@@ -1523,7 +1545,7 @@
       el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
     }
     return {
-      setData, open, close, render, hubHost, el,
+      setData, open, close, render, hubHost, rootHost, el,
       isOpen: () => isOpen,
       setTitle(t, s) { const h = el.querySelector('.ak-map-head'); if (h) { h.querySelector('h2').textContent = t; h.querySelector('p').textContent = s; } },
       refit() { if (L) { cam = { fx: fit.fx, fy: fit.fy, z: fit.z }; render(); } },
@@ -1547,15 +1569,20 @@
     homeEl.innerHTML = `<div class="ak-scroll">
       <h1 class="ak-title">What are you curious about?</h1>
       ${boxHTML('Ask anything…', 'a')}
+      <p class="ak-free" data-free>${esc(freeLeftText())}</p>
       <div class="ak-wonder" data-act="wonder" role="button" tabindex="0" aria-label="${esc(C.wonder.eyebrow)}: ${esc(w.q)}. Open">
         <div class="ak-wonder-top"><p class="ak-eyebrow">${ic('sparkle', 14)} ${esc(C.wonder.eyebrow)}</p><span class="ak-wonder-go">${ic('chev', 18, 2.4)}</span></div>
         <h2 class="ak-wonder-q">${esc(w.q)}</h2>
-        <div class="ak-wonder-vis"><div class="ak-glow" aria-hidden="true"></div><div class="ak-host ak-host-wonder" data-shape="${w.shape}" data-palette="${w.palette}"></div></div>
-        <p class="ak-wonder-hint">${ic('hand', 14, 2)} ${esc(C.wonder.hint)}</p>
+        <div class="ak-wonder-vis"><div class="ak-glow" aria-hidden="true"></div><div class="ak-wonder-ms" aria-hidden="true"></div></div>
+        <p class="ak-wonder-hint">${esc(C.wonder.hint)}</p>
       </div>
-      ${sug.length ? `<h2 class="ak-h2">Or try one of these</h2><div class="ak-sugs">${sug.map((id) => `<button type="button" class="ak-sug" data-act="ask" data-q="${id}"><span class="ak-sug-g">${glyph(A[id].shape, A[id].palette, 260, 0.04)}</span><span class="ak-sug-k">${esc(KIND_LABEL[A[id].type] || '')}</span><span class="ak-sug-q">${esc(A[id].q)}</span></button>`).join('')}</div>` : ''}
+      ${sug.length ? `<h2 class="ak-h2">Or try one of these</h2><div class="ak-sugs">${sug.map((id) => `<button type="button" class="ak-sug" data-act="ask" data-q="${id}"><span class="ak-sug-g" data-keep-colour>${paint(id, A[id].subject, 44, A[id].q)}</span><span class="ak-sug-k">${esc(KIND_LABEL[A[id].type] || '')}</span><span class="ak-sug-q">${esc(A[id].q)}</span></button>`).join('')}</div>` : ''}
       ${recentHTML()}
     </div>`;
+    // today's wonder: the mascot, already the topic
+    const wm = homeEl.querySelector('.ak-wonder-ms');
+    if (wm && window.Mascot) Mascot.create(wm, { size: 168, state: 'idle', topic: MT.answers[w.id] || null, decorative: true });
+    else if (wm) wm.innerHTML = paint(w.id, w.subject, 150, w.q);
   }
   const KIND_LABEL = { explain: 'How it works', compare: 'This or that', scale: 'How big', myth: 'True or not', course: 'Learn a skill', artifact: 'Make and share' };
   function recentHTML() {
@@ -1563,7 +1590,7 @@
     if (!ks.length) return '';
     return `<section class="ak-recent"><div class="ak-recent-head"><h2 class="ak-h2">Your recent branches</h2><button type="button" class="ak-link ak-recent-all" data-act="histmap">${ic('map', 16, 2.2)} See map</button></div>
       <div class="ak-recent-card">${ks.map((k) => { const c = convos.get(k), r = rootOf(c), br = [...c.nodes.values()].filter((n) => n.parent);
-        return `<button type="button" class="ak-tree" data-act="open-convo" data-k="${k}"><span class="ak-tree-root">${glyph(r.shape, r.palette, 260, 0.035)}</span><span class="ak-tree-main"><b>${esc(r.kind === 'answer' ? A[k].q : r.q)}</b>${br.length ? `<span class="ak-tree-br">${br.slice(0, 3).map((n) => `<i style="--c:${fam(n.palette)[1]}"></i>${esc(n.label)}`).join('<em aria-hidden="true">·</em>')}</span>` : `<span class="ak-tree-br is-none">${esc(c.when)}</span>`}</span><span class="ak-tree-chev">${ic('chev', 18, 2.2)}</span></button>`; }).join('')}</div></section>`;
+        return `<button type="button" class="ak-tree" data-act="open-convo" data-k="${k}"><span class="ak-tree-root" data-keep-colour>${paint(k, r.subject, 40, r.label)}</span><span class="ak-tree-main"><b>${esc(r.kind === 'answer' ? A[k].q : r.q)}</b>${br.length ? `<span class="ak-tree-br">${br.slice(0, 3).map((n) => `<i style="--c:${fam(n.palette)[1]}"></i>${esc(n.label)}`).join('<em aria-hidden="true">·</em>')}</span>` : `<span class="ak-tree-br is-none">${esc(c.when)}</span>`}</span><span class="ak-tree-chev">${ic('chev', 18, 2.2)}</span></button>`; }).join('')}</div></section>`;
   }
   function renderB() {
     homeEl.innerHTML = `<div class="ak-bmap"></div>
@@ -1576,7 +1603,7 @@
   // The pixel bot is the hero. Below it: the greeting, a few pills, and three round actions:
   // Type · Hold to talk (primary) · Show me. Asking makes the bot think, then regroup into the topic's icon.
   const CC0 = C.charC || {};
-  let cBot = null, cGreeted = false, cLastIcon = null, cBusy = false;
+  let cBot = null, cGreeted = false, cLastIcon = null, cLastTopic = null, cBusy = false;
   const ct = { on: false, t0: 0, auto: false, k: 0, raf: 0, hist: [], bump: 0, last: 0 };
   const cRoot = () => homeEl.querySelector('.ak-c');
   const cq = (s) => homeEl.querySelector(s);
@@ -1610,8 +1637,9 @@
         <button type="button" class="btn-lit ak-c-offer" data-act="c-ask" data-q="${C.show.ask}" data-src="show">${esc(A[C.show.ask] ? A[C.show.ask].q : '')}</button>
       </div>
       <form class="ak-c-field" data-form="c-ask" autocomplete="off">${useMs ? `<span class="ak-c-field-ic" aria-hidden="true">${ic('tee', 18, 2.2)}</span>` : ''}<label class="ak-sr" for="akInC">Your question</label><input id="akInC" name="q" type="text" placeholder="${useMs ? 'Type a question…' : 'Ask me anything…'}" enterkeyhint="send" autocomplete="off"><button type="submit" class="ak-c-send" aria-label="Send" disabled>${ic('up', 20, 2.6)}</button></form>
+      <p class="ak-c-free" data-free>${esc(freeLeftText())}</p>
       <div class="ak-c-acts">
-        <button type="button" class="ak-c-act" data-act="c-type" aria-pressed="false"><span class="ak-c-orb">${ic('tee', 22, 2.2)}</span><span class="ak-c-lbl">Type</span></button>
+        ${useMs ? '' : `<button type="button" class="ak-c-act" data-act="c-type" aria-pressed="false"><span class="ak-c-orb">${ic('tee', 22, 2.2)}</span><span class="ak-c-lbl">Type</span></button>`}
         <button type="button" class="ak-c-act is-main" data-act="c-talk" aria-label="Hold to talk"><span class="ak-c-orb"><i class="ak-c-ring" aria-hidden="true"></i><i class="ak-c-ring is-2" aria-hidden="true"></i>${ic('mic', 28, 2.2)}</span><span class="ak-c-lbl" data-talk-lbl>Hold to talk</span></button>
         <button type="button" class="ak-c-act" data-act="c-show" aria-pressed="false"><span class="ak-c-orb">${ic('camera', 22, 2.2)}</span><span class="ak-c-lbl">Show me</span></button>
       </div>
@@ -1622,12 +1650,13 @@
     // ?mstate= / ?mtopic= set the mascot's pose once it has said hello (for the lab and screenshots)
     const mInit = useMs && Mascot.initial && (Mascot.initial.state || Mascot.initial.topic) ? Mascot.initial : null;
     const applyInit = () => { if (!mInit || !cBot || !cBot.ms) return; if (mInit.topic) cBot.ms.setTopic(mInit.topic); if (mInit.state) cBot.ms.setState(mInit.state); };
-    if (still()) { cBot.appear(true); cGreeted = true; cLastIcon = null; applyInit(); return; }
+    if (still()) { cBot.appear(true); cGreeted = true; cLastIcon = null; cLastTopic = null; applyInit(); return; }
     if (mInit) cT(applyInit, 2600);
-    if (cLastIcon) {
-      // back from an answer: the icon regroups into the character
-      const icon = cLastIcon; cLastIcon = null;
-      cBot.appear(true); cBot.toIcon(icon, 1);
+    if (cLastIcon || cLastTopic) {
+      // back from an answer: it is still the topic for a beat, then regroups into itself
+      const icon = cLastIcon, tp = cLastTopic; cLastIcon = null; cLastTopic = null;
+      cBot.appear(true);
+      if (cBot.ms) cBot.ms.setTopic(tp, { instant: true }); else cBot.toIcon(icon, 1);
       root0.classList.add('is-back');
       cT(() => cBot.toBot(900), 260);
       cT(() => { cBot.hop(); bubble(CC0.back || 'What next?', 2000); }, 1150);
@@ -1664,7 +1693,7 @@
     if (was === 'talk') talkStop();
     if (was === 'show') { stopC(); if (m !== 'ask' && cBot && cBot.form() === 'icon') cBot.toBot(800); }
     r.dataset.mode = m; r.classList.remove('is-greet', 'is-back');
-    cq('[data-act="c-type"]').setAttribute('aria-pressed', m === 'type');
+    const tb = cq('[data-act="c-type"]'); if (tb) tb.setAttribute('aria-pressed', m === 'type');
     cq('[data-act="c-show"]').setAttribute('aria-pressed', m === 'show');
     const f = cq('.ak-c-field');
     if (m !== 'type' && f.contains(document.activeElement)) document.activeElement.blur();
@@ -1681,24 +1710,32 @@
   const cT = (fn, ms) => cState.timers.push(setTimeout(fn, still() ? 0 : ms));
   const botPt = () => localPt(cq('.ak-bot'));
 
-  // Ask from C: the bot thinks (eyes up, a pixel drifting off), regroups into the topic icon, then the answer opens.
-  function cAsk(q, o = {}) {
-    if (cBusy || !cBot) return; cBusy = true;
+  // Ask from C: the shell checks the free limit, the character hops, and the answer page takes over.
+  // The answer's own mascot does the thinking and becomes the topic, so there is one character and one morph.
+  async function cAsk(q, o = {}) {
+    if (cBusy || !cBot) return;
+    const c0 = classify(q), key = keyOf(c0);
+    const isNew = !o.open && !convos.has(key) && o.src !== 'wonder';
+    cBusy = true;
     if (cBot.ms) { cState.timers.forEach(clearTimeout); cState.timers = []; } // drop a pending hello
-    const c0 = classify(q);
-    const icon = o.icon || (c0.id ? ANSWER_ICON[c0.id] : KIND_ICON[c0.type]) || 'bulb';
+    if (isNew) {
+      if (gating) { cBusy = false; return; }
+      gating = true; const ok = await gate('ask'); gating = false;
+      refreshFree();
+      if (!ok || !cBot || !cRoot()) { cBusy = false; if (cBot) { cMode('home'); cBot.mood('idle'); } return; }
+    }
     const label = o.label || (A[q] ? A[q].q : String(q).trim());
+    cLastIcon = (c0.id ? ANSWER_ICON[c0.id] : KIND_ICON[c0.type]) || 'bulb';
+    cLastTopic = (c0.id ? MT.answers[c0.id] : MT.kinds[c0.type]) || null;
     cMode('ask');
     const tt = cq('[data-title]'); tt.textContent = label; pop(tt);
-    const sb = cq('[data-sub]'); sb.textContent = CC0.thinkingLine || 'Thinking'; sb.classList.add('is-thinking');
-    const go = o.open || (() => openQuestion(q, { src: o.src || 'typed', o: botPt(), noThink: true }));
-    const done = () => { cLastIcon = icon; cBusy = false; go(); };
-    if (still()) { cBot.toIcon(icon, 1); done(); return; }
-    if (cBot.form() === 'icon') { cBot.bounce(); cT(done, 520); return; }
-    cBot.mood('think'); bubble('');
-    if (cBot.ms) cT(() => { cBot.ms.setState('searching'); sb.textContent = 'Searching'; }, 650);
-    cT(() => { cBot.toIcon(icon, 1100); if (cBot.ms) { cBot.ms.setState('ready'); sb.textContent = 'Got it'; } }, 1250);
-    cT(done, 2550);
+    const sb = cq('[data-sub]'); sb.textContent = CC0.thinkingLine || 'One moment'; sb.classList.add('is-thinking');
+    bubble('');
+    const go = o.open || (() => openQuestion(q, { src: o.src || 'typed', o: botPt(), gated: true, startTopic: o.src === 'show' && !!(cBot.ms && cBot.ms.topic) }));
+    const done = () => { cBusy = false; go(); };
+    if (still()) { done(); return; }
+    if (cBot.ms) cBot.ms.play('hop'); else cBot.hop();
+    cT(done, 460);
   }
 
   // Hold to talk: press shows a live waveform and the bot listening; the words appear; release sends.
@@ -1815,8 +1852,7 @@
     if (view !== 'home' || !shown) return;
     const v = homeEl.dataset.v;
     if (v === 'A') {
-      const h = homeEl.querySelector('.ak-host-wonder'), w = A[C.wonder.id];
-      BR.take(h, w.shape, w.palette, 1100); BR.mode('listen');
+      parkBrain(); BR.mode('idle');
     } else if (v === 'B') {
       const h = bView && bView.hubHost(); if (h) { BR.take(h, 'brain', 'cobalt', 900); BR.mode('idle'); }
     } else {
@@ -1833,7 +1869,7 @@
     const act = t.dataset.act, i = +t.dataset.i, sec = t.closest('.ak-sec');
     const b = sec ? blockData(t) : null;
     switch (act) {
-      case 'wonder': if (wonderDrag) return; openQuestion(C.wonder.id, { src: 'wonder', o: localPt(homeEl.querySelector('.ak-host-wonder').parentElement), noThink: true }); break;
+      case 'wonder': if (wonderDrag) return; openQuestion(C.wonder.id, { src: 'wonder', o: localPt(homeEl.querySelector('.ak-wonder-vis')), noThink: true, startTopic: true }); break;
       case 'ask': if (view === 'chat' && t.closest('.ak-page')) followUp(A[t.dataset.q] ? A[t.dataset.q].q : t.dataset.q); else openQuestion(t.dataset.q, { src: t.closest('.ak-c') ? 'show' : 'suggest', o: localPt(t) }); break;
       case 'open-convo': { const c = convos.get(t.dataset.k); if (c) { c.current = c.current || c.key; enterChat(c, { o: localPt(t) }); } break; }
       case 'histmap': openHistMap(localPt(t)); break;
@@ -1842,12 +1878,12 @@
       case 'mini': openMap(); break;
       case 'term': if (popEl && popEl._btn === t) closePop(); else openPop(t); break;
       case 'branch': branch(t.dataset.term, popEl && popEl._btn); break;
-      case 'unlock': { const a = app(); if (a && a.paywall) a.paywall('ask'); break; }
+      case 'hero': react(t, 'hop'); break;
       case 'guess': pickGuess(sec, b, i); break;
       case 'guess-reset': resetGuess(sec); break;
       case 'breath': setBreath(sec, i); break;
       case 'stage': setPigment(sec, b, i); break;
-      case 'cmp': setCompare(sec, b, i); BR.pulse(); break;
+      case 'cmp': setCompare(sec, b, i); react(sec, 'nod'); break;
       case 'spot': pickSpot(sec.querySelector('[data-spot]'), b, i); break;
       case 'spot-next': { const s = sec.querySelector('[data-spot]'); s.dataset.r = +s.dataset.r + 1; delete s.dataset.locked; renderSpot(s, b); break; }
       case 'spot-again': { const s = sec.querySelector('[data-spot]'); s.dataset.r = 0; s.dataset.score = 0; delete s.dataset.locked; renderSpot(s, b); break; }
@@ -1857,8 +1893,8 @@
       case 'mc-next': { const s = sec.querySelector('[data-mc]'); s.dataset.i = +s.dataset.i + 1; renderMyth(s, b); break; }
       case 'mc-again': { const s = sec.querySelector('[data-mc]'); s.dataset.i = 0; s.dataset.score = 0; delete s.dataset.locked; renderMyth(s, b); break; }
       case 'build': emit('course:build', { topic: 'Photography', title: b.title, from: 'ask' }); say('Course builder opens here'); break;
-      case 'tip': showTip(sec, b); BR.pulse(); break;
-      case 'flip': { const tc = sec.querySelector('[data-tc]'); tc.classList.toggle('is-flipped'); BR.pulse(); break; }
+      case 'tip': showTip(sec, b); react(sec, 'nod'); break;
+      case 'flip': { const tc = sec.querySelector('[data-tc]'); tc.classList.toggle('is-flipped'); react(sec, 'nod'); break; }
       case 'cardmode': {
         setSeg(sec, 'cardmode', i);
         sec.querySelector('[data-tcwrap]').hidden = i === 1;
@@ -1896,7 +1932,7 @@
     const inp = f.querySelector('input'), v = inp.value.trim(); if (!v) return;
     inp.value = ''; f.querySelector('button[type=submit]').disabled = true; inp.blur();
     if (f.dataset.form === 'follow') { chatEl.classList.remove('is-typing'); followUp(v); return; }
-    if (f.dataset.form === 'c-ask') { f.classList.remove('has-text'); cAsk(v, { src: 'typed' }); return; }
+    if (f.dataset.form === 'c-ask') { f.classList.remove('has-text'); if (cRoot()) cRoot().classList.remove('has-text'); cAsk(v, { src: 'typed' }); return; }
     openQuestion(v, { o: localPt(f), src: 'typed' });
   }
   let typeT = 0;
@@ -1967,14 +2003,15 @@
     root.addEventListener('pointerdown', (e) => { const h = e.target.closest('[data-act="hold"]'); if (h) { e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (er) { /* noop */ } holdPurr(h.closest('.ak-sec'), true); } });
     const release = (e) => { const h = e.target.closest && e.target.closest('[data-act="hold"]'); if (h) holdPurr(h.closest('.ak-sec'), false); };
     root.addEventListener('pointerup', release); root.addEventListener('pointercancel', release); root.addEventListener('lostpointercapture', release, true);
-    root.addEventListener('input', (e) => { if (e.target.matches('[data-act="wave"]')) { const sec = e.target.closest('.ak-sec'), v = +e.target.value; drawWave(sec.querySelector('[data-wv]'), v); const b = blockData(e.target); sec.querySelector('[data-cap]').textContent = b.cap[v > 6 ? 1 : 0]; BR.pulse(); } });
+    root.addEventListener('input', (e) => { if (e.target.matches('[data-act="wave"]')) { const sec = e.target.closest('.ak-sec'), v = +e.target.value; drawWave(sec.querySelector('[data-wv]'), v); const b = blockData(e.target); sec.querySelector('[data-cap]').textContent = b.cap[v > 6 ? 1 : 0]; } });
     // C · hold to talk (a tap works too), and the bot's eyes follow the pointer
     root.addEventListener('pointerdown', (e) => { const h = e.target.closest('[data-act="c-talk"]'); if (h) { e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (er) { /* noop */ } talkStart(); } });
     const talkUp = (e) => { if (ct.on && e.target.closest && e.target.closest('[data-act="c-talk"]')) talkRelease(); };
     root.addEventListener('pointerup', talkUp); root.addEventListener('pointercancel', talkUp); root.addEventListener('lostpointercapture', talkUp, true);
     root.addEventListener('pointermove', botLook);
     // C with the mascot: the question field sits on the home; focusing it is the same as tapping Type
-    root.addEventListener('focusin', (e) => { if (e.target.id === 'akInC' && cBot && !cBusy && cRoot() && cRoot().dataset.mode === 'home') { stopC(); cMode('type'); } });
+    root.addEventListener('focusin', (e) => { if (e.target.id === 'akInC' && cBot && !cBusy && cRoot() && cRoot().dataset.mode !== 'type') { stopC(); cMode('type'); } });
+    root.addEventListener('focusout', (e) => { if (e.target.id === 'akInC' && !e.target.value.trim() && cRoot() && cRoot().dataset.mode === 'type' && cBot && cBot.ms) setTimeout(() => { if (cRoot() && cRoot().dataset.mode === 'type' && document.activeElement !== e.target) cMode('home'); }, 0); });
     root.addEventListener('keydown', (e) => {
       const h = e.target.closest && e.target.closest('[data-act="c-talk"]');
       if (h && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) talkStart(); }
@@ -2002,13 +2039,7 @@
 
     if (window.Bus) {
       Bus.on('variant:change', ({ key }) => { if (key !== 'askHome' || !mounted) return; if (view === 'chat') { closeMap(true); cur && cur.nodes.forEach((n) => n.page && n.page.classList.add('is-off')); chatEl.hidden = true; view = 'home'; homeEl.hidden = false; if (shown && app()) app().setTabBar(true); } renderHome(); homeBrain(); });
-      Bus.on('store:change', ({ patch }) => {
-        if (!patch || !('plan' in patch)) return;
-        if (isPlus()) { unlockAll(); if (pendingBranch && cur && cur.key === pendingBranch.convo) { const pb = pendingBranch; pendingBranch = null; addBranchNode(cur, pb.tid, cur.current); goNode(pb.tid, { dir: 'in', o: pb.o }); } }
-      });
-      Bus.on('paywall:close', ({ reason, upgraded }) => {
-        if (!upgraded) { locked.forEach((t) => t.el.classList.add('is-pill')); if (reason === 'branch') pendingBranch = null; }
-      });
+      Bus.on('store:change', ({ patch }) => { if (patch && ('plan' in patch || 'asksUsed' in patch)) refreshFree(); });
       Bus.on('ask:open', (d) => {
         if (!d || !d.question) return;
         const a = app(); if (a && a.current && a.current() !== 'ask') a.showTab('ask');
@@ -2030,8 +2061,6 @@
     }
     else {
       if (app()) app().setTabBar(false);
-      const n = cur && cur.nodes.get(cur.current), last = n && n.turns && n.turns[n.turns.length - 1];
-      if (last) { BR.take(last.host, last.shape, last.palette, 900); if (last.key === 'brain') BR.setLobes(0.4); }
     }
     if (!hooksRan) { hooksRan = true; testHooks(); }
   }
@@ -2052,7 +2081,7 @@
     const steps = [];
     if (P.get('akmode') && homeEl.dataset.v === 'C') steps.push([P.has('akfast') ? 0 : 2600, () => {
       const m = P.get('akmode');
-      if (m === 'type') { cq('[data-act="c-type"]').click(); const t = P.get('aktext'); if (t) { const inp = cq('#akInC'); inp.value = t; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
+      if (m === 'type') { const tb = cq('[data-act="c-type"]'); if (tb) tb.click(); else { const inp = cq('#akInC'); inp.focus({ preventScroll: true }); } const t = P.get('aktext'); if (t) { const inp = cq('#akInC'); inp.value = t; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
       if (m === 'talk') talkStart();
       if (m === 'show') showOpen();
     }]);

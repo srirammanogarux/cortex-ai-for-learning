@@ -1,9 +1,9 @@
 // Cortex mascot. window.Mascot. See CONTRACT.md § Mascot.
 //
-//   const m = Mascot.create(el, { size: 120, direction: 'E', state: 'idle', topic: null });
-//   m.setState('thinking'); m.setTopic('cat'); m.say('Hi'); m.destroy();
+//   const m = Mascot.create(el, { size: 120, direction: 'A', state: 'idle', topic: null });
+//   m.setState('thinking'); m.setTopic('cat'); m.say('Hi'); m.setLit(0.4); m.destroy();
 //
-// One brain-shaped character in five drawing directions (A line · B cell · C buddy · D line+cells · E soft).
+// One brain-shaped character in six drawing directions (A line, chosen · B cell · C buddy · D line+cells · E soft · F particle).
 // Every direction reads the same "pose" (outline points, face, props, timing), so they share one vocabulary
 // of states and topics. Many instances can coexist: each owns its own SVG or canvas; one shared rAF drives them.
 (function () {
@@ -31,12 +31,12 @@
 
   // ───────── Vocabulary ─────────
   const STATES = ['idle', 'hello', 'listening', 'thinking', 'searching', 'reading', 'analysing', 'building', 'loading', 'ready', 'happy', 'proud', 'curious', 'surprised', 'confused', 'error', 'sleepy', 'aside'];
-  const TOPICS = ['brain', 'heart', 'planet', 'cat', 'crocodile', 'octopus', 'leaf', 'camera', 'atom', 'book', 'music'];
+  const TOPICS = ['brain', 'heart', 'planet', 'sun', 'cat', 'crocodile', 'octopus', 'leaf', 'camera', 'atom', 'book', 'music'];
   const LABELS = {
     idle: 'Idle', hello: 'Hello', listening: 'Listening', thinking: 'Thinking', searching: 'Searching', reading: 'Reading', analysing: 'Analysing',
     building: 'Building', loading: 'Loading', ready: 'Ready', happy: 'Happy', proud: 'Proud', curious: 'Curious', surprised: 'Surprised',
     confused: 'Confused', error: 'Error', sleepy: 'Sleepy', aside: 'Aside',
-    brain: 'Brain', heart: 'Heart', planet: 'Planet', cat: 'Cat', crocodile: 'Crocodile', octopus: 'Octopus', leaf: 'Leaf', camera: 'Camera', atom: 'Atom', book: 'Book', music: 'Music',
+    brain: 'Brain', heart: 'Heart', planet: 'Planet', sun: 'Sun', cat: 'Cat', crocodile: 'Crocodile', octopus: 'Octopus', leaf: 'Leaf', camera: 'Camera', atom: 'Atom', book: 'Book', music: 'Music',
   };
   const DIRS = {
     A: { name: 'Living line', short: 'Line', rest: 'dot', note: 'One ember stroke that redraws itself.' },
@@ -44,8 +44,9 @@
     C: { name: 'Brain buddy', short: 'Buddy', rest: 'dot', note: 'A flat ink brain with dot eyes and props.' },
     D: { name: 'Line + cells', short: 'Line+cells', rest: 'dot', note: 'The line carries the state; cells carry the energy.' },
     E: { name: 'Soft', short: 'Soft', rest: 'arc', note: 'A glossy pearl brain with a warm glow.' },
+    F: { name: 'Particle', short: 'Particle', rest: 'dot', note: 'A colony of warm cells. Feeling shows in how they gather and move.' },
   };
-  const ALIAS = { sun: 'planet', space: 'planet', croc: 'crocodile', alligator: 'crocodile', octo: 'octopus', photo: 'camera', photography: 'camera', purr: 'cat', note: 'music', self: 'brain' };
+  const ALIAS = { solar: 'sun', star: 'sun', space: 'planet', croc: 'crocodile', alligator: 'crocodile', octo: 'octopus', photo: 'camera', photography: 'camera', purr: 'cat', note: 'music', self: 'brain' };
   function normTopic(t) {
     if (!t) return null;
     t = String(t).toLowerCase(); t = ALIAS[t] || t;
@@ -53,7 +54,7 @@
   }
   function storeDir() {
     const v = window.Store && Store.get && Store.get().variants && Store.get().variants.mascot;
-    return DIRS[v] ? v : 'E';
+    return DIRS[v] ? v : 'A';
   }
 
   // ───────── Shapes: every topic is one closed outline in a 100 × 100 box ─────────
@@ -87,6 +88,7 @@
     for (let i = 0; i <= 40; i++) { const a = lerp(a0, a1, i / 40), x = Math.cos(a) * rx, y = Math.sin(a) * ry; d += (i ? 'L' : 'M') + r2(cx + x * c - y * s) + ' ' + r2(cy + x * s + y * c); }
     return d;
   }
+  const r2v = (v) => Math.round(v * 100) / 100;
   // det: decorative strokes. w: width factor · o: opacity · c: 'accent' · layer: 'back' draws behind the body
   const TOPIC_DEF = {
     brain: { poly: brainPoly, face: [50, 56, 1], det: [
@@ -99,6 +101,10 @@
       { d: ellArc(50, 66, 47, 9.5, -0.16, Math.PI, TAU), w: 1.6, c: 'accent', layer: 'back' },
       { d: ellArc(50, 66, 47, 9.5, -0.16, 0, Math.PI), w: 1.6, c: 'accent' },
       { d: 'M30 38 C34 34 40 32 45 32', o: 0.5 },
+    ] },
+    sun: { poly: () => circlePoly(50, 52, 25), face: [50, 54, 0.86], det: [
+      { d: Array.from({ length: 12 }, (_, i) => { const a = i / 12 * TAU - Math.PI / 2, r1 = 31.5, r2 = i % 2 ? 38 : 42; return `M${r2v(50 + Math.cos(a) * r1)} ${r2v(52 + Math.sin(a) * r1)}L${r2v(50 + Math.cos(a) * r2)} ${r2v(52 + Math.sin(a) * r2)}`; }).join(''), w: 1.3, c: 'accent' },
+      { d: 'M33 40 C36 35.5 41 33 46 32.5', o: 0.5 },
     ] },
     cat: { d: 'M50 30 C58 30 65 31 71 34 L79 15 Q81.5 11 84 15 L87 41 C92 48 94 57 92 66 C88 80 72 88 50 88 C28 88 12 80 8 66 C6 57 8 48 13 41 L16 15 Q18.5 11 21 15 L29 34 C35 31 42 30 50 30 Z',
       face: [50, 60, 1], det: [{ d: 'M15 62 L2 59 M15 68 L3 70' }, { d: 'M85 62 L98 59 M85 68 L97 70' }, { d: 'M20.5 22 L25 32.5 M79.5 22 L75 32.5', o: 0.55 }] },
@@ -375,7 +381,7 @@
 
   class Inst {
     constructor(el, o) {
-      this.el = el; this.id = 'ms' + (++Inst.n);
+      this.el = el; this.k = ++Inst.n; this.id = 'ms' + this.k;
       this.size = o.size || Math.round(el.getBoundingClientRect().width / ((window.PS) || 1)) || 120;
       this.pinned = !!(o.direction && DIRS[o.direction]);
       this.dir = this.pinned ? o.direction : storeDir();
@@ -386,7 +392,7 @@
       this.F = { face: sh.face.slice(), det: [{ sh, o: 1 }], split: 0 };
       this.dets = [{ sh, o: 1, from: 1, to: 1 }];
       this.pose = null; this.props = []; this.addProp(ST[this.state].prop, true);
-      this.level = 0; this.lv = 0; this.lookExt = null; this.lookT = 0; this.gest = null;
+      this.level = 0; this.lv = 0; this.lit = 0; this.litV = 0; this.shown = true; this.lookExt = null; this.lookT = 0; this.gest = null;
       this.blinkAt = now() + 1200 + Math.random() * 2000; this.blinkT0 = -1e9; this.glanceAt = now() + 3000 + Math.random() * 3000; this.glance = null;
       this.visible = true; this.dirty = true; this.last = 0; this.connectedOnce = el.isConnected; this.lost = 0; this.alive = true;
       el.classList.add('ms'); el.style.setProperty('--ms-size', this.size + 'px'); el.dataset.msDir = this.dir;
@@ -401,7 +407,7 @@
         el, get state() { return self.state; }, get topic() { return self.topic; }, get direction() { return self.dir; },
         setState: (s, opt) => self.setState(s, opt), setTopic: (t, opt) => self.setTopic(t, opt), setDirection: (d) => self.setDirection(d),
         say: (txt, ms) => self.say(txt, ms), setLevel: (v) => { self.level = clamp(+v || 0); }, look: (x, y) => self.look(x, y),
-        play: (g) => self.play(g), destroy: () => self.destroy(),
+        play: (g) => self.play(g), setLit: (v) => { self.lit = clamp(+v || 0); self.dirty = true; }, destroy: () => self.destroy(),
       };
     }
     setState(s, opt = {}) {
@@ -474,6 +480,13 @@
         if (!this.el.isConnected) { if (this.connectedOnce && ++this.lost > 2) { this.destroy(); return; } }
         else { this.connectedOnce = true; this.lost = 0; }
       }
+      // hidden pages (visibility: hidden, display: none) don't need frames; IntersectionObserver can't tell
+      if ((frameN & 15) === (this.k & 15)) {
+        const was = this.shown;
+        this.shown = this.el.checkVisibility ? this.el.checkVisibility({ visibilityProperty: true }) : true;
+        if (this.shown && !was) this.dirty = true;
+      }
+      if (!this.shown && !this.dirty) return;
       const still = isStill();
       if (this.old && (ts >= this.old.until || still)) { this.old.r.destroy(); this.old.r.el.remove(); this.old = null; }
       if (!this.visible && !this.dirty) return;
@@ -534,6 +547,9 @@
       F.eL = blinkE(P.eL); F.eR = blinkE(P.eR); F.m = P.m; F.bL = P.bL; F.bR = P.bR;
       F.blush = P.blush; F.glow = P.glow; F.energy = P.energy; F.dim = P.dim; F.line = P.line;
       F.lv = this.lv;
+      this.litV += (this.lit - this.litV) * (still ? 1 : 1 - Math.exp(-dt * 4));
+      if (Math.abs(this.lit - this.litV) > 0.002) this.dirty = true;
+      F.lit = this.litV;
       // root transform: squash about the base, tilt, dock to the lower left
       const sc = P.scale * (1 - 0 * P.dock);
       F.root = F.root || {};
@@ -587,7 +603,7 @@
   // ───────── SVG renderer (A line · C buddy · E soft) ─────────
   function svgRenderer(dir, I) {
     const S = STY[dir], id = I.id + dir, small = I.size < 72;
-    const root = svg('svg', { viewBox: '0 0 100 100', class: 'ms-svg', overflow: 'visible', 'aria-hidden': 'true', focusable: 'false' });
+    const root = svg('svg', { viewBox: '0 0 100 100', class: 'ms-svg', overflow: 'inherit', 'aria-hidden': 'true', focusable: 'false' });
     const defs = svg('defs', null, root);
     let bodyG, fill, back, rim, hl, hl2, outline, shadowBody, ribbon;
     if (dir === 'E') {
@@ -634,6 +650,9 @@
       const ag = svg('g', { fill: 'none', stroke: C.humus, 'stroke-width': r2(2.5 * I_sw(I)), 'stroke-linecap': 'round' }, rootG);
       arms = [0, 1].map(() => ({ p: svg('path', null, ag), cur: null }));
     }
+    // setLit(v): small saffron sparks light up inside the body, a share of them at a time (A only)
+    const litG = dir === 'A' ? svg('g', { stroke: 'none' }, rootG) : null;
+    let litDots = [], litFor = '';
     const faceG = svg('g', { 'stroke-linecap': 'round', fill: 'none' }, rootG);
     const blush = dir === 'A' ? [] : [0, 1].map(() => svg('ellipse', { fill: C.coral, stroke: 'none' }, faceG));
     const eyes = [0, 1].map(() => svg('path', { stroke: S.ink }, faceG));
@@ -698,7 +717,7 @@
           const op = o * n._base * (dir === 'E' ? 1 - F.dim * 0.4 : 1);
           put(n, 'opacity', r2(op));
           if (dir === 'A' || dir === 'C') { const dr = F.still ? 1 : sstep(0, 1, o); put(n, 'stroke-dasharray', dr >= 0.999 ? 'none' : `${r2(dr)} 2`); }
-          put(n, 'visibility', op < 0.01 ? 'hidden' : 'visible');
+          put(n, 'visibility', op < 0.01 ? 'hidden' : 'inherit');
         }));
         detNodes.forEach((n, k) => { if (!seen.has(n)) { n.remove(); detNodes.delete(k); } });
         // whole-body transform
@@ -709,11 +728,11 @@
         if (halo) { const g = F.glow * (F.still ? 1 : 1 + 0.06 * Math.sin(F.t * (1.2 + F.energy * 3))); put(halo, 'opacity', r2(clamp(0.2 + 0.6 * g, 0, 1))); put(halo, 'r', r2(54 + 14 * Math.min(1.4, g))); }
         // split (analysing): two halves drift apart and regroup
         if (F.split > 0.01) {
-          put(u0, 'visibility', 'hidden'); put(uL, 'visibility', 'visible'); put(uR, 'visibility', 'visible');
+          put(u0, 'visibility', 'hidden'); put(uL, 'visibility', 'inherit'); put(uR, 'visibility', 'inherit');
           const sp = F.split * 7;
           put(uL, 'transform', `translate(${r2(-sp)} 0) rotate(${r2(-F.split * 7)} 50 70)`); put(uR, 'transform', `translate(${r2(sp)} 0) rotate(${r2(F.split * 7)} 50 70)`);
           if (shadowBody) put(shadowBody, 'visibility', 'hidden');
-        } else { put(u0, 'visibility', 'visible'); put(uL, 'visibility', 'hidden'); put(uR, 'visibility', 'hidden'); if (shadowBody) put(shadowBody, 'visibility', 'visible'); }
+        } else { put(u0, 'visibility', 'inherit'); put(uL, 'visibility', 'hidden'); put(uR, 'visibility', 'hidden'); if (shadowBody) put(shadowBody, 'visibility', 'inherit'); }
         if (shadowBody) put(shadowBody, 'transform', 'translate(2.4 3)');
         if (dir === 'E') put(fill, 'opacity', r2(1 - F.dim * 0.18));
         // face
@@ -723,6 +742,16 @@
         G.brows.forEach((b, i) => { put(brows[i], 'transform', `translate(${r2(b.x)} ${r2(b.y)}) rotate(${r2(b.r)}) scale(${r2(b.w)})`); put(brows[i], 'stroke-width', r2(1.8 * sw / b.w)); put(brows[i], 'opacity', r2(b.o)); });
         blush.forEach((b, i) => { const g = G.blush[i]; put(b, 'cx', r2(g.x)); put(b, 'cy', r2(g.y)); put(b, 'rx', r2(g.rx)); put(b, 'ry', r2(g.ry)); put(b, 'opacity', r2(F.blush * (dir === 'C' ? 0.45 : 0.5))); });
         if (arms) drawArms(arms, F, G);
+        if (litG) {
+          if (F.lit > 0.005 && litFor !== F.shape.name) {
+            litFor = F.shape.name; litG.innerHTML = '';
+            const [fx0, fy0, fs0] = F.shape.face;
+            const pts = interior(F.shape, 40).filter(([x, y]) => !(Math.abs(x - fx0) < 21 * fs0 && y > fy0 - 9 * fs0 && y < fy0 + 15 * fs0)).sort((a, b) => hash(a[0] * 3.1 + a[1]) - hash(b[0] * 3.1 + b[1]));
+            litDots = pts.map(([x, y], i) => ({ n: svg('circle', { cx: r2(x), cy: r2(y), r: '2.3', fill: i % 3 ? C.saffron : C.coral }, litG), k: i / pts.length, ph: hash(i + 0.3) * TAU }));
+          }
+          put(litG, 'visibility', F.lit > 0.005 ? 'inherit' : 'hidden');
+          litDots.forEach((d) => { const on = sstep(d.k - 0.02, d.k + 0.06, F.lit); put(d.n, 'opacity', r2(on * (F.still ? 0.9 : 0.7 + 0.3 * Math.sin(F.t * 2.4 + d.ph)))); });
+        }
         drawPropsSVG(propG, F, S, dir, I);
       },
       dropProp(p) { const n = p.nodes && p.nodes[dir]; if (n) n.g.remove(); if (p.nodes) delete p.nodes[dir]; },
@@ -1058,7 +1087,289 @@
   const bcx = (pts) => { let a = 0; pts.forEach((p) => { a += p[0]; }); return a / pts.length; };
   const bcy = (pts) => { let a = 0; pts.forEach((p) => { a += p[1]; }); return a / pts.length; };
 
+  // ───────── F · Particle: a colony of warm backlit cells (the Living brain's look, one canvas per instance) ─────────
+  // No drawn face. Feeling comes from four things only: how dense the colony is (it gathers, swells, thins, slumps),
+  // how the cells move (calm drift, bursts, swirls, waves of light), how they cluster (into props, along details),
+  // and two eye gaps, each with a small dark cluster in it that looks, blinks and squints.
+  // Topics: the cells re-flow into the topic's silhouette (a rim of cells rides the outline; the rest fill it) and
+  // take on the topic's colours; its details (whiskers, rays, rings) become lines of cells.
+  const FPAL = { // [light, deep]
+    brain: [[246, 170, 110], [184, 58, 28]], heart: [[248, 156, 150], [178, 40, 62]], planet: [[240, 190, 104], [120, 58, 70]],
+    sun: [[255, 208, 100], [222, 98, 24]], cat: [[255, 186, 110], [196, 68, 14]], crocodile: [[178, 198, 96], [58, 102, 34]],
+    octopus: [[248, 146, 140], [152, 46, 88]], leaf: [[232, 192, 76], [198, 72, 22]], camera: [[184, 140, 112], [78, 46, 32]],
+    atom: [[246, 172, 106], [152, 52, 86]], book: [[234, 180, 120], [134, 66, 34]], music: [[246, 146, 116], [152, 44, 66]],
+  };
+  const FSPR = new Map();
+  function fCell(r, g, b) {
+    const q = (v) => Math.max(0, Math.min(255, ((v | 0) >> 4) * 16 + 8));
+    r = q(r); g = q(g); b = q(b);
+    const key = (r << 16) | (g << 8) | b;
+    let s = FSPR.get(key); if (s) return s;
+    if (FSPR.size > 3000) FSPR.clear();
+    s = document.createElement('canvas'); s.width = s.height = 32;
+    const x = s.getContext('2d'), m = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+    m.addColorStop(0, `rgba(${r},${g},${b},0.34)`); m.addColorStop(0.6, `rgba(${r},${g},${b},0.5)`); m.addColorStop(0.84, `rgba(${r},${g},${b},0.96)`); m.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    x.fillStyle = m; x.fillRect(0, 0, 32, 32);
+    x.fillStyle = `rgba(${r * 0.55 | 0},${g * 0.4 | 0},${b * 0.4 | 0},0.66)`; x.beginPath(); x.arc(14.7, 14.7, 4.4, 0, TAU); x.fill();
+    FSPR.set(key, s); return s;
+  }
+  const fEye = () => spr('feye', (x, S) => {
+    const m = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    m.addColorStop(0, 'rgba(43,26,18,1)'); m.addColorStop(0.62, 'rgba(43,26,18,0.97)'); m.addColorStop(0.84, 'rgba(70,36,22,0.55)'); m.addColorStop(1, 'rgba(70,36,22,0)');
+    x.fillStyle = m; x.fillRect(0, 0, S, S);
+  });
+  const fShine = () => spr('fshine', (x, S) => {
+    const m = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    m.addColorStop(0, 'rgba(255,250,242,1)'); m.addColorStop(0.5, 'rgba(255,250,242,0.85)'); m.addColorStop(1, 'rgba(255,250,242,0)');
+    x.fillStyle = m; x.fillRect(0, 0, S, S);
+  });
+  // Blue-noise points inside a shape (best of 6 candidates), cached per shape and count
+  const FSAMP = new Map();
+  function fSample(sh, n) {
+    const key = sh.name + '|' + n; if (FSAMP.has(key)) return FSAMP.get(key);
+    const [x0, y0, x1, y1] = sh.bb, out = [];
+    let seed = 1;
+    const cand = () => { for (let k = 0; k < 60; k++) { const x = lerp(x0, x1, hash(seed++ * 1.37 + 0.1)), y = lerp(y0, y1, hash(seed++ * 2.11 + 0.7)); if (inside(sh.pts, M, x, y) && edgeDist(sh.pts, M, x, y) > 1.3) return [x, y]; } return null; };
+    for (let i = 0; i < n; i++) {
+      let best = null, bd = -1;
+      for (let k = 0; k < 6; k++) {
+        const c = cand(); if (!c) continue;
+        let d = 1e9; for (let j = 0; j < out.length; j++) { const dx = out[j][0] - c[0], dy = out[j][1] - c[1], dd = dx * dx + dy * dy; if (dd < d) d = dd; }
+        if (d > bd) { bd = d; best = c; }
+      }
+      out.push(best || [sh.cx + (hash(i) - 0.5) * 6, sh.cy + (hash(i + 0.5) - 0.5) * 6]);
+    }
+    FSAMP.set(key, out); return out;
+  }
+  // How each state moves the colony. exp: swell (+) or gather (−) · sag: slump · swirl · jit: drift · pulse: waves of light
+  // tw: twinkle · lean: lean toward the look · flow: the rim runs round · drip: cells fall away · dim
+  const FST = {
+    idle: { jit: 0.5, tw: 0.15 }, hello: { jit: 0.8, tw: 0.6 }, listening: { jit: 0.55 }, thinking: { jit: 0.6, pulse: 1 },
+    searching: { jit: 0.8, pulse: 0.45 }, reading: { jit: 0.35, pulse: 0.3 }, analysing: { jit: 0.9, pulse: 0.8 }, building: { jit: 0.7, tw: 0.3 },
+    loading: { jit: 0.45, flow: 1 }, ready: { jit: 0.4, tw: 0.5 }, happy: { jit: 1, tw: 1, exp: 0.035 }, proud: { jit: 0.8, tw: 1, exp: 0.05 },
+    curious: { jit: 0.5, lean: 1 }, surprised: { jit: 1.3, exp: 0.05 }, confused: { jit: 0.6, swirl: 1 }, error: { jit: 0.15, sag: 0.55, dim: 1, drip: 1 },
+    sleepy: { jit: 0.1, sag: 1, dim: 0.55 }, aside: { jit: 0.25, dim: 0.3 },
+  };
+  const FKEYS = ['exp', 'sag', 'swirl', 'jit', 'pulse', 'tw', 'lean', 'flow', 'drip', 'dim'];
+  const mixC = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const SAFFRON = [239, 180, 62], DUSK = [170, 142, 126];
+
+  function particleRenderer(I) {
+    const cv = document.createElement('canvas'); cv.className = 'ms-cv'; cv.setAttribute('aria-hidden', 'true');
+    const PAD = 0.3, size = I.size, small = size < 72, dpr = Math.min(2, window.devicePixelRatio || 1) * (small ? 1.5 : 1);
+    cv.width = cv.height = Math.round(size * (1 + PAD * 2) * dpr);
+    const ctx = cv.getContext('2d');
+    const NI = Math.round(clamp(size * 1.75, 70, 400)), NR = Math.round(clamp(size * 0.62, 34, 140));
+    const P = Array.from({ length: NI }, (_, i) => ({ x: 50, y: 53, fx: 50, fy: 53, tx: 50, ty: 53, t0: 0, d: 1, arc: 0, z: 0.5, h: hash(i + 0.31), ph: hash(i + 0.77) * TAU, ci: Math.floor(hash(i + 0.21) * CELL.length) }));
+    const RIM = Array.from({ length: NR }, (_, k) => ({ u: (k + 0.4 * hash(k + 1.9)) / NR, o: 0.4 + 1.5 * hash(k + 4.2), h: hash(k + 8.8), ph: hash(k + 2.6) * TAU, ci: Math.floor(hash(k + 5.5) * CELL.length) }));
+    let rBase = 2, maxR = 40, cx = 50, cy = 53;
+    let palA = FPAL[I.shape.name] || FPAL.brain, palB = palA, palT0 = 0, palDur = 1;
+    const S = {}; FKEYS.forEach((k) => { S[k] = 0; });
+    let last = 0;
+    const smoothP = new Float32Array(M * 4);
+    function retarget(sh, ms, instant) {
+      const T = fSample(sh, NI).map((p) => p.slice());
+      cx = sh.cx; cy = sh.cy;
+      maxR = 1; T.forEach(([x, y]) => { maxR = Math.max(maxR, Math.hypot(x - cx, y - cy)); });
+      rBase = (small ? 0.5 : 0.54) * Math.sqrt(sh.area / NI);
+      T.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+      const used = new Uint8Array(NI), t0 = now();
+      T.forEach(([x, y], k) => {
+        let bi = 0, bd = 1e12;
+        for (let j = 0; j < NI; j++) if (!used[j]) { const dx = P[j].x - x, dy = P[j].y - y, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; bi = j; } }
+        used[bi] = 1;
+        const p = P[bi], dn = Math.hypot(x - cx, y - cy) / maxR;
+        p.fx = p.x; p.fy = p.y; p.tx = x; p.ty = y; p.z = clamp(1 - dn * dn * 0.8 + (p.h - 0.5) * 0.3);
+        if (instant) { p.x = x; p.y = y; p.t0 = 0; p.d = 1; p.arc = 0; }
+        else { p.t0 = t0 + dn * ms * 0.32 + hash(k + 3.3) * 90; p.d = ms * (0.48 + 0.22 * hash(k)); p.arc = (hash(k + 9) - 0.5) * 16; }
+      });
+      palA = curPal(); palB = FPAL[sh.name] || FPAL.brain; palT0 = t0; palDur = instant ? 1 : ms;
+    }
+    function curPal() { const u = glide(clamp((now() - palT0) / palDur)); return [mixC(palA[0], palB[0], u), mixC(palA[1], palB[1], u)]; }
+    retarget(I.shape, 1, true);
+    const R = {
+      el: cv,
+      onShape(sh, ms) { retarget(sh, ms || 1, !ms); },
+      draw(F) {
+        const W = cv.width, uu = (size / 100) * dpr, off = PAD * size * dpr;
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, W);
+        ctx.setTransform(uu, 0, 0, uu, off, off);
+        const R0 = F.root, B = F.base, t = F.t, still = F.still, age = F.age, st = F.state, en = F.energy;
+        const dt = last ? clamp(t - last, 0, 0.1) : 0.016; last = t;
+        const tg = FST[st] || FST.idle, ks = still ? 1 : 1 - Math.exp(-dt * 5);
+        FKEYS.forEach((k) => { S[k] += ((tg[k] || 0) - S[k]) * ks; });
+        // one-shot swells: hello bursts out and gathers, surprise jumps wide, ready gathers in for a beat
+        let shot = 0;
+        if (!still) {
+          if (st === 'hello') shot = 0.13 * Math.sin(Math.PI * clamp((age - 0.08) / 0.6));
+          else if (st === 'surprised') { const u = clamp(age / 0.42); shot = 0.2 * Math.sin(Math.PI * u) * (u < 1 ? 1 : 0); }
+          else if (st === 'ready') shot = -0.07 * Math.sin(Math.PI * clamp(age / 0.5));
+          else if (st === 'proud') shot = 0.04 * Math.sin(Math.PI * clamp(age / 0.7));
+        }
+        if (F.morphU < 1) shot += 0.05 * Math.sin(F.morphU * Math.PI); // the colony loosens as it re-flows
+        const pal = curPal(), dimK = S.dim;
+        // backlight
+        const g = F.glow * (still ? 1 : 1 + 0.08 * Math.sin(t * (1.2 + en * 3)));
+        ctx.save(); ctx.translate(R0.tx, R0.ty);
+        const gr = 60 * Math.min(1.45, 0.72 + 0.4 * g) * R0.sc;
+        ctx.globalAlpha = clamp(0.18 + 0.42 * g) * (1 - dimK * 0.5); ctx.drawImage(glowSprite(), 50 - gr, 54 - gr, gr * 2, gr * 2);
+        ctx.restore();
+        // ground shadow
+        ctx.save(); const lift = clamp(-R0.ty / 14); ctx.globalAlpha = 0.1 * (1 - lift * 0.5); ctx.fillStyle = C.bark;
+        ctx.beginPath(); ctx.ellipse(50 + R0.tx, 92, 23 * R0.sc * (1 - lift * 0.35), 3, 0, 0, TAU); ctx.fill(); ctx.restore();
+        // body space
+        ctx.save();
+        ctx.translate(R0.tx, R0.ty); ctx.translate(50, B); ctx.rotate(R0.rot * Math.PI / 180); ctx.scale(R0.sx * R0.sc, R0.sy * R0.sc); ctx.translate(-50, -B);
+        upsample(F.pts, M, smoothP);
+        const sp = F.split * 8, so = (x) => (sp ? (x < 50 ? -sp : sp) : 0);
+        const bb = F.shape.bb, bot = bb[3], hgt = Math.max(10, bb[3] - bb[1]);
+        const G = faceGeo(F);
+        // eye gaps: cells are pushed off each eye's stroke, which opens a hole the dark cluster sits in
+        const gaps = G.eyes.map((e) => {
+          const pts = [];
+          const n = e.w > 0.6 ? 6 : 1;
+          for (let i = 0; i < n; i++) { const s = n === 1 ? 0.5 : i / (n - 1), a = 1 - s; const x = a * a * a * (e.x - e.w) + 3 * a * a * s * (e.x - e.w / 3) + 3 * a * s * s * (e.x + e.w / 3) + s * s * s * (e.x + e.w), y = a * a * a * e.y + 3 * a * a * s * (e.y - e.c * 1.33) + 3 * a * s * s * (e.y - e.c * 1.33) + s * s * s * e.y; pts.push([x, y]); }
+          return { pts, R: (e.sw * 0.5 + (e.w > 0.6 ? 2 : 2.6)) * (small ? 1.35 : 1) * F.sw, e };
+        });
+        const gap = (o) => {
+          for (const gp of gaps) {
+            let bx = 0, by = 0, bd = 1e9;
+            for (const q of gp.pts) { const dx = o[0] - q[0], dy = o[1] - q[1], d = dx * dx + dy * dy; if (d < bd) { bd = d; bx = q[0]; by = q[1]; } }
+            const d = Math.sqrt(bd);
+            if (d < gp.R) { const k = (gp.R - d) * 0.95; if (d < 0.01) { o[1] -= k; } else { o[0] += (o[0] - bx) / d * k; o[1] += (o[1] - by) / d * k; } }
+          }
+        };
+        const o = [0, 0], jit0 = (small ? 1.5 : 0.9) * S.jit, fq = 1 + en * 2.2;
+        const field = (x, y, ph, h, rim) => {
+          const dx = x - cx, dy = y - cy, r = Math.hypot(dx, dy) || 0.001;
+          const ex = S.exp + shot;
+          x += dx * ex; y += dy * ex;
+          if (S.sag > 0.01) { const up = clamp((bot - y) / hgt); y += S.sag * (bot - y) * 0.17; x += S.sag * dx * 0.07 * (1 - up); }
+          if (S.swirl > 0.01 && !still) { const a = S.swirl * 0.32 * Math.sin(t * 1.25 + r * 0.09) * (1 - Math.min(1, r / (maxR * 1.2))), ca = Math.cos(a), sa = Math.sin(a); const xx = cx + (x - cx) * ca - (y - cy) * sa; y = cy + (x - cx) * sa + (y - cy) * ca; x = xx; }
+          if (S.lean > 0.01) x += S.lean * F.lk[0] * 3.4 * clamp((bot - y) / hgt);
+          if (!still) { x += Math.sin(t * fq * 1.1 + ph) * jit0; y += Math.cos(t * fq * 0.9 + ph * 1.7) * jit0; }
+          if (F.lv > 0.01) { const w = F.lv * 2.6 * Math.sin(r * 0.3 - t * 9); x += dx / r * w; y += dy / r * w; }
+          if (S.drip > 0.01 && !rim && h < 0.06 && !still) { const u = (t * 0.32 + h * 17) % 1; y += u * u * 26 * S.drip; o.fade = 1 - u; } else o.fade = 1;
+          x += so(x); o[0] = x; o[1] = y; gap(o);
+        };
+        const lightOf = (x, y, ph, h) => {
+          let L = 0;
+          if (S.pulse > 0.01 && !still) L = Math.pow(Math.max(0, Math.sin(x * 0.12 + y * 0.07 - t * 3.6)), 10) * S.pulse;
+          if (S.tw > 0.01 && !still) L = Math.max(L, Math.pow(Math.max(0, Math.sin(t * 2.3 + ph * 7)), 26) * S.tw);
+          if (F.lit > 0.005 && h < F.lit) L = Math.max(L, 0.75 + (still ? 0 : 0.25 * Math.sin(t * 2.4 + ph)));
+          return L;
+        };
+        const dimC = (c) => (dimK > 0.01 ? mixC(c, DUSK, 0.5 * dimK) : c);
+        const cellAt = (x, y, rad, c, a) => { ctx.globalAlpha = clamp(a); const rr = rad * 1.25; ctx.drawImage(fCell(c[0], c[1], c[2]), x - rr, y - rr, rr * 2, rr * 2); };
+        const glowAt = (x, y, rad, a) => { ctx.globalAlpha = clamp(a); const gr2 = rad * 3.6; ctx.drawImage(glowSprite(), x - gr2, y - gr2, gr2 * 2, gr2 * 2); };
+        const detLayer = (layer) => F.dets.forEach(({ sh, o: dop }) => sh.det.forEach((dd) => {
+          if (dop < 0.02 || (dd.layer === 'back') !== (layer === 'back')) return;
+          const pts = sampled(dd.d, small ? 3.4 : 2.1), n = Math.max(1, Math.round(pts.length * (still ? 1 : sstep(0, 1, dop))));
+          const base = dd.c === 'accent' ? mixC(pal[0], SAFFRON, 0.35) : pal[1];
+          const rad = Math.max(rBase * 0.62, 1.15) * (dd.w || 1) * (small ? 1.35 : 1);
+          for (let k = 0; k < n; k++) {
+            const [px, py] = pts[k], ph = hash(k * 1.3 + px) * TAU;
+            const jx = still ? 0 : Math.sin(t * 1.4 + ph) * 0.35 * S.jit, jy = still ? 0 : Math.cos(t * 1.2 + ph) * 0.35 * S.jit;
+            const L = lightOf(px, py, ph, 1);
+            const c = dimC(L > 0.05 ? mixC(base, SAFFRON, L * 0.8) : base);
+            cellAt(px + so(px) + jx, py + jy, rad * (1 + L * 0.3), c, (0.82 + 0.18 * hash(k)) * (dd.o != null ? dd.o : 1) * Math.min(1, dop * 1.4) * (1 - dimK * 0.35));
+          }
+        }));
+        detLayer('back');
+        // interior cells
+        const tn = now();
+        for (let i = 0; i < NI; i++) {
+          const p = P[i];
+          const u = still ? 1 : clamp((tn - p.t0) / p.d), e = glide(u);
+          if (u < 1) { const ddx = p.tx - p.fx, ddy = p.ty - p.fy, dl = Math.hypot(ddx, ddy) || 1, a = Math.sin(u * Math.PI) * p.arc; p.x = lerp(p.fx, p.tx, e) - ddy / dl * a; p.y = lerp(p.fy, p.ty, e) + ddx / dl * a; }
+          else { p.x = p.tx; p.y = p.ty; }
+          field(p.x, p.y, p.ph, p.h, false);
+          const L = lightOf(o[0], o[1], p.ph, p.h);
+          let c = mixC(pal[1], pal[0], 0.2 + 0.7 * p.z); c = mixC(c, CELL[p.ci], 0.22);
+          if (L > 0.05) { c = mixC(c, F.lit > 0.005 && p.h < F.lit ? SAFFRON : [255, 196, 120], L * 0.75); glowAt(o[0], o[1], rBase, 0.2 * L); }
+          const rad = rBase * (0.72 + 0.46 * p.z) * (still ? 1 : 1 + 0.12 * Math.sin(t * 1.4 + p.ph)) * (1 + L * 0.35);
+          cellAt(o[0], o[1], rad, dimC(c), (0.5 + 0.5 * p.z) * (1 - dimK * 0.38) * o.fade);
+        }
+        // rim: cells riding the outline keep the silhouette crisp
+        const m2 = M * 2, flow = still ? 0 : S.flow * t * 0.09, lp = S.flow > 0.02 ? ((t * 0.55) % 1 + 1) % 1 : -9;
+        for (let k = 0; k < NR; k++) {
+          const q = RIM[k], s = (((q.u + flow) % 1) + 1) % 1, fi = s * m2, i = Math.floor(fi) % m2, j = (i + 1) % m2, f = fi - Math.floor(fi);
+          const x = lerp(smoothP[2 * i], smoothP[2 * j], f), y = lerp(smoothP[2 * i + 1], smoothP[2 * j + 1], f);
+          const tx = smoothP[2 * j] - smoothP[2 * i], ty = smoothP[2 * j + 1] - smoothP[2 * i + 1], tl = Math.hypot(tx, ty) || 1;
+          field(x - ty / tl * q.o, y + tx / tl * q.o, q.ph, q.h, true);
+          let L = lightOf(o[0], o[1], q.ph, 1);
+          if (lp > -1) { const dd = ((s - lp) % 1 + 1) % 1; L = Math.max(L, S.flow * Math.pow(1 - Math.min(1, dd / 0.3), 2)); } // loading: a bright arc runs round
+          let c = mixC(pal[1], CELL[q.ci], 0.14);
+          if (L > 0.05) { c = mixC(c, [255, 190, 110], L * 0.7); glowAt(o[0], o[1], rBase, 0.18 * L); }
+          cellAt(o[0], o[1], Math.max(rBase * 0.8, 1.2) * (small ? 0.82 : 1) * (0.85 + 0.3 * q.h) * (1 + L * 0.3), dimC(c), (small ? 0.8 : 0.9) * (1 - dimK * 0.3));
+        }
+        // analysing: sparks run across the gap between the two halves
+        if (F.split > 0.05 && !still) for (let k = 0; k < 7; k++) {
+          const u = (t * 0.9 + k / 7) % 1, dir = k % 2 ? 1 : -1, y = 34 + k * 6.5 + Math.sin(t * 2 + k) * 2;
+          const x = 50 + dir * (u - 0.5) * 2 * (sp + 3);
+          glowAt(x, y, 1.6, 0.4 * F.split); cellAt(x, y, 1.5, SAFFRON, F.split * Math.sin(u * Math.PI));
+        }
+        detLayer('front');
+        // the eyes: a dark cluster in each gap (a round clump, or a line of cells when they curve or close)
+        gaps.forEach(({ e }) => {
+          const dk = 1 - dimK * 0.25;
+          if (e.w <= 0.6) {
+            const r = e.sw * 0.5 * F.sw * 1.12;
+            ctx.globalAlpha = dk; ctx.drawImage(fEye(), e.x - r * 1.25, e.y - r * 1.25, r * 2.5, r * 2.5);
+            const sr = r * 0.42; ctx.globalAlpha = 0.9 * dk; ctx.drawImage(fShine(), e.x - r * 0.42 - sr, e.y - r * 0.45 - sr, sr * 2, sr * 2);
+          } else {
+            const n = Math.max(3, Math.round(e.w * 1.1)), r = e.sw * 0.62 * F.sw;
+            for (let i = 0; i < n; i++) {
+              const s = i / (n - 1), a = 1 - s;
+              const x = a * a * a * (e.x - e.w) + 3 * a * a * s * (e.x - e.w / 3) + 3 * a * s * s * (e.x + e.w / 3) + s * s * s * (e.x + e.w);
+              const y = a * a * a * e.y + 3 * a * a * s * (e.y - e.c * 1.33) + 3 * a * s * s * (e.y - e.c * 1.33) + s * s * s * e.y;
+              ctx.globalAlpha = dk; ctx.drawImage(fEye(), x - r * 1.25, y - r * 1.25, r * 2.5, r * 2.5);
+            }
+          }
+        });
+        ctx.globalAlpha = 1;
+        ctx.restore();
+        // props, made of cells
+        ctx.save(); ctx.translate(R0.tx, R0.ty); ctx.translate(50, B); ctx.scale(R0.sc, R0.sc); ctx.translate(-50, -B);
+        drawPropsF(ctx, F, pal, small);
+        ctx.restore(); ctx.globalAlpha = 1;
+      },
+      destroy() {},
+    };
+    return R;
+  }
+  function drawPropsF(ctx, F, pal, small) {
+    const t = F.t, still = F.still;
+    F.props.forEach((p) => p.st.forEach((s, i) => {
+      if (s.o < 0.01 || s.s < 0.01) return;
+      const part = p.parts[i];
+      ctx.save(); ctx.globalAlpha = clamp(s.o);
+      if (part.arcRing) { ctx.translate(50, 53); ctx.rotate(s.r * Math.PI / 180); ctx.translate(-50, -53); } else { ctx.translate(s.x, s.y); ctx.rotate(s.r * Math.PI / 180); ctx.scale(s.s, s.s); }
+      const pts = sampled(part.d, small ? 3 : 1.9);
+      const n = part.k === 'line' || part.arcRing ? Math.max(1, Math.round(pts.length * s.draw)) : pts.length;
+      const base = part.k === 'spark' ? SAFFRON : pal[1];
+      if (part.k === 'dot' || part.k === 'spark') {
+        const big = part.d === SPARK, mx = bcx(pts), my = bcy(pts), cnt = big ? 5 : 3;
+        for (let k = 0; k < cnt; k++) {
+          const a = k / cnt * TAU + (still ? 0 : t * 1.5), rr = k === 0 ? 0 : (big ? 2.2 : 1.1);
+          const x = mx + (k ? Math.cos(a) * rr : 0), y = my + (k ? Math.sin(a) * rr : 0), r = (big ? 2.3 : 1.7) * (small ? 1.4 : 1);
+          ctx.globalAlpha = clamp(s.o) * (k ? 0.85 : 1); ctx.drawImage(fCell(base[0], base[1], base[2]), x - r * 1.25, y - r * 1.25, r * 2.5, r * 2.5);
+        }
+      } else {
+        if (part.k === 'shape') { ctx.globalAlpha = clamp(s.o) * 0.55; ctx.fillStyle = part.glass ? 'rgba(255,244,234,0.5)' : 'rgba(255,238,222,0.9)'; ctx.fill(path2d(part.d)); }
+        const r = (part.w || 1) * 1.25 * F.sw * (small ? 1.25 : 1);
+        for (let k = 0; k < n; k++) {
+          const ph = hash(k + i * 7.1) * TAU, jx = still ? 0 : Math.sin(t * 2 + ph) * 0.25, jy = still ? 0 : Math.cos(t * 1.7 + ph) * 0.25;
+          const c = mixC(base, CELL[(k + i) % CELL.length], 0.25);
+          ctx.globalAlpha = clamp(s.o) * (0.8 + 0.2 * hash(k)); ctx.drawImage(fCell(c[0], c[1], c[2]), pts[k][0] + jx - r * 1.25, pts[k][1] + jy - r * 1.25, r * 2.5, r * 2.5);
+        }
+      }
+      ctx.restore();
+    }));
+  }
+
   function makeRenderer(dir, I) {
+    if (dir === 'F') return particleRenderer(I);
     return dir === 'B' || dir === 'D' ? canvasRenderer(dir, I) : svgRenderer(dir, I);
   }
 

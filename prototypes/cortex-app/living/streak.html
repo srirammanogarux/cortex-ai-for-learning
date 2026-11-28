@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex · Streak lab · Living Matter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Figtree:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../streak/streak.css">
+  <style>
+    :root { --bone: #F6ECE1; --shell: #FFF8F1; --humus: #2B1A12; --bark: #6A4636; --ember: #B83A1C; --coral: #F07B5A; --saffron: #EFB43E;
+      --display: 'Fraunces', Georgia, serif; --font: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+      --carved: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(106, 70, 54, .08), 0 8px 20px -14px rgba(120, 60, 30, .55);
+      --lit-bg: linear-gradient(180deg, #C8482A, #B23718); --lit-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 12px 26px -10px rgba(178, 55, 24, .7); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: var(--font); color: var(--humus); background: radial-gradient(90% 60% at 50% 0%, #FFF5EA, #F3E6D6 60%, #EADCCB); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 36px 32px 90px; }
+    .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ember); }
+    h1 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; font-size: 44px; line-height: 48px; margin: 6px 0 8px; }
+    h2 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.025em; font-size: 26px; line-height: 30px; margin: 56px 0 6px; }
+    .lede { margin: 0; max-width: 660px; font-size: 16px; line-height: 23px; color: var(--bark); font-weight: 500; }
+    .back { font-size: 14px; font-weight: 650; color: var(--ember); text-decoration: none; padding: 12px 0; }
+
+    /* Controls */
+    .controls { position: sticky; top: 8px; z-index: 20; margin: 26px 0 0; padding: 12px 14px 6px; border-radius: 24px; background: rgba(255, 245, 234, .86); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 30px -22px rgba(120, 60, 30, .6); }
+    .row { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+    .row > b { width: 52px; flex: none; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bark); }
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 16px; background: rgba(255, 248, 241, .7); box-shadow: var(--carved); }
+    .chip { border: 0; background: transparent; border-radius: 999px; min-height: 44px; padding: 0 14px; font-size: 14px; font-weight: 650; color: var(--bark); }
+    .chip i { font-style: normal; color: var(--ember); margin-right: 5px; }
+    .chip:hover { background: rgba(255, 255, 255, .8); }
+    .chip[aria-pressed="true"] { background: var(--ember); color: var(--shell); }
+    .chip[aria-pressed="true"] i { color: #FFD2B8; }
+    .chip:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+    .sliders { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+    .sl { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-radius: 16px; background: rgba(255, 248, 241, .7); box-shadow: var(--carved); }
+    .sl label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bark); }
+    .sl output { min-width: 70px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    input[type=range] { -webkit-appearance: none; appearance: none; width: 190px; height: 44px; background: transparent; }
+    input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--saffron), var(--ember)); }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: var(--shell); box-shadow: 0 0 0 2px var(--ember), 0 4px 10px -2px rgba(120, 60, 30, .5); }
+    input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--saffron), var(--ember)); }
+    input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--shell); box-shadow: 0 0 0 2px var(--ember); }
+    #time::-webkit-slider-runnable-track { background: linear-gradient(90deg, #EFB43E, #F07B5A 55%, #8E2A12 70%, #3A1A0E); }
+    .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(106, 70, 54, .08); }
+    .seg button { min-width: 44px; min-height: 38px; border: 0; border-radius: 999px; background: transparent; font-weight: 700; color: var(--bark); }
+    .seg button[aria-pressed="true"] { background: #DCEBF3; color: #24557A; box-shadow: inset 0 0 0 1.5px rgba(63, 124, 166, .45); }
+    .btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; font-size: 15px; font-weight: 700; }
+    .btn-lit { background: var(--lit-bg); box-shadow: var(--lit-shadow); color: var(--shell); }
+    .btn-lit:active { transform: scale(.97); }
+    .note { font-size: 13px; color: var(--bark); font-weight: 600; }
+
+    /* Stage: phone + hero */
+    .stage { display: grid; grid-template-columns: 390px 1fr; gap: 28px; margin-top: 24px; align-items: start; }
+    .phone { position: relative; width: 390px; height: 844px; padding: 10px; border-radius: 62px; background: #2B1A12; box-shadow: inset 0 0 0 2px #4A3226, 0 40px 80px -34px rgba(70, 30, 10, .6); }
+    .island { position: absolute; z-index: 90; top: 21px; left: 50%; width: 112px; height: 32px; margin-left: -56px; border-radius: 20px; background: #0E0705; }
+    .screen { position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden; background: radial-gradient(120% 70% at 50% 26%, #FFF5EA 0%, #F7E8D8 55%, #EFDDCA 100%); }
+    .ph-status { position: absolute; top: 0; left: 0; right: 0; height: 54px; padding: 18px 30px 0 34px; display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; z-index: 5; }
+    .ph-head { position: absolute; top: 58px; left: 16px; right: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 6; }
+    .ph-switch { height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 5px; border: 0; border-radius: 999px; background: rgba(255, 248, 241, .94); box-shadow: inset 0 1px 0 #fff, 0 8px 20px -14px rgba(120, 60, 30, .55); font-family: var(--display); font-weight: 560; font-size: 17px; letter-spacing: -.02em; }
+    .ph-switch .dot { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #B83A1C); box-shadow: 0 0 12px rgba(240, 123, 90, .45); }
+    .ph-body { position: absolute; top: 114px; left: 0; right: 0; bottom: 0; padding: 4px 20px; }
+    .ph-prog { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; color: var(--bark); padding: 0 4px; }
+    .ph-prog b { color: var(--humus); }
+    .ph-bar { margin: 8px 4px 0; height: 8px; border-radius: 4px; background: rgba(106, 70, 54, .15); }
+    .ph-bar i { display: block; width: 22%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--saffron), #C9472B); }
+    .ph-path { position: relative; margin-top: 30px; height: 520px; }
+    .ph-path svg { position: absolute; inset: 0; }
+    .stop { position: absolute; width: 64px; height: 64px; border-radius: 50%; }
+    .stop.done { background: radial-gradient(circle at 34% 30%, #E46A44, #B83A1C 70%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 18px -8px rgba(184, 58, 28, .7); }
+    .stop.now { background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #D9553A); box-shadow: 0 0 0 7px rgba(240, 123, 90, .14), 0 10px 24px -8px rgba(222, 90, 60, .7); }
+    .stop.later { background: var(--shell); box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .18); }
+    .stop-l { position: absolute; font-size: 14px; font-weight: 650; width: 150px; }
+    .ph-tabs { position: absolute; left: 16px; right: 16px; bottom: 22px; height: 70px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; border-radius: 35px; background: rgba(255, 248, 241, .92); box-shadow: inset 0 1px 0 #fff, 0 16px 34px -16px rgba(120, 60, 30, .55); z-index: 6; }
+    .ph-tabs span { display: grid; place-items: center; border-radius: 29px; font-size: 13px; font-weight: 650; color: var(--bark); }
+    .ph-tabs span.on { background: var(--ember); color: var(--shell); }
+    .ph-scrim { position: absolute; inset: 0; z-index: 7; background: rgba(43, 26, 18, .2); opacity: 0; pointer-events: none; transition: opacity 220ms ease-out; }
+    .ph-drop { position: absolute; z-index: 8; top: 110px; left: 12px; right: 12px; transform-origin: 86% 0; opacity: 0; transform: translateY(-6px) scale(.97); pointer-events: none; transition: opacity 200ms ease-out, transform 260ms cubic-bezier(.2, .8, .2, 1); }
+    .ph-drop::before { content: ''; position: absolute; top: -7px; right: 38px; width: 16px; height: 16px; border-radius: 3px; background: #FFF8F1; transform: rotate(45deg); }
+    .screen.is-open .ph-drop { opacity: 1; transform: none; pointer-events: auto; }
+    .screen.is-open .ph-scrim { opacity: 1; pointer-events: auto; }
+    .ph-layer { position: absolute; inset: 0; z-index: 80; pointer-events: none; border-radius: 52px; }
+    .ph-layer > * { pointer-events: auto; }
+    .ph-chip { z-index: 9; position: relative; }
+
+    .side { display: grid; gap: 16px; }
+    .card { border-radius: 28px; background: rgba(255, 248, 241, .78); box-shadow: var(--carved); padding: 22px; }
+    .card h3 { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); }
+    .hero { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: center; background: var(--shell); }
+    .hero-stage { position: relative; height: 320px; display: grid; place-items: center; border-radius: 24px; background: radial-gradient(60% 60% at 50% 55%, #FFF3E6, rgba(255, 243, 230, 0)); }
+    .hero-name { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; font-size: 30px; line-height: 34px; letter-spacing: -.03em; margin: 4px 0 2px; }
+    .hero-note { margin: 0 0 14px; color: var(--bark); font-weight: 500; font-size: 15px; line-height: 21px; }
+    .kv { display: grid; grid-template-columns: 96px 1fr; gap: 8px 12px; margin: 0; font-size: 14.5px; line-height: 20px; }
+    .kv dt { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--bark); padding-top: 2px; }
+    .kv dd { margin: 0; font-weight: 600; }
+    .kv dd.muted { color: var(--bark); font-weight: 500; }
+    .ladder { display: flex; gap: 6px; margin-top: 16px; }
+    .ladder span { flex: 1; text-align: center; padding: 7px 0; border-radius: 12px; font-size: 12.5px; font-weight: 700; color: var(--bark); background: rgba(106, 70, 54, .07); }
+    .ladder span.on { background: #FCE3D2; color: #8E2A12; box-shadow: inset 0 0 0 1.5px rgba(184, 58, 28, .35); }
+    .moments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .moments button { min-height: 56px; border: 0; border-radius: 18px; background: var(--shell); box-shadow: var(--carved); padding: 8px 12px; text-align: left; font-weight: 700; font-size: 15px; }
+    .moments button small { display: block; font-size: 12.5px; font-weight: 550; color: var(--bark); }
+    .moments button:hover { box-shadow: inset 0 0 0 1.5px rgba(184, 58, 28, .4), var(--carved); }
+    .moments-note { margin: 10px 0 0; font-size: 13px; color: var(--bark); font-weight: 500; }
+
+    /* Grids */
+    .grid { margin-top: 14px; display: grid; border-radius: 24px; background: rgba(255, 248, 241, .62); box-shadow: var(--carved); overflow: hidden; }
+    .grid > div { display: grid; place-items: center; min-height: 88px; border-top: 1px solid rgba(106, 70, 54, .08); }
+    .grid .gh { min-height: 50px; font-size: 12.5px; font-weight: 700; color: var(--bark); border-top: 0; text-align: center; line-height: 15px; padding: 0 4px; }
+    .grid .gl { justify-items: start; padding-left: 16px; }
+    .grid .gl button { border: 0; background: none; padding: 8px 0; min-height: 44px; text-align: left; font-weight: 700; font-size: 14px; }
+    .grid .gl button i { font-style: normal; color: var(--ember); margin-right: 5px; }
+    .grid .gl button:hover { color: var(--ember); }
+    .grid .cell { cursor: pointer; border-radius: 0; }
+    .grid .cell:hover { background: rgba(255, 255, 255, .6); }
+    .grid .is-sel { background: rgba(252, 227, 210, .55); }
+    .grid.chips24 > div { min-height: 64px; }
+    .copytab { width: 100%; margin-top: 14px; border-collapse: separate; border-spacing: 0; border-radius: 24px; overflow: hidden; background: rgba(255, 248, 241, .62); box-shadow: var(--carved); font-size: 14.5px; line-height: 20px; }
+    .copytab th, .copytab td { text-align: left; padding: 12px 14px; border-top: 1px solid rgba(106, 70, 54, .08); vertical-align: top; }
+    .copytab thead th { border-top: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--bark); }
+    .copytab tbody th { font-weight: 700; white-space: nowrap; }
+    .copytab td { font-weight: 550; }
+    .copytab td.muted { color: var(--bark); font-weight: 500; }
+    .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+    .rules .card p { margin: 6px 0 0; font-size: 14.5px; line-height: 21px; color: var(--bark); font-weight: 500; }
+    .rules .card b { color: var(--humus); }
+    @media (max-width: 1100px) { .stage { grid-template-columns: 1fr; justify-items: center; } .hero { grid-template-columns: 1fr; } .rules { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <p class="eyebrow">Cortex · Living Matter · Streak lab</p>
+        <h1>A flame made of living cells</h1>
+        <p class="lede">Five ways to draw the streak with the brand’s particles. Heat is how many cells there are, how bright they burn and how fast they rise. Pick a style, push it through every state, and press Extend to feel the beat.</p>
+      </div>
+      <a class="back" href="index.html?tab=learn">Back to the app →</a>
+    </div>
+
+    <div class="controls" role="region" aria-label="Controls">
+      <div class="row"><b>Style</b><div class="chips" id="styleChips" role="group" aria-label="Style"></div></div>
+      <div class="row"><b>State</b><div class="chips" id="stateChips" role="group" aria-label="State"></div></div>
+      <div class="row sliders">
+        <div class="sl"><label for="days">Days</label><input id="days" type="range" min="0" max="400" step="1"><output id="daysOut" for="days"></output></div>
+        <div class="sl"><label for="time">Time</label><input id="time" type="range" min="360" max="1435" step="5"><output id="timeOut" for="time"></output></div>
+        <div class="sl"><label id="frzL">Freezes</label><span class="seg" id="frz" role="group" aria-labelledby="frzL"></span></div>
+        <button type="button" class="btn btn-lit" id="extend">Extend streak</button>
+        <span class="note" id="note"></span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="phone" aria-label="Phone preview">
+        <div class="island" aria-hidden="true"></div>
+        <div class="screen is-open" id="screen">
+          <div class="ph-status"><span id="phTime">2:00</span><span aria-hidden="true" style="display:flex;gap:6px;align-items:center">
+            <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="8" rx="2" fill="currentColor"/></svg></span></div>
+          <header class="ph-head">
+            <button type="button" class="ph-switch" tabindex="-1"><span class="dot" aria-hidden="true"></span>How the heart works</button>
+            <span class="ph-chip" id="phChip"></span>
+          </header>
+          <div class="ph-body" aria-hidden="true">
+            <div class="ph-prog"><span><b>2 of 9</b> · 22%</span><span>Full roadmap</span></div>
+            <div class="ph-bar"><i></i></div>
+            <div class="ph-path">
+              <svg width="330" height="520" viewBox="0 0 330 520" fill="none"><path d="M70 40 C 200 60, 250 120, 250 170 S 90 250, 90 300 S 240 380, 240 440" stroke="rgba(255,248,241,.9)" stroke-width="14" stroke-linecap="round"/><path d="M70 40 C 200 60, 250 120, 250 170" stroke="#C9472B" stroke-width="5" stroke-linecap="round"/></svg>
+              <span class="stop done" style="left:38px;top:8px"></span><span class="stop-l" style="left:112px;top:28px">What the heart does</span>
+              <span class="stop now" style="left:218px;top:138px"></span><span class="stop-l" style="left:58px;top:158px">Four chambers</span>
+              <span class="stop later" style="left:58px;top:268px"></span><span class="stop-l" style="left:136px;top:288px">The beat, step by step</span>
+              <span class="stop later" style="left:208px;top:408px"></span><span class="stop-l" style="left:50px;top:428px">Blood pressure</span>
+            </div>
+          </div>
+          <nav class="ph-tabs" aria-hidden="true"><span class="on">Learn</span><span>Ask</span><span>Profile</span></nav>
+          <div class="ph-scrim" id="phScrim"></div>
+          <div class="ph-drop" id="phDrop"></div>
+          <div class="ph-layer" id="phLayer"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card hero">
+          <div class="hero-stage"><div id="hero"></div></div>
+          <div>
+            <h3 id="heroEyebrow">Style 1</h3>
+            <p class="hero-name" id="heroName"></p>
+            <p class="hero-note" id="heroNote"></p>
+            <dl class="kv">
+              <dt>State</dt><dd id="kvState"></dd>
+              <dt>Status</dt><dd id="kvStatus"></dd>
+              <dt>Pill</dt><dd id="kvPill"></dd>
+              <dt>Reads as</dt><dd class="muted" id="kvRead"></dd>
+            </dl>
+            <div class="ladder" id="ladder" aria-label="Tiers"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Full-screen moments</h3>
+          <p class="hero-note" style="margin:0">Only six. They play inside the phone. Tap anywhere to skip; Continue fades in at about 600 ms.</p>
+          <div class="moments" id="moments"></div>
+          <p class="moments-note" id="momNote"></p>
+        </div>
+        <div class="card">
+          <h3>How the streak works</h3>
+          <p class="hero-note" style="margin:0">Any basic exploration counts: a finished lesson or one Ask question. The first one each day lights the flame. Until then it shrinks and dims through the day, and from 6 PM it’s at risk. Freezes: hold up to 2, earned at 7, 14, 30 and 100 days, used for you automatically, never sold. Winning a streak back is never paywalled.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2>Every state, every style</h2>
+    <p class="lede">At 64 px. Read the state from colour and shape before you look for a number. Tap any cell to load it above.</p>
+    <div class="grid" id="gridStates"></div>
+
+    <h2>Every tier</h2>
+    <p class="lede">The flame grows with the streak: day 1, 7, 30, 100 and 365. Before day 1 it’s an ember waiting.</p>
+    <div class="grid" id="gridTiers"></div>
+
+    <h2>At 24 px, in the chip</h2>
+    <p class="lede">The real top-bar counter. The chip’s tint carries the state too: ember when lit, saffron ring at risk, frost when frozen, a dashed edge to win back. Returning users never see 0.</p>
+    <div class="grid chips24" id="grid24"></div>
+
+    <h2>The words</h2>
+    <p class="lede">Plain, kind, short. Never “lost”, never “0”, never a guilt trip.</p>
+    <table class="copytab" id="copyTab"></table>
+  </div>
+
+  <script src="../streak/streak.js"></script>
+  <script>
+  (function () {
+    const S = window.Streak, $ = (id) => document.getElementById(id);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const Q = new URLSearchParams(location.search);
+    const st = {
+      style: clamp(parseInt(Q.get('style'), 10) || 1, 1, 5),
+      state: S.STATES.includes(Q.get('state')) ? Q.get('state') : 'lit',
+      days: Q.has('days') ? clamp(parseInt(Q.get('days'), 10) || 0, 0, 400) : 12,
+      time: Q.has('time') ? clamp(parseInt(Q.get('time'), 10) || 840, 360, 1435) : 14 * 60,
+      freezes: Q.has('freezes') ? clamp(parseInt(Q.get('freezes'), 10) || 0, 0, 2) : 1,
+    };
+    const heatOf = (m) => clamp(1 - (m - 360) / (1440 - 360), 0, 1);
+    const hoursLeft = (m) => Math.max(1, Math.ceil((1440 - m) / 60));
+    const fmt = (m) => { const h = Math.floor(m / 60), mm = m % 60, h12 = ((h + 11) % 12) + 1; return `${h12}:${String(mm).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+    function eff(over) {
+      const o = Object.assign({}, st, over || {});
+      const r = { style: o.style, state: o.state, days: o.days, best: Math.max(3, o.days), heat: heatOf(o.time), freezes: o.freezes, hoursLeft: hoursLeft(o.time), today: 3 };
+      if (o.state === 'born') { r.days = 1; r.best = Math.max(3, o.days); }
+      if (o.state === 'broken') r.best = Math.max(1, o.days);
+      return r;
+    }
+    const READS = {
+      unlit: 'Smaller, deeper ember colour, no bright core. Shrinks as the day goes on.',
+      lit: 'Full size, saffron core, cells rising fast.',
+      risk: 'Low and guttering, with a saffron pulse at the base.',
+      frozen: 'Frost blue, cells hang still, a snowflake mark.',
+      broken: 'A single warm ember, ready to light. No number.',
+      winback: 'The old flame held as empty cells or a dashed line, an ember glowing under it.',
+      repaired: 'Lit, inside a dashed ring: the mark of a day won back.',
+      born: 'A small new flame with fresh sparkles.',
+      milestone: 'A corona of sparks around a bigger flame.',
+    };
+
+    // ---- controls ----
+    $('styleChips').innerHTML = S.STYLES.map((s) => `<button type="button" class="chip" data-style="${s.id}"><i>${s.id}</i>${s.name}</button>`).join('');
+    $('stateChips').innerHTML = S.STATES.map((s) => `<button type="button" class="chip" data-state="${s}">${S.LABELS[s]}</button>`).join('');
+    $('frz').innerHTML = [0, 1, 2].map((n) => `<button type="button" data-frz="${n}" aria-label="${n} freezes">${n}</button>`).join('');
+    $('days').value = st.days; $('time').value = st.time;
+
+    // ---- the live instances ----
+    const hero = S.flame($('hero'), Object.assign(eff(), { size: 300, label: 'Streak flame preview' }));
+    let open = true;
+    const phChip = S.chip($('phChip'), Object.assign(eff(), { size: 24, onTap: () => { open = !open; $('screen').classList.toggle('is-open', open); } }));
+    $('phScrim').addEventListener('click', () => { open = false; $('screen').classList.remove('is-open'); });
+    const wd = S.widget($('phDrop'), eff());
+
+    // ---- grids ----
+    const gridMs = [];
+    const COLS = [
+      ['Not lit', { state: 'unlit', days: 12 }], ['Lit', { state: 'lit', days: 12 }], ['At risk', { state: 'risk', days: 12 }], ['Frozen', { state: 'frozen', days: 12 }],
+      ['Broken', { state: 'broken', days: 12 }], ['Win back', { state: 'winback', days: 12 }], ['Repaired', { state: 'repaired', days: 13 }], ['New streak', { state: 'born', days: 1 }],
+      ['Day 7', { state: 'milestone', days: 7 }], ['Day 30', { state: 'milestone', days: 30 }], ['Day 100', { state: 'milestone', days: 100 }],
+    ];
+    function buildGrid(id, cols, size, mk) {
+      const g = $(id); g.style.gridTemplateColumns = `150px repeat(${cols.length}, 1fr)`;
+      g.innerHTML = '<div class="gh"></div>' + cols.map((c) => `<div class="gh">${c[0]}</div>`).join('') +
+        S.STYLES.map((s) => `<div class="gl" data-row="${s.id}"><button type="button" data-style="${s.id}"><i>${s.id}</i>${s.name}</button></div>` +
+          cols.map((c, j) => `<div class="cell" data-row="${s.id}" data-pick="${s.id}:${j}" role="button" tabindex="0" aria-label="${s.name}, ${c[0]}"><span data-mk="${s.id}:${j}"></span></div>`).join('')).join('');
+      g.querySelectorAll('[data-mk]').forEach((el) => { const [sid, j] = el.dataset.mk.split(':').map(Number); gridMs.push(mk(el, sid, cols[j][1])); });
+      g.addEventListener('click', (e) => { const c = e.target.closest('[data-pick]'); if (!c) return; const [sid, j] = c.dataset.pick.split(':').map(Number); const o = cols[j][1]; setAll({ style: sid, state: o.state, days: o.days }); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      g.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pick]')) { e.preventDefault(); e.target.click(); } });
+    }
+    const timed = [];
+    // the risk column always shows an evening time (it only exists after 6 PM)
+    const gridHeat = (s) => heatOf(s === 'risk' ? Math.max(st.time, 20 * 60) : st.time);
+    buildGrid('gridStates', COLS, 64, (el, sid, o) => { const f = S.flame(el, { style: sid, state: o.state, days: o.days, heat: gridHeat(o.state), size: 64, label: `${S.LABELS[o.state]}, ${o.days} days` }); if (o.state === 'unlit' || o.state === 'risk') timed.push(f); return f; });
+    const TIERS = [['Day 0', { state: 'unlit', days: 0 }], ['Day 1', { state: 'lit', days: 1 }], ['Day 7', { state: 'lit', days: 7 }], ['Day 30', { state: 'lit', days: 30 }], ['Day 100', { state: 'lit', days: 100 }], ['Day 365', { state: 'lit', days: 365 }]];
+    buildGrid('gridTiers', TIERS, 64, (el, sid, o) => S.flame(el, { style: sid, state: o.state, days: o.days, size: 72, label: `${o.days} days` }));
+    const C24 = [['Not lit', { state: 'unlit', days: 12 }], ['Lit', { state: 'lit', days: 12 }], ['At risk', { state: 'risk', days: 12 }], ['Frozen', { state: 'frozen', days: 12 }], ['Broken', { state: 'broken', days: 12 }], ['Win back', { state: 'winback', days: 12 }], ['Repaired', { state: 'repaired', days: 13 }], ['Day 30', { state: 'milestone', days: 30 }]];
+    buildGrid('grid24', C24, 24, (el, sid, o) => { const c = S.chip(el, { style: sid, state: o.state, days: o.days, heat: gridHeat(o.state), size: 24 }); c.el.tabIndex = -1; if (o.state === 'unlit' || o.state === 'risk') timed.push(c); return c; });
+
+    // ---- copy table ----
+    function copyTable() {
+      const o = { days: 12, best: 12, hoursLeft: hoursLeft(st.time), freezes: st.freezes };
+      const MOM = { lit: 'Lighting up: “12 days. Lit for today.” Day 1: “You lit your first flame.”', frozen: 'Thawing: “Your freeze kept your 12 days safe.”', broken: 'New start: “Day 1. A fresh start. Your best is 12 days. Let’s beat it.”', winback: 'Win back: “Your 12 days are waiting. Win it back today: finish anything.”', repaired: 'Repaired: “Won back. 13 days.”', milestone: 'Milestone: “7 days in a row” + “+1 freeze” card and next goal.', born: 'Comes after New start.', unlit: '', risk: '' };
+      $('copyTab').innerHTML = `<thead><tr><th>State</th><th>Chip</th><th>Status line</th><th>Pill</th><th>Full-screen moment</th></tr></thead><tbody>` +
+        S.STATES.map((s) => { const c = S.copy(s, s === 'born' ? Object.assign({}, o, { days: 1, best: 12 }) : s === 'repaired' ? Object.assign({}, o, { days: 13 }) : o); return `<tr><th>${S.LABELS[s]}</th><td>${c.chip}</td><td>${c.status}</td><td class="muted">${c.pill || '—'}</td><td class="muted">${MOM[s] || '—'}</td></tr>`; }).join('') + '</tbody>';
+    }
+
+    // ---- moments ----
+    const MOMS = S.MOMENTS;
+    function momOpts(name) {
+      const e = eff();
+      if (name === 'ignite') return { style: st.style, days: st.state === 'broken' ? 1 : Math.max(1, st.days) };
+      if (name === 'milestone') return { style: st.style, days: S.MILESTONES.find((m) => m >= st.days) || 100, freezes: st.freezes };
+      if (name === 'newstart') return { style: st.style, best: e.best };
+      return { style: st.style, days: Math.max(1, st.days), freezes: st.freezes };
+    }
+    function momSub(name) {
+      const o = momOpts(name);
+      return { ignite: o.days === 1 ? 'Day 1: ember to flame' : `Day ${o.days}`, milestone: `${o.days} days, +1 freeze`, thaw: 'A freeze was used', newstart: `Best is ${o.best}`, winback: 'Away 1 to 2 days', repaired: `${o.days} → ${o.days + 1}` }[name];
+    }
+    function paintMoments() { $('moments').innerHTML = MOMS.map((n) => `<button type="button" data-mom="${n}">${S.MOMENT_NAMES[n]}<small>${momSub(n)}</small></button>`).join(''); }
+    let playing = null;
+    $('moments').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-mom]'); if (!b) return;
+      $('phLayer').innerHTML = '';
+      const t0 = performance.now();
+      playing = S.moment($('phLayer'), b.dataset.mom, momOpts(b.dataset.mom));
+      $('momNote').textContent = `Playing ${S.MOMENT_NAMES[b.dataset.mom]}. Tap the phone to skip.`;
+      playing.then((r) => { $('momNote').textContent = `${S.MOMENT_NAMES[r.name]} closed${r.skipped ? ' (skipped)' : ''}.`; });
+    });
+
+    // ---- sync ----
+    function sync(opt) {
+      opt = opt || {};
+      const e = eff();
+      document.querySelectorAll('#styleChips [data-style]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.style === st.style));
+      document.querySelectorAll('#stateChips [data-state]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.state === st.state));
+      document.querySelectorAll('[data-frz]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.frz === st.freezes));
+      document.querySelectorAll('.grid [data-row]').forEach((c) => c.classList.toggle('is-sel', +c.dataset.row === st.style));
+      $('daysOut').textContent = st.state === 'broken' ? `best ${e.best}` : st.state === 'born' ? `best ${e.best}` : `${st.days} ${st.days === 1 ? 'day' : 'days'}`;
+      $('timeOut').textContent = fmt(st.time); $('phTime').textContent = fmt(st.time).replace(/ [AP]M/, '');
+      $('note').textContent = st.state === 'unlit' ? 'At risk starts at 6 PM' : st.state === 'risk' ? `${hoursLeft(st.time)} h left today` : '';
+      if (!opt.keepInstances) { hero.set(e); phChip.set(e); wd.set(e); }
+      timed.forEach((f) => f.set({ heat: gridHeat(f.flame ? f.flame.o.state : f.o.state) }));
+      const s = S.STYLES[st.style - 1], c = S.copy(e.state, e);
+      $('heroEyebrow').textContent = `Style ${s.id}`; $('heroName').textContent = s.name; $('heroNote').textContent = s.note;
+      $('kvState').textContent = `${S.LABELS[st.state]} · ${c.title}`; $('kvStatus').textContent = c.status; $('kvPill').textContent = c.pill || '—'; $('kvRead').textContent = READS[st.state];
+      const tier = st.state === 'broken' ? 0 : S.tierOf(e.days);
+      $('ladder').innerHTML = [['Ember', 0], ['1', 1], ['7', 2], ['30', 3], ['100', 4], ['365', 5]].map(([l, t]) => `<span class="${t === tier ? 'on' : ''}">${l}</span>`).join('');
+      paintMoments(); copyTable();
+      const q = new URLSearchParams({ style: st.style, state: st.state, days: st.days });
+      if (st.time !== 840) q.set('time', st.time); if (st.freezes !== 1) q.set('freezes', st.freezes);
+      if (document.documentElement.classList.contains('still') && Q.has('still')) q.set('still', '');
+      history.replaceState(null, '', '?' + q.toString().replace(/still=$/, 'still'));
+    }
+    function setAll(p) { Object.assign(st, p); if (p.days != null) $('days').value = st.days; sync(); }
+
+    document.addEventListener('click', (e) => {
+      const s = e.target.closest('#styleChips [data-style], .grid .gl [data-style]'); if (s) setAll({ style: +s.dataset.style });
+      const t = e.target.closest('#stateChips [data-state]'); if (t) setAll({ state: t.dataset.state });
+      const f = e.target.closest('[data-frz]'); if (f) setAll({ freezes: +f.dataset.frz });
+    });
+    $('days').addEventListener('input', (e) => setAll({ days: +e.target.value }));
+    $('time').addEventListener('input', (e) => {
+      st.time = +e.target.value;
+      if (st.state === 'unlit' && st.time >= 1080) st.state = 'risk';
+      else if (st.state === 'risk' && st.time < 1080) st.state = 'unlit';
+      sync();
+    });
+
+    // Extend: the ignite/extend beat on every live instance. The number rolls on impact.
+    let busy = false;
+    $('extend').addEventListener('click', () => {
+      if (busy) return; busy = true;
+      const e = eff();
+      const from = st.state === 'broken' ? 0 : e.days;
+      const to = from + 1;
+      const state = st.state === 'winback' ? 'repaired' : to === 1 ? 'born' : S.MILESTONES.includes(to) ? 'milestone' : 'lit';
+      const opt = { to, state, ignite: from === 0 };
+      if (st.state === 'broken') { hero.set({ days: 0 }, { instant: true }); }
+      Promise.all([hero.extend(opt), phChip.extend(opt), wd.extend(opt)]).then(() => { busy = false; });
+      setTimeout(() => { st.days = to; st.state = state; $('days').value = to; sync({ keepInstances: true }); }, Streak.isStill() ? 0 : 640);
+    });
+
+    sync();
+  })();
+  </script>
+</body>
+</html>
