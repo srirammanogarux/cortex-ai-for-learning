@@ -8,7 +8,9 @@ This repo holds the research, decisions and clickable prototypes made so far.
 
 | Prototype | Link | Status |
 |---|---|---|
-| **Onboarding (current), one flow**: trailer → 3 quick questions → pondering orbs → exploration → map → save → Today (PM path) | https://cortex-onboarding-v3.vercel.app | Current |
+| **Cortex v4 app (current)**: onboarding builds your course → Learn · Ask · Profile, with variant pickers | https://cortex-app-phi.vercel.app | Current |
+| **Brand explorations**: 4 names × styles | https://cortex-app-phi.vercel.app/brand/ | Current |
+| Onboarding v3, one flow: trailer → 3 quick questions → pondering orbs → exploration → map → save → Today (PM path) | https://cortex-onboarding-v3.vercel.app | Earlier exploration |
 | Onboarding v2: one-minute work path | https://cortex-onboarding-v2.vercel.app | Earlier exploration |
 | Idea map: curiosity map for a PM | https://cortex-idea-map.vercel.app | Earlier exploration |
 | Onboarding v1: three directions × four personas | https://cortex-onboarding-nine.vercel.app | Earlier exploration |
@@ -19,6 +21,7 @@ Best viewed on a laptop: each prototype shows a phone frame with a guide beside 
 
 - `CORTEX_MASTER.md`: the master brief (product, personas, IA, design system, orb).
 - `research/`: competitor research, design-system breakdown, decision log (`decisions.md`) and flow docs (`flows/`).
+- `prototypes/cortex-app/`: the current v4 app. See its `CONTRACT.md`. Plan: `research/flows/plan-v4-app.md`.
 - `prototypes/`: each prototype is plain HTML/CSS/JS with no build step. Open its `index.html`.
   - `onboarding-v3/`: the current onboarding. Trailer and questions at the root; the exploration, map and finale in `explore/`. `brain.js` is the particle brain engine.
 

@@ -1,9 +1,10 @@
 # CORTEX — Master brief
 
-Attach this file to any chat or agent working on Cortex. It is the source of truth: if a chat's idea conflicts with it, this file wins until it is updated. Last updated: 2026-11-27.
+Attach this file to any chat or agent working on Cortex. It is the source of truth: if a chat's idea conflicts with it, this file wins until it is updated. Last updated: 2026-11-28, after Anesh's handoff (`.context/attachments/W8zsoO/handoff-for-sriram.md`) and the v4 plan (`research/flows/plan-v4-app.md`).
 
 Related files:
-- `research/decisions.md`: full decision log (D1–D28+).
+- `research/decisions.md`: full decision log (D1–D33+).
+- `research/flows/plan-v4-app.md`: the current plan (one app: onboarding → Learn · Ask · Profile).
 - `research/design-system-breakdown.md`: material recipes, with exact CSS.
 - `research/onboarding-inspiration.md`: Quest / Wondering / Wabi teardowns.
 - `research/00-synthesis.md` and `research/01–03`: market research.
@@ -12,7 +13,12 @@ Related files:
 ---
 
 ## 1. The product in one paragraph
-Cortex is a mobile-first **curiosity app**. People who open ChatGPT to understand something come to Cortex instead. They get a **visual, interactive answer**, can follow **rabbit holes** at any time, and Cortex **remembers and revisits** what they learned through quick practice. **Positioning:** *the place you go when you're curious.* Courses are what a curiosity grows into; they are not the front door.
+**Come here, not ChatGPT, for any curious thought.** Cortex is a mobile-first curiosity app. The first answer has to make three things felt, never said:
+- **You can see it:** visual and interactive, not a wall of text.
+- **It stays with you:** everything joins your knowledge graph.
+- **You can branch anywhere** without losing your place.
+
+You can **learn anything** here. A skill becomes a finite **course**; a curiosity becomes a living **explanation**; "make me something" becomes a quirky **artifact**.
 
 ## 2. Users
 | Persona | Wide↔deep · joy↔use | Asks like | Feels it worked when |
@@ -22,18 +28,25 @@ Cortex is a mobile-first **curiosity app**. People who open ChatGPT to understan
 | **Student** (Meera, 19) | deep · mastery | "Explain entropy intuitively" | "I get it, and I can answer questions" |
 | **Specialist** (doctor, engineer; V1) | deep · rigor | "New mechanism of X?" | Precise, sourced, no dumbing down |
 
-V0 targets the first three. iOS and Android, India and global.
+- **Learning style, asked once in onboarding:** Quick bites · Connect the dots · Full roadmap. It sets the format of the first course.
+- **Archetype = learning style × knowledge-graph shape.** This is the retention moat.
+  - Two axes: **breadth ↔ depth** (from the graph) × **guided ↔ self-directed** (from the style).
+  - That gives 4 archetypes. It shows as "forming…" until about 5 explorations, then it's revealed.
+  - "Polymath" is not an archetype name, because it's a brand candidate.
 
 ## 3. Information architecture
-Tabs (floating pill bar, icons, label shown on the selected tab only): **Ask · Explore · Practice · Memory**
-- **Ask (home, first tab, like ChatGPT):**
-  - The orb, plus "What are you curious about?" and a composer at the bottom (type or voice).
-  - Floating **sparks** (your unfinished questions) and a **Continue** chip.
-  - Answers come as a quick visual answer card, then "Explore it" opens the full **Exploration**.
-- **Explore:** a **For you** strip (Continue + sparks), trending rabbit holes, 8 subject shelves, and "Make it mine" on other people's Explorations.
-- **Practice:** the 2-minute **Daily mix** of due concepts, plus practising any single Exploration.
-- **Memory:** a canvas of everything explored, as bubbles clustered by subject. Zoom levels go subject → Exploration → cards. Filters, plus profile behind the avatar.
-- There is **no Today tab.**
+Three tabs: **Learn · Ask · Profile.** Practice is dropped; Memory = Profile.
+- **Learn (first tab):**
+  - Your courses as a roadmap, with one active course and a switcher at the top left. Free users get up to 3 courses.
+  - Lessons work like Explorations, with quizzes along the path and review as stops on the roadmap.
+  - **Courses are finite.** The end brings a unique **particle collectible** (e.g. the living heart), your graph visibly grows, and suggestions widen into bigger tracks.
+- **Ask:**
+  - A chat layout like ChatGPT. **Tap a word to branch**: the branch chat takes over the whole screen.
+  - A trail at the top plus a corner map lets you zoom out to the whole tree.
+  - **The answer type matches the question type** (see §4).
+  - The home screen is still being explored: A box + one live wonder · B your map as home · C the character you talk to, type to or show things.
+- **Profile:** your knowledge graph across subjects (free users see a preview), your archetype, collectibles, courses and streak.
+- **Not yet placed:** the old Explore content (For you, trending, subject shelves).
 
 ## 4. The Exploration (core content unit)
 - **Card flow:** Hook (one-line answer + illustration) → Aha (interactive diagram) → Unfold (2–4 cards) → Quick check (1 question) → Next (3 rabbit holes · "Make it a deep dive" · "Practise later").
@@ -41,6 +54,7 @@ Tabs (floating pill bar, icons, label shown on the selected tab only): **Ask · 
   - Glowing terms open a peek sheet with "Explore this", which creates a branch.
   - A trail (Heart › Valves › Murmurs) shows the path.
   - Pinching out shows the branches.
+- **The answer type matches the question type** (Anesh, 2.9): why/how → an interactive visual · teach me a skill → a course · A vs B → a comparison card · what happened → a story or timeline · how big → a scale zoom · is it true → myth vs fact · help me decide → a small decision tool · make me something → a quirky artifact (a quiz to send, a cheat sheet, a trading card, a comic, a mini game, flashcards).
 - **Lead card type depends on the question:**
   - living model (how it works)
   - story trail (why)
@@ -55,35 +69,44 @@ Tabs (floating pill bar, icons, label shown on the selected tab only): **Ask · 
   - Every wrong option has its own "why not" explanation.
 
 ## 5. Activation, monetisation, retention
-- **Activation:** in the first session, the user finishes their first Exploration, taps its interactive diagram and follows one rabbit hole.
-- **Paywall:** soft. It appears at the rabbit-holes screen of the first Exploration, offering a 3-day trial with an ×. Sign-in happens after the wow.
-- **Free tier (proposed):** 3 Explorations a day, unlimited quick answers and practice. Deep dives are paid.
-- **Retention:**
-  - Daily mix with a streak that allows a freeze day.
-  - At most 1 notification a day, leading with curiosity ("your heart question has a next chapter"), never guilt.
+- **Onboarding order (decided):**
+  1. Curiosity trailer
+  2. Learning style
+  3. "What do you want to learn?": typing first, suggestions second
+  4. Course questions: goal and time
+  5. **The course builds itself in front of you** (the particles build the roadmap)
+  6. Land on Learn
+  7. **Paywall**
+- **Activation:** build a course and finish lesson 1.
 
-## 6. Character: the orb (in exploration)
-- **No cartoon mascot.** Cortex is a **cobalt glass orb**.
-- **Leading proposal ("The Cortex"):** a glass orb that **fills with your curiosity**. Every topic drops in as a tiny bubble in its subject colour. It is the character, a progress signal and the doorway to Memory, all in one.
-- **States:** idle (breathing), listening (rings pulse with your voice), thinking (light swirls while AI generates), filled, happy/hint (brightens).
-- **Build:** one Rive file.
-- **Paper:** see the *04 Orb character* page (6 directions plus the converge proposal).
-- **Candidate under review (2026-11-27): a particle "Speaking Orb"** (MIT, aqualang89/shipnotes-components).
-  - **What it is:** a WebGL sphere of 6–12k particles that morphs per state: sphere (listening), tangled ribbons (thinking), gyroscope rings (searching), a tick (done). While speaking, syllables send rings through it, and it can build caption words out of particles.
-  - **Strengths:** it fits the name Cortex (particles = neurons), and particles can form *any* shape (a heart, the curiosity map).
-  - **Weaknesses:** it glows on dark but washes out on light. It's web WebGL, so React Native needs a Skia/GL port.
-  - **Siri-style conic-gradient orb (CSS):** cheap, and works on light backgrounds. It's generic (Siri/Gemini look), so it's only a small-size fallback.
-  - **Render:** `.context/orb-preview.png`.
-- **Brain variant (prototype 2026-11-27, `.context/brain-orb-v2.png`):** the same particles fold into a brain, and "thinking" sends light pulses along the folds, like neurons firing.
-  - **Proposed use:** the sphere at rest; it becomes a brain while thinking or learning; then it forms the topic's shape (for example a heart).
-  - **Onboarding reveal:** your imported questions light up "lobes" in subject colours.
-  - **Production:** sample the particles from a real 3D brain model, not maths.
+**Free vs Plus:**
+
+| | Free | Plus |
+|---|---|---|
+| Ask | You can type, and the answer starts to form, then the paywall appears | Full |
+| Knowledge graph | Preview | Whole graph |
+| Branching | 3 branches per question, any depth | Unlimited |
+| Courses | Up to 3 | More |
+
+More paid features and pricing are still open. The placeholder price is $49.99/yr with a 3-day trial.
+
+- **Retention:** finite courses that lead to the next one, the archetype that grows, the streak, and collectibles.
+
+## 6. Character: the particles
+- **The particle system is the character.** It is brand-neutral and fluid. It forms any shape: a brain, a "?", icons, a heart, a roadmap, letters.
+- **Behaviour:**
+  - It reacts to touch (scatters and springs back).
+  - It listens and thinks (neurons firing).
+  - It morphs into the topic.
+  - It takes on each icon's own colours.
+- **Brand open:** the name may move beyond "brain" (Cortex · Curious · Rabbit hole · Polymath). Whatever the name, the particles keep, and are styled per brand.
+- **History:** the glass orb → a brain particle orb (D29) → particles as a brand-neutral character (D33).
+- **Engine:** `prototypes/cortex-app/brain.js`.
 
 ## 7. Design system (summary; exact values in Paper › 01 Foundations and in tokens)
 - **Look:** Quest-grade physical UI. Objects have soft carved faces, white rims, inner light and soft double shadows. The background is a cool lilac-grey studio with warm fog.
-- **Type:**
-  - **Bricolage Grotesque 600:** titles, numbers, card titles, button labels. Tracking −3% (−1% on buttons).
-  - **Inter Display 500–600:** body, labels, tabs, fields, eyebrows.
+- **Type: Geist** for everything (D32). Titles are 600 with −3% tracking. Sizes are sleek: screen titles 26–28, card titles 17–20, body 15–16.
+- **Icons:** solid glyphs in their own colour gradient, on white tiles (style A, D32). No emojis, no 3D clay.
 - **Text sizes:**
   - Screen title 32–36
   - Section 22–24
@@ -133,39 +156,22 @@ Tabs (floating pill bar, icons, label shown on the selected tab only): **Ask · 
 
 ## 8. References (what to borrow)
 - **Quest:** onboarding as a moment. Understanding meter → founder letter → **Reveal** as cinematic story chapters (a Wrapped-style profile). Dark → light transition. Glowing orbs. Native surfaces.
-- **Wondering:** conversational acknowledgements, ≤3 questions, the first lesson generated **before** signup, "one step away" sign-in gate, notifications after value, ask-first landing.
+- **Wondering:** the closest competitor once we add courses. Map Cortex against it 1:1 (Anesh 2.14).
+- **Brilliant / Duolingo:** the roadmap pattern for Learn, in our own design.
+- **Wondering (onboarding):** conversational acknowledgements, ≤3 questions, the first lesson generated **before** signup, "one step away" sign-in gate, notifications after value, ask-first landing.
 - **Wabi:** a rain of glossy image spheres, a one-line promise, native sign-in.
 
 Full teardown: `research/onboarding-inspiration.md`.
 
 ## 9. Core flows: status
-| # | Flow | Status | Paper page |
+| # | Flow | Status | Where |
 |---|---|---|---|
-| 1 | Onboarding → first wow → paywall | **In exploration** (directions A–C) | 05 Onboarding directions |
-| 2 | Ask (home) | Defined at text-map level | — |
-| 3 | Exploration | Defined at text-map level | 01 Style v1 (old heart drafts) |
-| 4 | Explore | Defined at text-map level | 03 Screens (card language) |
-| 5 | Practice | Defined at text-map level | — |
-| 6 | Memory | Defined at text-map level | — |
-| 7 | Coming back (notifications, streak) | Defined at text-map level | — |
-| 8 | Limits & paywall | Defined at text-map level | — |
-
-### Onboarding directions under exploration
-- **A · Curiosity Wrapped (Quest-style):**
-  1. Dark intro with the orb: "What were you curious about this year?"
-  2. Understanding meter + imports (ChatGPT, Claude, YouTube), each charging the meter.
-  3. Reveal: cinematic chapters ("You're a rabbit-holer", "38 of your questions were pure curiosity", "the question you keep coming back to").
-  4. Light world: the orb fills with bubbles → "You never finished: Why do we dream?" → before/after → first Exploration.
-- **B · Bubble rain (Wabi-style):**
-  1. White screen, glossy curiosity spheres raining down, the orb.
-  2. "Tap what pulls you" (spheres with topics).
-  3. Spheres fly into the orb, which thinks.
-  4. The first Exploration grows out of the orb.
-- **C · Conversation with the orb (Wondering-style):**
-  1. The orb speaks: three quick questions with acknowledgements (what made you curious, how you like explanations, why you learn).
-  2. Live build: "Drawing the heart ✓ Writing the aha…".
-  3. "Your first exploration is ready" → sign in.
-- **Likely converge:** A's structure (meter → reveal → first spark) + B's opening image + C's acknowledgements and speed. The ChatGPT import path is optional, with C's questions as the fallback.
+| 1 | Onboarding → course build → Learn → paywall | **Building (v4)** | `prototypes/cortex-app` |
+| 2 | Learn: roadmap, lessons (3 styles explored), review, course end + gift, widen | **Building** | `cortex-app/learn` |
+| 3 | Ask: 3 home directions, answer types, tap-to-branch, zoom-out, free preview → paywall | **Building** | `cortex-app/ask` |
+| 4 | Profile: knowledge graph, emerging archetype, collectibles | **Building** | `cortex-app/profile` |
+| 5 | Brand: 4 names × styles | **Exploring** | `cortex-app/brand` |
+| — | Earlier: onboarding v1–v3, idea map | Archived | Paper › Early explorations + Onboarding · initial flows |
 
 ## 10. How to run a flow exploration (instructions for any chat or agent)
 1. **Read** this file and `research/decisions.md`. Don't re-decide settled items; list conflicts under "Open questions" instead.
@@ -198,8 +204,9 @@ Purpose · Elements (top→bottom) · Copy · States · Motion · Haptics · Eve
 ```
 
 ## 11. Open decisions
-- **Orb:** confirm "The Cortex" (glass + curiosity bubbles), or pick another of the 6 directions.
-- **Subject cover style:** linear / enamel / arcs / soft tint.
-- **Ask button style** inside the tab bar: now that Ask is the first tab, does it still need its own button?
-- **Onboarding direction:** A / B / C / converged.
-- **Free-tier numbers and price** (placeholder: $9.99/mo, $59.99/yr; ₹299/mo).
+- **Ask home:** A / B / C (prototyped side by side).
+- **Lesson style:** paced exploration / card stack / mixed by learning style (prototyped side by side).
+- **Brand:** the name, the style, and the character treatment.
+- **Where review lives:** roadmap stops (current) and/or a "fading ideas" shuffle in Profile.
+- **A home for the old Explore content.**
+- **More paid features and pricing.**
