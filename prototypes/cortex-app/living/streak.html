@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Figtree:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../streak/streak.css">
+  <link rel="stylesheet" href="../streak/v2.css">
   <style>
     :root { --bone: #F6ECE1; --shell: #FFF8F1; --humus: #2B1A12; --bark: #6A4636; --ember: #B83A1C; --coral: #F07B5A; --saffron: #EFB43E;
       --display: 'Fraunces', Georgia, serif; --font: 'Figtree', ui-sans-serif, system-ui, sans-serif;
@@ -64,8 +65,8 @@
     .ph-switch { height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 5px; border: 0; border-radius: 999px; background: rgba(255, 248, 241, .94); box-shadow: inset 0 1px 0 #fff, 0 8px 20px -14px rgba(120, 60, 30, .55); font-family: var(--display); font-weight: 560; font-size: 17px; letter-spacing: -.02em; }
     .ph-switch .dot { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #B83A1C); box-shadow: 0 0 12px rgba(240, 123, 90, .45); }
     .ph-body { position: absolute; top: 114px; left: 0; right: 0; bottom: 0; padding: 4px 20px; }
-    .ph-prog { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; color: var(--bark); padding: 0 4px; }
-    .ph-prog b { color: var(--humus); }
+    .ph-prog { display: flex; justify-content: space-between; font-size: 13px; line-height: 18px; font-weight: 600; color: var(--bark); padding: 0 4px; }
+    .ph-prog b { color: var(--humus); font-weight: 700; }
     .ph-bar { margin: 8px 4px 0; height: 8px; border-radius: 4px; background: rgba(106, 70, 54, .15); }
     .ph-bar i { display: block; width: 22%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--saffron), #C9472B); }
     .ph-path { position: relative; margin-top: 30px; height: 520px; }
@@ -74,9 +75,9 @@
     .stop.done { background: radial-gradient(circle at 34% 30%, #E46A44, #B83A1C 70%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 8px 18px -8px rgba(184, 58, 28, .7); }
     .stop.now { background: radial-gradient(circle at 34% 30%, #FFD08A, #F07B5A 62%, #D9553A); box-shadow: 0 0 0 7px rgba(240, 123, 90, .14), 0 10px 24px -8px rgba(222, 90, 60, .7); }
     .stop.later { background: var(--shell); box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .18); }
-    .stop-l { position: absolute; font-size: 14px; font-weight: 650; width: 150px; }
+    .stop-l { position: absolute; font-size: 13px; line-height: 18px; font-weight: 600; width: 150px; }
     .ph-tabs { position: absolute; left: 16px; right: 16px; bottom: 22px; height: 70px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; border-radius: 35px; background: rgba(255, 248, 241, .92); box-shadow: inset 0 1px 0 #fff, 0 16px 34px -16px rgba(120, 60, 30, .55); z-index: 6; }
-    .ph-tabs span { display: grid; place-items: center; border-radius: 29px; font-size: 13px; font-weight: 650; color: var(--bark); }
+    .ph-tabs span { display: grid; place-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--bark); }
     .ph-tabs span.on { background: var(--ember); color: var(--shell); }
     .ph-scrim { position: absolute; inset: 0; z-index: 7; background: rgba(43, 26, 18, .2); opacity: 0; pointer-events: none; transition: opacity 220ms ease-out; }
     .ph-drop { position: absolute; z-index: 8; top: 110px; left: 12px; right: 12px; transform-origin: 86% 0; opacity: 0; transform: translateY(-6px) scale(.97); pointer-events: none; transition: opacity 200ms ease-out, transform 260ms cubic-bezier(.2, .8, .2, 1); }
@@ -128,6 +129,19 @@
     .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
     .rules .card p { margin: 6px 0 0; font-size: 14.5px; line-height: 21px; color: var(--bark); font-weight: 500; }
     .rules .card b { color: var(--humus); }
+    .chip.chip-old { margin-left: 8px; min-height: 44px; border: 0; border-radius: 999px; padding: 0 16px; font-size: 13px; font-weight: 600; color: var(--bark); background: transparent; box-shadow: inset 0 0 0 1.5px rgba(106, 70, 54, .18); }
+    .chip.chip-old[aria-pressed="true"] { background: var(--humus); color: var(--shell); box-shadow: none; }
+    .hero-why { margin: 0 0 14px; padding: 12px 16px; border-radius: 20px; background: #F8E2CF; font-size: 15px; line-height: 21px; font-weight: 500; color: var(--humus); }
+    .hero-why b { display: block; font-size: 12px; line-height: 16px; letter-spacing: .09em; text-transform: uppercase; color: #9A2F15; font-weight: 600; margin-bottom: 2px; }
+    .dirs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+    .dir { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: start; text-align: left; border: 0; border-radius: 28px; padding: 16px; background: rgba(255, 248, 241, .78); box-shadow: var(--carved); cursor: pointer; }
+    .dir:hover, .dir.is-sel { box-shadow: inset 0 0 0 1.5px rgba(184, 58, 28, .4), var(--carved); }
+    .dir-art { width: 112px; height: 112px; display: grid; place-items: center; border-radius: 20px; background: radial-gradient(60% 60% at 50% 55%, #FFF3E6, rgba(255, 243, 230, 0)); }
+    .dir h4 { margin: 2px 0 4px; font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; font-size: 20px; line-height: 25px; letter-spacing: -.03em; }
+    .dir h4 i { font-style: normal; color: var(--ember); margin-right: 6px; }
+    .dir p { margin: 0 0 6px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--bark); }
+    .dir p b { color: var(--humus); font-weight: 600; }
+    @media (max-width: 1100px) { .dirs { grid-template-columns: 1fr; } }
     @media (max-width: 1100px) { .stage { grid-template-columns: 1fr; justify-items: center; } .hero { grid-template-columns: 1fr; } .rules { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -135,15 +149,15 @@
   <div class="wrap">
     <div class="top">
       <div>
-        <p class="eyebrow">Cortex · Living Matter · Streak lab</p>
-        <h1>A flame made of living cells</h1>
-        <p class="lede">Five ways to draw the streak with the brand’s particles. Heat is how many cells there are, how bright they burn and how fast they rise. Pick a style, push it through every state, and press Extend to feel the beat.</p>
+        <p class="eyebrow">Cortex · Living Matter · Streak lab v2</p>
+        <h1>Six painted streaks</h1>
+        <p class="lede">No cells, no particles, no cartoon flame. Six metaphors painted in the app’s gouache, from a glowing ember to the number itself. Pick one, push it through every state, slide the time of day, and press Extend to feel the beat.</p>
       </div>
       <a class="back" href="index.html?tab=learn">Back to the app →</a>
     </div>
 
     <div class="controls" role="region" aria-label="Controls">
-      <div class="row"><b>Style</b><div class="chips" id="styleChips" role="group" aria-label="Style"></div></div>
+      <div class="row"><b>Style</b><div class="chips" id="styleChips" role="group" aria-label="Style"></div><button type="button" class="chip chip-old" id="oldToggle" aria-pressed="false">Earlier: cell styles</button></div>
       <div class="row"><b>State</b><div class="chips" id="stateChips" role="group" aria-label="State"></div></div>
       <div class="row sliders">
         <div class="sl"><label for="days">Days</label><input id="days" type="range" min="0" max="400" step="1"><output id="daysOut" for="days"></output></div>
@@ -190,11 +204,13 @@
             <h3 id="heroEyebrow">Style 1</h3>
             <p class="hero-name" id="heroName"></p>
             <p class="hero-note" id="heroNote"></p>
+            <p class="hero-why" id="heroWhy"></p>
             <dl class="kv">
               <dt>State</dt><dd id="kvState"></dd>
               <dt>Status</dt><dd id="kvStatus"></dd>
               <dt>Pill</dt><dd id="kvPill"></dd>
               <dt>Reads as</dt><dd class="muted" id="kvRead"></dd>
+              <dt>Tiers</dt><dd class="muted" id="kvTiers"></dd>
             </dl>
             <div class="ladder" id="ladder" aria-label="Tiers"></div>
           </div>
@@ -212,16 +228,20 @@
       </div>
     </div>
 
+    <h2 id="dirsH">The six directions</h2>
+    <p class="lede">Each is one metaphor in one medium. Tap one to load it above.</p>
+    <div class="dirs" id="dirs"></div>
+
     <h2>Every state, every style</h2>
     <p class="lede">At 64 px. Read the state from colour and shape before you look for a number. Tap any cell to load it above.</p>
     <div class="grid" id="gridStates"></div>
 
     <h2>Every tier</h2>
-    <p class="lede">The flame grows with the streak: day 1, 7, 30, 100 and 365. Before day 1 it’s an ember waiting.</p>
+    <p class="lede">It grows with the streak: day 1, 7, 30, 100 and 365. Before day 1 it waits, ready to start.</p>
     <div class="grid" id="gridTiers"></div>
 
     <h2>At 24 px, in the chip</h2>
-    <p class="lede">The real top-bar counter. The chip’s tint carries the state too: ember when lit, saffron ring at risk, frost when frozen, a dashed edge to win back. Returning users never see 0.</p>
+    <p class="lede">The real top-bar counter at 24 px. The chip’s tint carries the state too: ember when lit, a saffron ring at risk, frost when frozen, a dashed edge to win back. The lit numeral needs no icon: its digits glow. Returning users never see 0.</p>
     <div class="grid chips24" id="grid24"></div>
 
     <h2>The words</h2>
@@ -230,18 +250,26 @@
   </div>
 
   <script src="../streak/streak.js"></script>
+  <script src="../streak/styles-v2.js"></script>
   <script>
   (function () {
     const S = window.Streak, $ = (id) => document.getElementById(id);
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const Q = new URLSearchParams(location.search);
+    // Styles: the six painted v2 styles are the main set (keys); the five earlier cell styles (1–5) sit behind a toggle.
+    const qs = Q.get('style');
     const st = {
-      style: clamp(parseInt(Q.get('style'), 10) || 1, 1, 5),
+      style: S.isV2(qs) ? qs : /^[1-5]$/.test(qs || '') ? +qs : 'ember',
       state: S.STATES.includes(Q.get('state')) ? Q.get('state') : 'lit',
       days: Q.has('days') ? clamp(parseInt(Q.get('days'), 10) || 0, 0, 400) : 12,
       time: Q.has('time') ? clamp(parseInt(Q.get('time'), 10) || 840, 360, 1435) : 14 * 60,
       freezes: Q.has('freezes') ? clamp(parseInt(Q.get('freezes'), 10) || 0, 0, 2) : 1,
     };
+    const fam = () => (S.isV2(st.style) ? 'v2' : 'v1');
+    const LIST = () => (fam() === 'v2' ? S.STYLES2 : S.STYLES);
+    const valOf = (s) => (s.key && S.isV2(s.key) ? s.key : s.id);
+    const meta = () => LIST().find((s) => String(valOf(s)) === String(st.style)) || LIST()[0];
+    const parseStyle = (v) => (S.isV2(v) ? v : +v);
     const heatOf = (m) => clamp(1 - (m - 360) / (1440 - 360), 0, 1);
     const hoursLeft = (m) => Math.max(1, Math.ceil((1440 - m) / 60));
     const fmt = (m) => { const h = Math.floor(m / 60), mm = m % 60, h12 = ((h + 11) % 12) + 1; return `${h12}:${String(mm).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
@@ -252,7 +280,7 @@
       if (o.state === 'broken') r.best = Math.max(1, o.days);
       return r;
     }
-    const READS = {
+    const READS1 = {
       unlit: 'Smaller, deeper ember colour, no bright core. Shrinks as the day goes on.',
       lit: 'Full size, saffron core, cells rising fast.',
       risk: 'Low and guttering, with a saffron pulse at the base.',
@@ -263,51 +291,67 @@
       born: 'A small new flame with fresh sparkles.',
       milestone: 'A corona of sparks around a bigger flame.',
     };
+    const readsFor = (state) => (fam() === 'v2' ? S.READS2[st.style][state] : READS1[state]);
 
     // ---- controls ----
-    $('styleChips').innerHTML = S.STYLES.map((s) => `<button type="button" class="chip" data-style="${s.id}"><i>${s.id}</i>${s.name}</button>`).join('');
+    function paintStyleChips() {
+      $('styleChips').innerHTML = LIST().map((s) => `<button type="button" class="chip" data-style="${valOf(s)}"><i>${s.id}</i>${s.name}</button>`).join('');
+      $('oldToggle').setAttribute('aria-pressed', fam() === 'v1');
+      $('oldToggle').textContent = fam() === 'v1' ? 'Back to painted styles' : 'Earlier: cell styles';
+    }
     $('stateChips').innerHTML = S.STATES.map((s) => `<button type="button" class="chip" data-state="${s}">${S.LABELS[s]}</button>`).join('');
     $('frz').innerHTML = [0, 1, 2].map((n) => `<button type="button" data-frz="${n}" aria-label="${n} freezes">${n}</button>`).join('');
     $('days').value = st.days; $('time').value = st.time;
 
-    // ---- the live instances ----
-    const hero = S.flame($('hero'), Object.assign(eff(), { size: 300, label: 'Streak flame preview' }));
-    let open = true;
-    const phChip = S.chip($('phChip'), Object.assign(eff(), { size: 24, onTap: () => { open = !open; $('screen').classList.toggle('is-open', open); } }));
+    // ---- the live instances (rebuilt when the family changes) ----
+    let open = true, hero, phChip, wd, builtFam = null;
+    function makeLive() {
+      if (hero) { hero.destroy(); phChip.destroy(); wd.destroy(); }
+      hero = S.flame($('hero'), Object.assign(eff(), { size: 300, label: 'Streak preview' }));
+      phChip = S.chip($('phChip'), Object.assign(eff(), { size: 24, onTap: () => { open = !open; $('screen').classList.toggle('is-open', open); } }));
+      wd = S.widget($('phDrop'), eff());
+    }
     $('phScrim').addEventListener('click', () => { open = false; $('screen').classList.remove('is-open'); });
-    const wd = S.widget($('phDrop'), eff());
 
     // ---- grids ----
-    const gridMs = [];
+    let gridMs = [], timed = [];
     const COLS = [
       ['Not lit', { state: 'unlit', days: 12 }], ['Lit', { state: 'lit', days: 12 }], ['At risk', { state: 'risk', days: 12 }], ['Frozen', { state: 'frozen', days: 12 }],
       ['Broken', { state: 'broken', days: 12 }], ['Win back', { state: 'winback', days: 12 }], ['Repaired', { state: 'repaired', days: 13 }], ['New streak', { state: 'born', days: 1 }],
       ['Day 7', { state: 'milestone', days: 7 }], ['Day 30', { state: 'milestone', days: 30 }], ['Day 100', { state: 'milestone', days: 100 }],
     ];
-    function buildGrid(id, cols, size, mk) {
-      const g = $(id); g.style.gridTemplateColumns = `150px repeat(${cols.length}, 1fr)`;
-      g.innerHTML = '<div class="gh"></div>' + cols.map((c) => `<div class="gh">${c[0]}</div>`).join('') +
-        S.STYLES.map((s) => `<div class="gl" data-row="${s.id}"><button type="button" data-style="${s.id}"><i>${s.id}</i>${s.name}</button></div>` +
-          cols.map((c, j) => `<div class="cell" data-row="${s.id}" data-pick="${s.id}:${j}" role="button" tabindex="0" aria-label="${s.name}, ${c[0]}"><span data-mk="${s.id}:${j}"></span></div>`).join('')).join('');
-      g.querySelectorAll('[data-mk]').forEach((el) => { const [sid, j] = el.dataset.mk.split(':').map(Number); gridMs.push(mk(el, sid, cols[j][1])); });
-      g.addEventListener('click', (e) => { const c = e.target.closest('[data-pick]'); if (!c) return; const [sid, j] = c.dataset.pick.split(':').map(Number); const o = cols[j][1]; setAll({ style: sid, state: o.state, days: o.days }); window.scrollTo({ top: 0, behavior: 'smooth' }); });
-      g.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pick]')) { e.preventDefault(); e.target.click(); } });
-    }
-    const timed = [];
+    const TIERS = [['Day 0', { state: 'unlit', days: 0 }], ['Day 1', { state: 'lit', days: 1 }], ['Day 7', { state: 'lit', days: 7 }], ['Day 30', { state: 'lit', days: 30 }], ['Day 100', { state: 'lit', days: 100 }], ['Day 365', { state: 'lit', days: 365 }]];
+    const C24 = [['Not lit', { state: 'unlit', days: 12 }], ['Lit', { state: 'lit', days: 12 }], ['At risk', { state: 'risk', days: 12 }], ['Frozen', { state: 'frozen', days: 12 }], ['Broken', { state: 'broken', days: 12 }], ['Win back', { state: 'winback', days: 12 }], ['Repaired', { state: 'repaired', days: 13 }], ['Day 30', { state: 'milestone', days: 30 }]];
     // the risk column always shows an evening time (it only exists after 6 PM)
     const gridHeat = (s) => heatOf(s === 'risk' ? Math.max(st.time, 20 * 60) : st.time);
-    buildGrid('gridStates', COLS, 64, (el, sid, o) => { const f = S.flame(el, { style: sid, state: o.state, days: o.days, heat: gridHeat(o.state), size: 64, label: `${S.LABELS[o.state]}, ${o.days} days` }); if (o.state === 'unlit' || o.state === 'risk') timed.push(f); return f; });
-    const TIERS = [['Day 0', { state: 'unlit', days: 0 }], ['Day 1', { state: 'lit', days: 1 }], ['Day 7', { state: 'lit', days: 7 }], ['Day 30', { state: 'lit', days: 30 }], ['Day 100', { state: 'lit', days: 100 }], ['Day 365', { state: 'lit', days: 365 }]];
-    buildGrid('gridTiers', TIERS, 64, (el, sid, o) => S.flame(el, { style: sid, state: o.state, days: o.days, size: 72, label: `${o.days} days` }));
-    const C24 = [['Not lit', { state: 'unlit', days: 12 }], ['Lit', { state: 'lit', days: 12 }], ['At risk', { state: 'risk', days: 12 }], ['Frozen', { state: 'frozen', days: 12 }], ['Broken', { state: 'broken', days: 12 }], ['Win back', { state: 'winback', days: 12 }], ['Repaired', { state: 'repaired', days: 13 }], ['Day 30', { state: 'milestone', days: 30 }]];
-    buildGrid('grid24', C24, 24, (el, sid, o) => { const c = S.chip(el, { style: sid, state: o.state, days: o.days, heat: gridHeat(o.state), size: 24 }); c.el.tabIndex = -1; if (o.state === 'unlit' || o.state === 'risk') timed.push(c); return c; });
+    function buildGrid(id, cols, mk) {
+      const g = $(id), L = LIST(); g.style.gridTemplateColumns = `170px repeat(${cols.length}, 1fr)`;
+      g.innerHTML = '<div class="gh"></div>' + cols.map((c) => `<div class="gh">${c[0]}</div>`).join('') +
+        L.map((s) => `<div class="gl" data-row="${valOf(s)}"><button type="button" data-style="${valOf(s)}"><i>${s.id}</i>${s.name}</button></div>` +
+          cols.map((c, j) => `<div class="cell" data-row="${valOf(s)}" data-pick="${valOf(s)}:${j}" role="button" tabindex="0" aria-label="${s.name}, ${c[0]}"><span data-mk="${valOf(s)}:${j}"></span></div>`).join('')).join('');
+      g.querySelectorAll('[data-mk]').forEach((el) => { const [sv, j] = el.dataset.mk.split(':'); gridMs.push(mk(el, parseStyle(sv), cols[+j][1])); });
+      g.onclick = (e) => { const c = e.target.closest('[data-pick]'); if (!c) return; const [sv, j] = c.dataset.pick.split(':'); const o = cols[+j][1]; setAll({ style: parseStyle(sv), state: o.state, days: o.days }); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      g.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-pick]')) { e.preventDefault(); e.target.click(); } };
+    }
+    function buildGrids() {
+      gridMs.forEach((m) => m.destroy()); gridMs = []; timed = [];
+      buildGrid('gridStates', COLS, (el, sv, o) => { const f = S.flame(el, { style: sv, state: o.state, days: o.days, heat: gridHeat(o.state), size: 64, label: `${S.LABELS[o.state]}, ${o.days} days` }); if (o.state === 'unlit' || o.state === 'risk') timed.push(f); return f; });
+      buildGrid('gridTiers', TIERS, (el, sv, o) => S.flame(el, { style: sv, state: o.state, days: o.days, size: 72, label: `${o.days} days` }));
+      buildGrid('grid24', C24, (el, sv, o) => { const c = S.chip(el, { style: sv, state: o.state, days: o.days, heat: gridHeat(o.state), size: 24 }); c.el.tabIndex = -1; if (o.state === 'unlit' || o.state === 'risk') timed.push(c); return c; });
+      // the six directions, one card each
+      const dirs = $('dirs');
+      dirs.innerHTML = LIST().map((s) => `<button type="button" class="dir" data-style="${valOf(s)}"><span class="dir-art"><span data-dir="${valOf(s)}"></span></span><span><h4><i>${s.id}</i>${s.name}</h4>${s.medium ? `<p><b>Medium.</b> ${s.medium}. It ${s.verb}.</p><p><b>Tiers.</b> ${s.tiers}.</p><p><b>Why it’s distinct.</b> ${s.distinct}</p>` : `<p>${s.note}</p>`}</span></button>`).join('');
+      dirs.querySelectorAll('[data-dir]').forEach((el) => gridMs.push(S.flame(el, { style: parseStyle(el.dataset.dir), state: 'lit', days: 12, size: 104, decorative: true })));
+      $('dirsH').textContent = fam() === 'v2' ? 'The six directions' : 'The earlier cell styles';
+    }
 
     // ---- copy table ----
     function copyTable() {
-      const o = { days: 12, best: 12, hoursLeft: hoursLeft(st.time), freezes: st.freezes };
-      const MOM = { lit: 'Lighting up: “12 days. Lit for today.” Day 1: “You lit your first flame.”', frozen: 'Thawing: “Your freeze kept your 12 days safe.”', broken: 'New start: “Day 1. A fresh start. Your best is 12 days. Let’s beat it.”', winback: 'Win back: “Your 12 days are waiting. Win it back today: finish anything.”', repaired: 'Repaired: “Won back. 13 days.”', milestone: 'Milestone: “7 days in a row” + “+1 freeze” card and next goal.', born: 'Comes after New start.', unlit: '', risk: '' };
+      const o = { style: st.style, days: 12, best: 12, hoursLeft: hoursLeft(st.time), freezes: st.freezes };
+      const MOM = { lit: 'Lighting up: “12 days. Lit for today.” Day 1: “' + ((S.FIRST2 && S.FIRST2[st.style]) ? S.FIRST2[st.style][1] : 'You lit your first flame') + '”', frozen: 'Thawing: “Your freeze kept your 12 days safe.”', broken: 'New start: “Day 1. A fresh start. Your best is 12 days. Let’s beat it.”', winback: 'Win back: “Your 12 days are waiting. Win it back today: finish anything.”', repaired: 'Repaired: “Won back. 13 days.”', milestone: 'Milestone: “7 days in a row” + “+1 freeze” card and next goal.', born: 'Comes after New start.', unlit: '', risk: '' };
       $('copyTab').innerHTML = `<thead><tr><th>State</th><th>Chip</th><th>Status line</th><th>Pill</th><th>Full-screen moment</th></tr></thead><tbody>` +
-        S.STATES.map((s) => { const c = S.copy(s, s === 'born' ? Object.assign({}, o, { days: 1, best: 12 }) : s === 'repaired' ? Object.assign({}, o, { days: 13 }) : o); return `<tr><th>${S.LABELS[s]}</th><td>${c.chip}</td><td>${c.status}</td><td class="muted">${c.pill || '—'}</td><td class="muted">${MOM[s] || '—'}</td></tr>`; }).join('') + '</tbody>';
+        S.STATES.map((s) => { const c = S.copy(s, s === 'born' ? Object.assign({}, o, { days: 1, best: 12 }) : s === 'repaired' ? Object.assign({}, o, { days: 13 }) : o); return `<tr><th>${S.LABELS[s]}</th><td>${c.chip}</td><td>${c.status}</td><td class="muted">${c.pill || '—'}</td><td class="muted">${MOM[s] || '—'}</td></tr>`; }).join('') +
+        `<tr><th>Day 0</th><td>Start</td><td>${S.copy('unlit', { style: st.style, days: 0 }).title}</td><td class="muted">—</td><td class="muted">—</td></tr></tbody>`;
     }
 
     // ---- moments ----
@@ -320,16 +364,14 @@
       return { style: st.style, days: Math.max(1, st.days), freezes: st.freezes };
     }
     function momSub(name) {
-      const o = momOpts(name);
-      return { ignite: o.days === 1 ? 'Day 1: ember to flame' : `Day ${o.days}`, milestone: `${o.days} days, +1 freeze`, thaw: 'A freeze was used', newstart: `Best is ${o.best}`, winback: 'Away 1 to 2 days', repaired: `${o.days} → ${o.days + 1}` }[name];
+      const o = momOpts(name), v = fam() === 'v2' ? meta().verb : 'lights';
+      return { ignite: o.days === 1 ? `Day 1: it ${v}` : `Day ${o.days}`, milestone: `${o.days} days, +1 freeze`, thaw: 'A freeze was used', newstart: `Best is ${o.best}`, winback: 'Away 1 to 2 days', repaired: `${o.days} → ${o.days + 1}` }[name];
     }
     function paintMoments() { $('moments').innerHTML = MOMS.map((n) => `<button type="button" data-mom="${n}">${S.MOMENT_NAMES[n]}<small>${momSub(n)}</small></button>`).join(''); }
-    let playing = null;
     $('moments').addEventListener('click', (e) => {
       const b = e.target.closest('[data-mom]'); if (!b) return;
       $('phLayer').innerHTML = '';
-      const t0 = performance.now();
-      playing = S.moment($('phLayer'), b.dataset.mom, momOpts(b.dataset.mom));
+      const playing = S.moment($('phLayer'), b.dataset.mom, momOpts(b.dataset.mom));
       $('momNote').textContent = `Playing ${S.MOMENT_NAMES[b.dataset.mom]}. Tap the phone to skip.`;
       playing.then((r) => { $('momNote').textContent = `${S.MOMENT_NAMES[r.name]} closed${r.skipped ? ' (skipped)' : ''}.`; });
     });
@@ -337,21 +379,25 @@
     // ---- sync ----
     function sync(opt) {
       opt = opt || {};
-      const e = eff();
-      document.querySelectorAll('#styleChips [data-style]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.style === st.style));
+      if (builtFam !== fam()) { builtFam = fam(); paintStyleChips(); makeLive(); buildGrids(); }
+      const e = eff(), s = meta();
+      document.querySelectorAll('#styleChips [data-style]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.style === String(st.style)));
       document.querySelectorAll('#stateChips [data-state]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.state === st.state));
       document.querySelectorAll('[data-frz]').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.frz === st.freezes));
-      document.querySelectorAll('.grid [data-row]').forEach((c) => c.classList.toggle('is-sel', +c.dataset.row === st.style));
+      document.querySelectorAll('.grid [data-row], .dir[data-style]').forEach((c) => c.classList.toggle('is-sel', (c.dataset.row || c.dataset.style) === String(st.style)));
       $('daysOut').textContent = st.state === 'broken' ? `best ${e.best}` : st.state === 'born' ? `best ${e.best}` : `${st.days} ${st.days === 1 ? 'day' : 'days'}`;
       $('timeOut').textContent = fmt(st.time); $('phTime').textContent = fmt(st.time).replace(/ [AP]M/, '');
       $('note').textContent = st.state === 'unlit' ? 'At risk starts at 6 PM' : st.state === 'risk' ? `${hoursLeft(st.time)} h left today` : '';
       if (!opt.keepInstances) { hero.set(e); phChip.set(e); wd.set(e); }
       timed.forEach((f) => f.set({ heat: gridHeat(f.flame ? f.flame.o.state : f.o.state) }));
-      const s = S.STYLES[st.style - 1], c = S.copy(e.state, e);
-      $('heroEyebrow').textContent = `Style ${s.id}`; $('heroName').textContent = s.name; $('heroNote').textContent = s.note;
-      $('kvState').textContent = `${S.LABELS[st.state]} · ${c.title}`; $('kvStatus').textContent = c.status; $('kvPill').textContent = c.pill || '—'; $('kvRead').textContent = READS[st.state];
+      const c = S.copy(e.state, e);
+      $('heroEyebrow').textContent = fam() === 'v2' ? `Direction ${s.id} · it ${s.verb}` : `Earlier · style ${s.id}`;
+      $('heroName').textContent = s.name; $('heroNote').textContent = s.note;
+      $('heroWhy').hidden = !s.distinct; $('heroWhy').innerHTML = s.distinct ? `<b>Why it’s distinct</b>${s.distinct}` : '';
+      $('kvState').textContent = `${S.LABELS[st.state]} · ${c.title}`; $('kvStatus').textContent = c.status; $('kvPill').textContent = c.pill || '—'; $('kvRead').textContent = readsFor(st.state);
+      $('kvTiers').textContent = s.tiers || '—';
       const tier = st.state === 'broken' ? 0 : S.tierOf(e.days);
-      $('ladder').innerHTML = [['Ember', 0], ['1', 1], ['7', 2], ['30', 3], ['100', 4], ['365', 5]].map(([l, t]) => `<span class="${t === tier ? 'on' : ''}">${l}</span>`).join('');
+      $('ladder').innerHTML = [['Start', 0], ['1', 1], ['7', 2], ['30', 3], ['100', 4], ['365', 5]].map(([l, t]) => `<span class="${t === tier ? 'on' : ''}">${l}</span>`).join('');
       paintMoments(); copyTable();
       const q = new URLSearchParams({ style: st.style, state: st.state, days: st.days });
       if (st.time !== 840) q.set('time', st.time); if (st.freezes !== 1) q.set('freezes', st.freezes);
@@ -361,7 +407,8 @@
     function setAll(p) { Object.assign(st, p); if (p.days != null) $('days').value = st.days; sync(); }
 
     document.addEventListener('click', (e) => {
-      const s = e.target.closest('#styleChips [data-style], .grid .gl [data-style]'); if (s) setAll({ style: +s.dataset.style });
+      const s = e.target.closest('#styleChips [data-style], .grid .gl [data-style], .dir[data-style]'); if (s) { setAll({ style: parseStyle(s.dataset.style) }); if (s.classList.contains('dir')) window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      if (e.target.closest('#oldToggle')) setAll({ style: fam() === 'v2' ? 1 : 'ember' });
       const t = e.target.closest('#stateChips [data-state]'); if (t) setAll({ state: t.dataset.state });
       const f = e.target.closest('[data-frz]'); if (f) setAll({ freezes: +f.dataset.frz });
     });

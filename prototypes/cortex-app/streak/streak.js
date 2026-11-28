@@ -656,7 +656,11 @@
   }
 
   // ───────── Copy (Cortex rule: never shame; returning users never see "lost" or "0") ─────────
-  function copy(state, o) {
+  // Registered styles (streak/styles-v2.js) bring their own renderer and verbs.
+  const EXT = Object.create(null), EXTW = Object.create(null);
+  function make(el, o) { const C = o && o.style != null ? EXT[o.style] : null; return C ? new C(el, o) : new Flame(el, o); }
+  function copy(state, o) { const r = copy0(state, o), w = o && EXTW[o.style]; return w ? w('copy', state, r, o || {}) : r; }
+  function copy0(state, o) {
     o = o || {};
     const d = Math.max(0, Math.round(+o.days || 0)), best = Math.max(+o.best || 0, d), h = o.hoursLeft != null ? o.hoursLeft : 4, f = o.freezes != null ? +o.freezes : 1;
     const nd = plural(d, 'day'), dd = `${d}-day`;
@@ -725,7 +729,7 @@
     const b = document.createElement('button'); b.type = 'button'; b.className = 'sk-chip';
     b.innerHTML = '<span class="sk-chip-fl"></span><span class="sk-roll"></span>';
     el.appendChild(b);
-    const fl = new Flame(b.firstChild, { style: o.style, days: o.days, state: o.state, heat: o.heat, size: o.size, decorative: true, overlays: false });
+    const fl = make(b.firstChild, { style: o.style, days: o.days, state: o.state, heat: o.heat, size: o.size, decorative: true, overlays: false });
     const roll = b.querySelector('.sk-roll');
     function paint(instant) {
       const c = copy(o.state, o);
@@ -765,7 +769,7 @@
         <div class="sk-next"></div>
       </div>`;
     el.appendChild(root);
-    const fl = new Flame(root.querySelector('.sk-wd-fl'), { style: o.style, days: o.days, state: o.state, heat: o.heat, size: 76, decorative: true });
+    const fl = make(root.querySelector('.sk-wd-fl'), { style: o.style, days: o.days, state: o.state, heat: o.heat, size: 76, decorative: true });
     const $ = (s) => root.querySelector(s);
     function paint(instant) {
       const c = copy(o.state, o), word = c.chip === 'Start';
@@ -855,7 +859,8 @@
   function moment(layer, name, o) {
     o = Object.assign({ style: 1 }, o || {});
     const def = MOMENTS[name]; if (!def || !layer) return Promise.resolve({ name, skipped: false });
-    const cfg = def(o), reduced = isStill();
+    let cfg = def(o); const reduced = isStill();
+    if (EXTW[o.style]) cfg = EXTW[o.style]('moment', name, cfg, o);
     return new Promise((resolve) => {
       const m = document.createElement('div');
       m.className = `sk-mo sk-mo-${name}${reduced ? ' is-reduced' : ''}`;
@@ -875,7 +880,7 @@
       const roll = m.querySelector('.sk-roll');
       rollTo(roll, cfg.num === '' || cfg.num === 0 ? '' : cfg.num, true);
       if (cfg.num === '' || cfg.num === 0) m.querySelector('.sk-mo-num').classList.add('is-empty');
-      const fl = new Flame(m.querySelector('.sk-mo-fl'), Object.assign({ style: o.style, size: 232, dark: true, decorative: true }, cfg.start));
+      const fl = make(m.querySelector('.sk-mo-fl'), Object.assign({ style: o.style, size: 232, dark: true, decorative: true }, cfg.start));
       const ctx = {
         fl: fl.api,
         extend: (opt) => fl.extend(Object.assign({}, opt, { onImpact: (d) => { m.querySelector('.sk-mo-num').classList.remove('is-empty'); rollTo(roll, d); bar(); } })),
@@ -917,7 +922,8 @@
 
   window.Streak = {
     STYLES, STATES, LABELS, MILESTONES, TIER_DAYS, MOMENTS: Object.keys(MOMENTS), MOMENT_NAMES,
-    flame: (el, o) => new Flame(el, o).api,
+    flame: (el, o) => make(el, o).api,
+    register(key, Ctor, words) { EXT[key] = Ctor; if (words) EXTW[key] = words; }, targets, weekHTML, rollTo, envAt: (ms) => Flame.prototype.envAt(ms),
     chip, widget, moment, copy, week, tierOf, nextGoal, styleKey,
     isStill,
     get live() { return LIVE.size; },

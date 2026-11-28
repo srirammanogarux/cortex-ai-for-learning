@@ -1,0 +1,60 @@
+/* Cortex streak · v2 painted styles (streak/styles-v2.js). Class prefix: sk2-.
+   Tokens: DESIGN_SYSTEM §0 only. Shell #FFF8F1 · Bone #F6ECE1 · Humus #2B1A12 · Bark #6A4636 · Ember #B83A1C / 700 #9A2F15
+   Coral #F07B5A, Saffron #EFB43E (glow only, never text) · Frost (frozen only) #3F7CA6 / #24557A / #E4EFF5 */
+.sk2 { position: relative; }
+.sk2-box { position: absolute; inset: 0; will-change: transform; }
+.sk2-svg { position: absolute; inset: 0; display: block; overflow: visible;
+  transition: opacity 300ms ease-out, transform 380ms cubic-bezier(.2, 1.3, .4, 1); }
+.sk2-svg.sk2-out { opacity: 0; }
+.sk2-svg.sk2-roll-out { opacity: 0; transform: translateY(-26%); transition: opacity 220ms ease-in, transform 260ms ease-in; }
+.sk2-svg.sk2-roll-in { opacity: 0; transform: translateY(26%); transition: none; }
+
+/* ---------- Lit numeral: the number itself is the flame ---------- */
+/* Chip: the painted icon steps aside and the counter's own digits glow. */
+.sk-chip.sk2-chip-numeral { padding: 0 16px; }
+.sk-chip.sk2-chip-numeral .sk-chip-fl { display: none; }
+.sk-chip.sk2-chip-numeral:not(.is-word) .sk-roll { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: var(--t-display-s, 20px); font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; padding-bottom: 1px; }
+.sk-chip.sk2-chip-numeral:not(.is-word) .sk-n { -webkit-background-clip: text; background-clip: text; color: transparent;
+  background-image: linear-gradient(180deg, #E07A2A 0%, #B83A1C 52%, #7A2410 100%); }
+.sk-chip.sk2-chip-numeral[data-state="unlit"] .sk-n { background-image: linear-gradient(180deg, #9A2F15, #6B2410); }
+.sk-chip.sk2-chip-numeral[data-state="risk"] .sk-n { background-image: linear-gradient(180deg, #6B2410 0 58%, #D9701E 58% 100%); }
+.sk-chip.sk2-chip-numeral[data-state="frozen"] .sk-n { background-image: linear-gradient(180deg, #4F86AE, #24557A); }
+.sk-chip.sk2-chip-numeral[data-state="winback"] .sk-n { background-image: none; color: transparent; -webkit-text-stroke: 1.1px var(--ember, #B83A1C); }
+
+/* Widget and moments: the painted numeral replaces the plain number. */
+.sk-wd.sk2-wd-numeral .sk-wd-num .sk-roll { display: none; }
+.sk-wd.sk2-wd-numeral .sk-wd-fl { margin: -6px 2px -6px -8px; }
+.sk-mo.sk2-mo-numeral .sk-mo-num .sk-roll { display: none; }
+.sk-mo.sk2-mo-numeral .sk-mo-num { margin-top: -4px; }
+
+/* ---------- Full-screen moments: each metaphor gets its own light ---------- */
+.sk-mo.sk2-mo-jar .sk-mo-bg { background: radial-gradient(70% 42% at 50% 30%, #4A2A22 0%, rgba(74, 42, 34, 0) 72%), radial-gradient(60% 40% at 15% 92%, rgba(150, 70, 40, .3), transparent 70%), #160D0A; }
+.sk-mo.sk2-mo-candle .sk-mo-bg { background: radial-gradient(60% 38% at 50% 26%, #5A2A12 0%, rgba(90, 42, 18, 0) 72%), #140A06; }
+
+/* Sun, ink and numeral are daylight things: their moments sit on warm paper. */
+.sk-mo.sk2-light { color: var(--humus, #2B1A12); }
+.sk-mo.sk2-light .sk-mo-bg { background: radial-gradient(80% 46% at 50% 28%, #FFF5E6 0%, rgba(255, 245, 230, 0) 70%), linear-gradient(180deg, #F8E9D6 0%, #F6ECE1 55%, #F1E1CD 100%); }
+.sk-mo.sk2-mo-sun .sk-mo-bg { background: radial-gradient(70% 40% at 50% 26%, #FFEFC9 0%, rgba(255, 239, 201, 0) 72%), linear-gradient(180deg, #F9DFC0 0%, #F6ECE1 58%, #F1E1CD 100%); }
+.sk-mo.sk2-light.sk-mo-thaw .sk-mo-bg { background: radial-gradient(70% 40% at 50% 28%, #F4F9FC 0%, rgba(244, 249, 252, 0) 72%), linear-gradient(180deg, #E4EFF5 0%, #F3ECE4 60%, #F1E1CD 100%); }
+.sk-mo.sk2-light .sk-mo-num { color: var(--humus, #2B1A12); }
+.sk-mo.sk2-light .sk-mo-num small { color: var(--ember-700, #9A2F15); }
+.sk-mo.sk2-light .sk-mo-p { color: var(--bark, #6A4636); }
+.sk-mo.sk2-light .sk-mo-go { color: var(--shell, #FFF8F1); background: linear-gradient(180deg, #C8482A, #B23718); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 12px 26px -10px rgba(178, 55, 24, .7); }
+.sk-mo.sk2-light .sk-mo-go:focus-visible { outline-color: var(--ember, #B83A1C); }
+.sk-mo.sk2-light .sk-mo-card { color: #24557A; background: #E4EFF5; box-shadow: inset 0 0 0 1px rgba(63, 124, 166, .28); }
+.sk-mo.sk2-light .sk-mo-card b { color: var(--humus, #2B1A12); }
+.sk-mo.sk2-light .sk-mo-card small { color: var(--bark, #6A4636); }
+.sk-mo.sk2-light .sk-mo-tag { color: #24557A; background: #E4EFF5; }
+.sk-mo.sk2-light .sk-next-t { color: var(--bark, #6A4636); }
+.sk-mo.sk2-light .sk-next-t b { color: var(--humus, #2B1A12); }
+.sk-mo.sk2-light .sk-bar { background: rgba(106, 70, 54, .14); }
+.sk-mo.sk2-light .sk-wk-l { color: var(--bark, #6A4636); }
+.sk-mo.sk2-light .sk-wd-day.is-now .sk-wk-l { color: var(--humus, #2B1A12); }
+.sk-mo.sk2-light .sk-wd-day.bl::before, .sk-mo.sk2-light .sk-wd-day.br::after { background: #F8D9C4; }
+.sk-mo.sk2-light .sk-wd-day.is-off .sk-dot, .sk-mo.sk2-light .sk-wd-day.is-future .sk-dot, .sk-mo.sk2-light .sk-wd-day.is-miss .sk-dot { background: rgba(106, 70, 54, .07); }
+.sk-mo.sk2-light .sk-wd-day.is-miss .sk-dot::after { background: rgba(106, 70, 54, .3); }
+.sk-mo.sk2-light .sk-wd-day.is-today .sk-dot { border-color: rgba(184, 58, 28, .5); background: var(--shell, #FFF8F1); }
+.sk-mo.sk2-light .sk-wd-day.is-repaired .sk-dot { border-color: var(--ember, #B83A1C); color: var(--ember, #B83A1C); background: var(--shell, #FFF8F1); }
+
+@media (prefers-reduced-motion: reduce) { .sk2-svg { transition: none; } }
+.still .sk2-svg { transition: none; }
