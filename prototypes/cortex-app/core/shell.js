@@ -119,6 +119,8 @@
   const VARIANTS = [
     ['askHome', 'Ask home', [['A', 'Box + wonder'], ['B', 'Map home'], ['C', 'Character']]],
     ['lesson', 'Lesson style', [['1', 'Paced'], ['2', 'Cards'], ['3', 'By style']]],
+    ['mascot', 'Mascot', [['A', 'Line'], ['B', 'Cell'], ['C', 'Buddy'], ['D', 'Line+cells'], ['E', 'Soft']]],
+    ['orbs', 'Graph orbs', [['i', 'Drawn'], ['ii', 'Painted'], ['iii', 'Duotone'], ['iv', 'Scenes']]],
   ];
   function renderSide() {
     const s = Store.get(), obSteps = (window.Onboarding && Onboarding.steps) || [];

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex · Mascot lab · Living Matter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=Figtree:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../mascot/mascot.css">
+  <style>
+    :root { --bone: #F6ECE1; --shell: #FFF8F1; --humus: #2B1A12; --bark: #6A4636; --ember: #B83A1C; --coral: #F07B5A; --saffron: #EFB43E;
+      --ink-2: #6A4636; --cobalt-500: #B83A1C; --display: 'Fraunces', Georgia, serif; --font: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+      --carved: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(106, 70, 54, .08), 0 8px 20px -14px rgba(120, 60, 30, .55); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: var(--font); color: var(--humus); background: radial-gradient(90% 60% at 50% 0%, #FFF5EA, #F3E6D6 60%, #EADCCB); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 36px 32px 80px; }
+    .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ember); }
+    h1 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; font-size: 44px; line-height: 48px; margin: 6px 0 8px; }
+    h2 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.025em; font-size: 26px; line-height: 30px; margin: 48px 0 6px; }
+    .lede { margin: 0; max-width: 640px; font-size: 16px; line-height: 23px; color: var(--bark); font-weight: 500; }
+    .back { font-size: 14px; font-weight: 650; color: var(--ember); text-decoration: none; padding: 12px 0; }
+    .controls { position: sticky; top: 8px; z-index: 5; margin: 26px 0 0; padding: 12px 14px 4px; border-radius: 24px; background: rgba(255, 245, 234, .82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+    .row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
+    .row b { width: 52px; flex: none; padding-top: 13px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bark); }
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 16px; background: rgba(255, 248, 241, .7); box-shadow: var(--carved); }
+    .chip { border: 0; background: transparent; border-radius: 999px; min-height: 40px; padding: 0 14px; font-size: 14px; font-weight: 650; color: var(--bark); }
+    .chip:hover { background: rgba(255,255,255,.8); }
+    .chip[aria-pressed="true"] { background: var(--ember); color: var(--shell); }
+    .chip:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+    .heroes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 18px; }
+    .card { position: relative; border-radius: 28px; background: rgba(255, 248, 241, .72); box-shadow: var(--carved); padding: 20px 16px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .card.is-default { background: var(--shell); box-shadow: inset 0 0 0 1.5px rgba(184, 58, 28, .35), 0 14px 30px -18px rgba(120, 60, 30, .6); }
+    .card .stage { height: 220px; width: 100%; display: grid; place-items: center; }
+    .card h3 { margin: 6px 0 2px; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+    .card h3 i { font-style: normal; color: var(--ember); margin-right: 6px; }
+    .card p { margin: 0; font-size: 13.5px; line-height: 18px; color: var(--bark); font-weight: 500; }
+    .tag { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); background: #F8E2CF; border-radius: 999px; padding: 4px 9px; }
+    .now { margin-top: 12px; font-size: 13px; color: var(--bark); font-weight: 600; }
+    .grid { margin-top: 14px; display: grid; grid-template-columns: 120px repeat(5, 1fr); border-radius: 24px; background: rgba(255, 248, 241, .6); box-shadow: var(--carved); overflow: hidden; }
+    .grid > div { display: grid; place-items: center; min-height: 92px; border-top: 1px solid rgba(106, 70, 54, .08); }
+    .grid .gh { min-height: 46px; font-size: 13px; font-weight: 700; color: var(--bark); border-top: 0; }
+    .grid .gl { justify-items: start; padding-left: 18px; font-size: 14px; font-weight: 650; }
+    .grid .gl button { border: 0; background: none; padding: 10px 0; font-weight: 650; color: var(--humus); text-align: left; min-height: 44px; }
+    .grid .gl button:hover { color: var(--ember); }
+    .uses { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .use { border-radius: 28px; background: var(--shell); box-shadow: var(--carved); padding: 22px; min-height: 300px; position: relative; overflow: hidden; }
+    .use h4 { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ember); }
+    .use .hi { display: flex; flex-direction: column; align-items: center; margin-top: 12px; text-align: center; }
+    .use .hi h5 { font-family: var(--display); font-weight: 560; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.03em; font-size: 30px; margin: 16px 0 4px; }
+    .use .hi p { margin: 0; color: var(--bark); font-weight: 500; }
+    .peek { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+    .bub { padding: 12px 16px; border-radius: 20px 20px 20px 6px; background: #FBEADB; font-weight: 600; font-size: 15px; line-height: 20px; }
+    .status { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 15px; font-weight: 650; color: var(--bark); }
+    .fab-scene { position: absolute; left: 22px; right: 22px; bottom: 22px; height: 76px; border-radius: 38px; background: rgba(246, 236, 225, .9); box-shadow: inset 0 1px 0 #fff, 0 16px 34px -16px rgba(120, 60, 30, .55); }
+    .fab { position: absolute; right: 18px; bottom: 112px; width: 68px; height: 68px; border-radius: 50%; border: 0; background: var(--shell); box-shadow: inset 0 1px 0 #fff, 0 12px 26px -10px rgba(184, 58, 28, .55); display: grid; place-items: center; }
+    @media (max-width: 1000px) { .heroes { grid-template-columns: repeat(2, 1fr); } .uses { grid-template-columns: 1fr; } .grid { grid-template-columns: 100px repeat(5, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <p class="eyebrow">Cortex · Living Matter · Mascot lab</p>
+        <h1>One brain, five ways to draw it</h1>
+        <p class="lede">The mascot is your sidekick, not the hero. It shows what it is doing with shape and timing, and becomes what you are exploring. Pick a state or a topic to drive all five.</p>
+      </div>
+      <a class="back" href="index.html?tab=ask&amp;ask=C">Back to the app →</a>
+    </div>
+
+    <div class="controls">
+      <div class="row"><b>State</b><div class="chips" id="stateChips" role="group" aria-label="State"></div></div>
+      <div class="row"><b>Topic</b><div class="chips" id="topicChips" role="group" aria-label="Topic"></div></div>
+    </div>
+
+    <div class="heroes" id="heroes"></div>
+
+    <h2>In use</h2>
+    <p class="lede">Big on hello. Small and docked while it works. A quiet button when you need it.</p>
+    <div class="uses">
+      <div class="use"><h4>Hello</h4><div class="hi"><div id="useHi"></div><h5>Hi, I’m Cortex</h5><p>Ask me anything.</p></div></div>
+      <div class="use"><h4>Working beside you</h4>
+        <div class="peek"><div id="usePeek"></div><div class="bub">Cats purr at 25 to 150 Hz.</div></div>
+        <div class="status"><div id="useStatus"></div><span id="useStatusT">Reading 3 sources</span></div>
+      </div>
+      <div class="use"><h4>Out of the way</h4><p style="margin:0;color:var(--bark);font-weight:500">It docks as a button over the tab bar.</p><div class="fab-scene"></div><button class="fab" id="useFab" aria-label="Ask Cortex"><span id="useFabM"></span></button></div>
+    </div>
+
+    <h2>Every state, every direction</h2>
+    <p class="lede">At 56 px, the size it docks at. Tap a state name to play it on the heroes.</p>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <script src="../core/bus.js"></script>
+  <script src="../mascot/mascot.js"></script>
+  <script>
+    (function () {
+      const D = Mascot.DIRECTIONS, L = Mascot.LABELS, $ = (id) => document.getElementById(id);
+      let state = Mascot.initial.state || 'idle', topic = Mascot.initial.topic || 'brain';
+      const heroes = [];
+      $('heroes').innerHTML = Object.keys(D).map((k) => `<div class="card${k === 'E' ? ' is-default' : ''}">${k === 'E' ? '<span class="tag">Default</span>' : ''}<div class="stage"><div data-hero="${k}"></div></div><h3><i>${k}</i>${D[k].name}</h3><p>${D[k].note}</p></div>`).join('');
+      document.querySelectorAll('[data-hero]').forEach((el) => heroes.push(Mascot.create(el, { size: 150, direction: el.dataset.hero, state, topic, label: 'Cortex mascot, ' + D[el.dataset.hero].name })));
+      const chips = (host, list, key) => { $(host).innerHTML = list.map((s) => `<button type="button" class="chip" data-${key}="${s}">${L[s]}</button>`).join(''); };
+      chips('stateChips', Mascot.STATES, 'state'); chips('topicChips', Mascot.TOPICS, 'topic');
+      function sync() {
+        document.querySelectorAll('[data-state]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.state === state));
+        document.querySelectorAll('[data-topic]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.topic === topic));
+      }
+      sync();
+      function setState(s) { state = s; heroes.forEach((m) => m.setState(s, { restart: true })); sync(); }
+      function setTopic(t) { topic = t; heroes.concat(gridMs).forEach((m) => m.setTopic(t)); sync(); }
+      document.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-state]'); if (b) setState(b.dataset.state);
+        const t = e.target.closest('[data-topic]'); if (t) setTopic(t.dataset.topic);
+      });
+      // In use
+      const hi = Mascot.create($('useHi'), { size: 140, direction: 'E', state: 'hello' });
+      setInterval(() => hi.setState('hello', { restart: true }), 6000);
+      Mascot.create($('usePeek'), { size: 52, direction: 'E', state: 'ready', topic: 'cat' });
+      const stm = Mascot.create($('useStatus'), { size: 48, direction: 'E', state: 'reading' });
+      const steps = [['thinking', 'Thinking'], ['searching', 'Searching'], ['reading', 'Reading 3 sources'], ['analysing', 'Connecting ideas'], ['ready', 'Here’s what I found']];
+      let si = 2; setInterval(() => { si = (si + 1) % steps.length; stm.setState(steps[si][0]); $('useStatusT').textContent = steps[si][1]; }, 2200);
+      const fab = Mascot.create($('useFabM'), { size: 46, direction: 'E', state: 'idle', decorative: true });
+      $('useFab').addEventListener('click', () => { fab.play('hop'); fab.say('Ask me anything', 1800); });
+      // Grid: every state × direction
+      const gridMs = [];
+      $('grid').innerHTML = '<div class="gh"></div>' + Object.keys(D).map((k) => `<div class="gh">${k} · ${D[k].short}</div>`).join('') +
+        Mascot.STATES.map((s) => `<div class="gl"><button type="button" data-state="${s}">${L[s]}</button></div>` + Object.keys(D).map((k) => `<div><div data-cell="${k}:${s}"></div></div>`).join('')).join('');
+      document.querySelectorAll('[data-cell]').forEach((el) => { const [k, s] = el.dataset.cell.split(':'); gridMs.push(Mascot.create(el, { size: 56, direction: k, state: s, topic, label: D[k].name + ', ' + L[s] })); });
+    })();
+  </script>
+</body>
+</html>

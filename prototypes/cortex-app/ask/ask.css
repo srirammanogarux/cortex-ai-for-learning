@@ -581,3 +581,32 @@
 .still .is-shown .ak-host { transform: scale(.74); }
 
 .still .ak-c *, .still .ak-c > * { animation: none !important; transition: none !important; }
+
+/* ───── The mascot (mascot/mascot.js) ───── */
+/* Home C: a Lovi-style hello. The mascot sits big and centred; the question field is always on the home. */
+.ak-c.has-ms .ak-c-stage { top: 50px; height: 206px; }
+.ak-c.has-ms .ak-c-stage::after { display: none; }
+.ak-c.has-ms .ak-bot { height: 206px; display: grid; place-items: center; background: none; border: 0; padding: 0; }
+.ak-bot-ms { display: block; }
+.ak-c.has-ms .ak-c-bub { right: 4px; bottom: calc(100% - 40px); }
+.ak-c.has-ms .ak-c-head { top: 262px; }
+.ak-c.has-ms .ak-c-title { font-size: 32px; line-height: 36px; }
+.ak-c.has-ms .ak-c-field { top: 346px; bottom: auto; height: 56px; padding-left: 16px; }
+.ak-c.has-ms[data-mode="home"] .ak-c-field { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition: opacity 260ms ease-out 80ms, transform 460ms var(--glide) 40ms, visibility 0s; }
+.ak-c.has-ms[data-mode="type"] .ak-c-field { box-shadow: 0 0 0 2px var(--c5), 0 10px 26px rgba(31,91,224,.18); }
+.ak-c-field-ic { display: grid; place-items: center; width: 22px; flex-shrink: 0; color: var(--ink-3); }
+.ak-c.has-ms .ak-c-pills { top: 422px; }
+.ak-c.has-ms.is-greet .ak-c-field { animation: akRise 560ms var(--out) 1180ms both; }
+.ak-c.has-ms.is-back .ak-c-field { animation: akRise 460ms var(--out) 180ms both; }
+.ak-c-pill-ic .ms-icon { overflow: visible; }
+
+/* Answers: the mascot docks at the left of the status line and narrates */
+.ak-status { display: flex; align-items: center; gap: 10px; min-height: 52px; margin: 10px 0 -6px; opacity: 0; transform: translateY(6px); transition: opacity 260ms ease-out 120ms, transform 420ms var(--out) 120ms; }
+.is-q .ak-status { opacity: 1; transform: none; }
+.ak-status-ms { width: 48px; height: 48px; flex: none; margin-left: 2px; }
+.ak-status-t { margin: 0; font-size: 14.5px; line-height: 20px; font-weight: 650; letter-spacing: -.005em; color: var(--ink-2); }
+.ak-status-t.is-busy { background: linear-gradient(90deg, var(--ink-2) 0%, var(--ink-2) 40%, var(--cobalt-500) 50%, var(--ink-2) 60%, var(--ink-2) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: akShimmer 1.4s linear infinite; }
+.has-ms .ak-think { display: none; }
+.is-instant .ak-status, .still .ak-status { transition: none; opacity: 1; transform: none; }
+.still .ak-status-t.is-busy { animation: none; }
+@media (prefers-reduced-motion: reduce) { .ak-status-t.is-busy { animation: none; } }

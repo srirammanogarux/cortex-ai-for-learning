@@ -21,7 +21,7 @@ window.Bus = (function () {
     streak: 1,
     branchesUsed: {},                       // { [questionId]: n } for the free 3-branch limit
     paywallSeen: false,
-    variants: { askHome: P.get('ask') || 'A', lesson: P.get('lesson') || '1' },
+    variants: { askHome: P.get('ask') || 'A', lesson: P.get('lesson') || '1', mascot: P.get('mascot') || 'E', orbs: P.get('orbs') || 'i' },
   };
   window.Store = {
     get: () => state,

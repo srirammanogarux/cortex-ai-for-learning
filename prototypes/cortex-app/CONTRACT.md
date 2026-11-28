@@ -104,3 +104,35 @@ Change state only with `Store.set(patch)`, which emits `store:change`. `Store.va
   - Wrap node runs with `perl -e 'alarm 120; exec @ARGV' node script.mjs`; macOS has no `timeout`.
   - Headless Chrome's `--virtual-time-budget` hangs on this app, so use Playwright with real waits.
 - Check the console for errors on every run.
+
+## Mascot (`mascot/mascot.js`, `mascot/mascot.css`)
+The brain buddy. It is a sidekick, not the hero: it shows what the app is doing with shape and timing, takes on the shape of what you're exploring, and steps aside while you read. Load `mascot/mascot.css` and `mascot/mascot.js` before any module that uses it. Classes are prefixed `ms-`. Lab page: `living/mascot.html`.
+
+**API**
+- `const m = Mascot.create(el, { size, direction, state, topic, label, decorative })` draws into `el` (which becomes `size` × `size` px; default 120). Many instances can coexist; each owns its own SVG or canvas (it never uses the shared `#brain` canvas). One shared rAF drives them all; off-screen ones pause.
+  - `direction`: `'A'…'E'`. Leave it out to follow `Store.get().variants.mascot` (default `'E'`): the instance then switches smoothly on `variant:change { key: 'mascot' }`. Passing it pins the instance.
+  - `decorative: true` hides it from screen readers (use it inside a labelled button). Otherwise it is `role="img"` with `label` (default "Cortex").
+- `m.setState(name, { restart })` · `m.setTopic(name | null, { ms, instant })` (`null` or `'brain'` = itself) · `m.setDirection(d | null)` (`null` = follow the Store again)
+- `m.say(text, ms)`: a small speech bubble at its top right; `say()` hides it.
+- `m.setLevel(0..1)`: input level while `listening` (voice or typing). `m.look(x, y)`: eyes look toward −1..1 (`look()` releases).
+- `m.play('hop' | 'bounce' | 'nod' | 'wave' | 'shake' | 'blink')`: one-off gestures.
+- `m.destroy()`. Instances whose element leaves the DOM clean themselves up.
+- `m.state`, `m.topic`, `m.direction` read back the current values.
+- `Mascot.icon(topic, size)`: a static SVG string of the topic silhouette with two eyes, for pills and lists.
+- `Mascot.setAll({ state, topic })` applies to every visible instance. `Mascot.all()`, `Mascot.STATES`, `Mascot.TOPICS`, `Mascot.DIRECTIONS`, `Mascot.LABELS`, `Mascot.topic(alias)` (e.g. `'sun'` → `'planet'`).
+- URL: `?mascot=A..E` (Store), `?mstate=<state>`, `?mtopic=<topic>` set the starting pose of the lab, the side-panel preview and the Ask home C hero. `.still` on `<html>` and `prefers-reduced-motion` render the final pose with no motion.
+
+**Directions** (one shared vocabulary; every state and topic exists in all five)
+| | Name | Drawing |
+|---|---|---|
+| A | Living line | One ember stroke with an inked, varying width. It draws and undraws itself into states and topics. |
+| B | The cell | Warm backlit cells (the Living brain's cell look) with two cell eyes. It swells, divides and regroups. |
+| C | Brain buddy | A flat, Notion-like ink brain with dot eyes and little arms that hold the props. |
+| D | Line + cells | An ember line skeleton with cells flowing along it. The line carries the state; the cells carry the energy. |
+| E | Soft (default) | A glossy pearl brain with arc eyes, a smile, a warm glow halo and squash and stretch. |
+
+**States**: `idle` (breathes, blinks, glances) · `hello` (hop and rock) · `listening` (leans in, follows `setLevel`) · `thinking` (thought bubbles) · `searching` (magnifier) · `reading` (a page; eyes scan) · `analysing` (the hemispheres come apart and regroup) · `building` (blocks stack) · `loading` (a ring runs round) · `ready` (a nod and a check: small, not a party) · `happy` · `proud` (sparkles, glow: use sparingly, e.g. streaks, a finished course) · `curious` (tilt, raised brow) · `surprised` · `confused` · `error` (calm: dim, a little cloud) · `sleepy` (z's) · `aside` (shrinks and docks while the user reads).
+
+**Topics**: `brain` (itself), `heart`, `planet`, `cat`, `crocodile`, `octopus`, `leaf`, `camera`, `atom`, `book`, `music`. The body morphs into the topic's silhouette and keeps its face. Map content to topics in your module (Ask keeps its map in `ask/content.js` → `mascot`).
+
+**Where it is used**: Ask home C (big hello, `curious` on focus, `listening` while typing or holding to talk), every Ask answer (48 px, docked by the status line: thinking → searching → reading → connecting ideas → ready, morphs to the answer's topic, then `aside`), and the side panel's `#mascotPanel` (state and topic chips plus a preview). Onboarding can use the same `Mascot.create` API.

@@ -102,13 +102,13 @@
 .is-plus .pf-unlock { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(14px); }
 
 /* node card */
-.pf-ncard { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 30; display: grid; grid-template-columns: 48px 1fr 36px; gap: 4px 12px; align-items: start; padding: 12px 10px 12px 12px; border-radius: 22px; background: #fff;
+.pf-ncard { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 30; display: grid; grid-template-columns: 64px 1fr 36px; gap: 4px 12px; align-items: start; padding: 12px 10px 12px 12px; border-radius: 22px; background: #fff;
   box-shadow: 0 1px 2px rgba(20,18,17,.06), 0 16px 40px rgba(20,18,17,.16); }
 .pf-ncard[hidden] { display: none; }
 .pf-ncard.is-in { animation: pfCardIn 380ms var(--out) both; }
 @keyframes pfCardIn { from { opacity: 0; transform: translateY(14px) scale(.98); } }
-.pf-nc-glyph { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; background: color-mix(in oklab, var(--mid) 12%, #fff); }
-.pf-nc-glyph svg { width: 78%; height: 78%; }
+.pf-nc-glyph { position: relative; width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; overflow: hidden; background: color-mix(in oklab, var(--mid) 12%, #fff); }
+.pf-nc-glyph svg { width: 80%; height: 80%; }
 .pf-nc-txt { min-width: 0; padding-top: 1px; }
 .pf-nc-title { margin: 0; font-size: 15.5px; line-height: 20px; font-weight: 600; letter-spacing: -.02em; }
 .pf-nc-meta { margin: 3px 0 0; font-size: 13px; line-height: 17px; font-weight: 500; color: var(--ink-2); }
@@ -125,7 +125,7 @@
 .pf-chip { height: 40px; padding: 0 13px 0 11px; border: 0; border-radius: 999px; display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,.78);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.9), 0 1px 2px rgba(20,18,17,.05); font-size: 13.5px; font-weight: 600; transition: transform 160ms var(--out); }
 .pf-chip:active { transform: scale(.95); }
-.pf-chip i { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--mid), var(--deep)); }
+.pf-chip i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--mid) 70%, #fff), var(--mid) 55%, var(--deep)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--mid) 16%, transparent), 0 0 8px color-mix(in oklab, var(--mid) 40%, transparent); }
 .pf-chip b { font-weight: 500; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .pf-chip svg { width: 12px; height: 12px; color: var(--ink-3); margin-left: -1px; }
 .pf-chip.is-locked { color: var(--ink-2); background: rgba(255,255,255,.55); }
@@ -241,6 +241,7 @@
 .pf-course { width: 100%; border: 0; text-align: left; display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 12px; border-radius: 22px; background: #fff; box-shadow: var(--card-shadow); transition: transform 160ms var(--out); }
 .pf-course:active { transform: scale(.98); }
 .pf-c-glyph { width: 54px; height: 54px; flex-shrink: 0; border-radius: 17px; display: grid; place-items: center; background: color-mix(in oklab, var(--mid) 12%, #fff); }
+.pf-c-glyph { overflow: hidden; }
 .pf-c-glyph svg { width: 80%; height: 80%; }
 .pf-c-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .pf-c-txt b { font-size: 16px; line-height: 20px; font-weight: 600; letter-spacing: -.02em; }
@@ -250,4 +251,51 @@
 .pf-c-chev { color: var(--ink-3); display: grid; place-items: center; }
 .pf-empty { margin: 0 6px; font-size: 14px; color: var(--ink-2); }
 
+/* ---------- Orbs: four styles of idea drawing (profile/orb-glyphs.js). The root carries data-orbs. ---------- */
+.og { display: block; overflow: visible; }
+.pf-bub svg.og-bleed, .pf-nc-glyph svg.og-bleed, .pf-c-glyph svg.og-bleed { width: 100%; height: 100%; overflow: hidden; }
+.pf-bub svg.og-bleed { clip-path: circle(50%); }
+.pf-node.is-ghost .og-paint, .pf-node.is-ghost .og-scene { opacity: .4; filter: saturate(.6); }
+
+/* i · Drawn: shell bubbles lit from inside, a soft halo in the subject's colour, ember ink */
+.pf[data-orbs="i"] .pf-node:not(.k-hub) .pf-bub {
+  background: radial-gradient(circle at 50% 36%, #FFFFFF 0%, #FFF8F1 46%, color-mix(in oklab, var(--mid) 13%, #FFF4EA) 100%);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--mid) 34%, #FFF8F1), inset 0 -6px 10px color-mix(in oklab, var(--mid) 12%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--mid) 9%, transparent), 0 0 16px 2px color-mix(in oklab, var(--mid) 34%, transparent), 0 6px 14px rgba(90, 40, 20, .12); }
+.pf[data-orbs="i"] .pf-bub svg { width: 74%; height: 74%; }
+.pf[data-orbs="i"] .k-hub .pf-bub {
+  background: radial-gradient(circle at 50% 40%, var(--mid) 0%, var(--mid) 58%, var(--deep) 100%);
+  box-shadow: inset 0 1.5px 2px rgba(255, 255, 255, .45), inset 0 0 0 1.5px color-mix(in oklab, var(--mid) 60%, #fff),
+    0 0 0 4px color-mix(in oklab, var(--mid) 14%, transparent), 0 0 24px 3px color-mix(in oklab, var(--mid) 48%, transparent), 0 10px 22px color-mix(in oklab, var(--deep) 30%, transparent); }
+.pf[data-orbs="i"] .k-hub .pf-bub svg { width: 66%; height: 66%; }
+.pf[data-orbs="i"] .pf-nc-glyph { background: radial-gradient(circle at 50% 38%, #FFFFFF, #FFF8F1 55%, color-mix(in oklab, var(--mid) 16%, #FFF4EA));
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--mid) 30%, #FFF8F1), 0 0 14px color-mix(in oklab, var(--mid) 26%, transparent); }
+.og-draw .og-s { stroke-dasharray: 1 1.05; stroke-dashoffset: 1; opacity: 0; animation: ogDraw 1000ms cubic-bezier(.33, .7, .2, 1) forwards; animation-delay: calc(var(--og-d, 0ms) + var(--k, 0) * 85ms); }
+.og-draw .og-f { opacity: 0; animation: ogDot 380ms ease-out forwards; animation-delay: calc(var(--og-d, 0ms) + 420ms + var(--k, 0) * 85ms); }
+@keyframes ogDraw { 0% { stroke-dashoffset: 1; opacity: 0; fill-opacity: 0; } 6% { opacity: 1; } 55% { fill-opacity: 0; } 100% { stroke-dashoffset: 0; opacity: 1; fill-opacity: 1; } }
+@keyframes ogDot { from { opacity: 0; } to { opacity: 1; } }
+
+/* ii · Painted: the gouache still life fills the bubble */
+.pf[data-orbs="ii"] .pf-bub { background: #F3E3CF;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 248, 241, .7), 0 1px 2px rgba(70, 35, 18, .18), 0 0 0 3px color-mix(in oklab, var(--mid) 12%, transparent), 0 8px 18px color-mix(in oklab, var(--deep) 26%, transparent); }
+.pf[data-orbs="ii"] .k-hub .pf-bub { box-shadow: inset 0 0 0 1.5px rgba(255, 248, 241, .5), 0 0 0 4px color-mix(in oklab, var(--mid) 16%, transparent), 0 0 22px 2px color-mix(in oklab, var(--mid) 40%, transparent), 0 10px 22px color-mix(in oklab, var(--deep) 32%, transparent); }
+.pf[data-orbs="ii"] .pf-node.is-ghost .pf-bub { background: rgba(255, 248, 241, .6); }
+.pf[data-orbs="ii"] .pf-nc-glyph, .pf[data-orbs="ii"] .pf-c-glyph { background: #F3E3CF; }
+
+/* iii · Duotone, and iv · Scenes for the ideas: a pale tint of the subject with a chunky two-tone icon */
+.pf[data-orbs="iii"] .pf-node:not(.k-hub) .pf-bub, .pf[data-orbs="iv"] .pf-node:not(.k-hub) .pf-bub {
+  background: radial-gradient(circle at 50% 34%, color-mix(in oklab, var(--mid) 8%, #FFF8F1) 0%, color-mix(in oklab, var(--mid) 18%, #FFF8F1) 100%);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--mid) 28%, #FFF8F1), 0 0 0 3px color-mix(in oklab, var(--mid) 8%, transparent), 0 0 12px color-mix(in oklab, var(--mid) 22%, transparent), 0 6px 14px rgba(90, 40, 20, .12); }
+.pf[data-orbs="iii"] .pf-bub svg, .pf[data-orbs="iv"] .pf-bub svg { width: 70%; height: 70%; }
+.pf[data-orbs="iii"] .k-hub .pf-bub {
+  background: radial-gradient(circle at 40% 30%, color-mix(in oklab, var(--mid) 80%, #FFF3E0) 0%, var(--mid) 45%, var(--deep) 100%);
+  box-shadow: inset 0 1.5px 2px rgba(255, 255, 255, .4), 0 0 0 4px color-mix(in oklab, var(--mid) 14%, transparent), 0 0 20px 2px color-mix(in oklab, var(--mid) 38%, transparent), 0 10px 22px color-mix(in oklab, var(--deep) 30%, transparent); }
+.pf[data-orbs="iii"] .k-hub .pf-bub svg { width: 62%; height: 62%; }
+.pf[data-orbs="iv"] .k-hub .pf-bub { background: var(--deep);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 248, 241, .35), 0 0 0 4px color-mix(in oklab, var(--mid) 16%, transparent), 0 0 24px 3px color-mix(in oklab, var(--mid) 45%, transparent), 0 10px 22px color-mix(in oklab, var(--deep) 32%, transparent); }
+.pf[data-orbs="iii"] .pf-nc-glyph, .pf[data-orbs="iv"] .pf-nc-glyph, .pf[data-orbs="iii"] .pf-c-glyph, .pf[data-orbs="iv"] .pf-c-glyph { background: color-mix(in oklab, var(--mid) 14%, #FFF8F1); }
+.pf[data-orbs="iii"] .pf-nc-glyph svg, .pf[data-orbs="iv"] .pf-nc-glyph svg { width: 72%; height: 72%; }
+
+.still .og-draw .og-s, .still .og-draw .og-f { animation: none; opacity: 1; stroke-dasharray: none; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { .og-draw .og-s, .og-draw .og-f { animation: none; opacity: 1; stroke-dasharray: none; stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .pf-node.is-fading .pf-bub::before, .pf-dot-halo, .pf-art.is-glow svg { animation: none; } }

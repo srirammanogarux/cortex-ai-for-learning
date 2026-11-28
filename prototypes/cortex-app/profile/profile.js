@@ -19,6 +19,10 @@
     history: { name: 'History', mid: '#C8922A', deep: '#7E5408', shape: 'steps' },
     arts: { name: 'Arts', mid: '#B04AA8', deep: '#7E2777', shape: 'curve' },
   };
+  // Subject colours come from the shared orb glyph library, so Living gets its own seven earthy hues.
+  if (window.OrbGlyphs) Object.keys(FAM).forEach((k) => { const c = OrbGlyphs.colours(k); FAM[k].mid = c.mid; FAM[k].deep = c.deep; });
+  // Subjects the other modules send that aren't hubs of their own
+  const ALIAS = { animals: 'nature', animal: 'nature', plants: 'nature', physics: 'tech', places: 'society', skills: 'arts', photography: 'arts', biology: 'body', health: 'body', language: 'society', money: 'society', communication: 'society' };
   // Where each subject's cluster sits around the centre cluster (degrees, screen space: 0 = right, 90 = down)
   const ANG = { mind: -38, tech: 12, society: 58, arts: 104, nature: 148, history: 196, space: -128, body: -84 };
   const PAL2SUBJ = { body: 'body', mind: 'mind', space: 'space', tech: 'tech', society: 'society', arts: 'arts', nature: 'nature', history: 'history', cobalt: 'mind' };
@@ -119,6 +123,20 @@
     return s + '</svg>';
   }
 
+  // ---------- Orbs: each idea's own drawing, in the style picked in the side panel (OrbGlyphs) ----------
+  const orbStyle = () => { const v = (S().variants || {}).orbs; return ['i', 'ii', 'iii', 'iv'].includes(v) ? v : 'i'; };
+  const nodeSize = (n) => SIZE[n.kind === 'ghost' || n.kind === 'hub' ? n.kind : 'idea'];
+  // o: { draw, delay } · px: the size the drawing renders at
+  function orbSVG(n, px, o) {
+    if (!window.OrbGlyphs) return n.kind === 'hub' ? glyph(n.shape, n.subj, 90, true) : glyph(n.shape, n.subj, n.kind === 'ghost' ? 40 : 70, false);
+    return OrbGlyphs.svg(n.id, orbStyle(), n.subj, px, Object.assign({ hub: n.kind === 'hub', ghost: n.kind === 'ghost', label: n.label }, o || {}));
+  }
+  function paintNode(n, draw, delay) {
+    if (!n.el) return;
+    const px = Math.round(nodeSize(n) * (n.kind === 'hub' ? 0.64 : 0.7));
+    n.el.querySelector('.pf-bub').innerHTML = orbSVG(n, px, { draw: draw && !instant(), delay });
+  }
+
   // ---------- Archetype emblems (particle shapes) ----------
   let emblemsDone = false;
   function defineEmblems() {
@@ -167,6 +185,7 @@
   function subjOf(d) {
     const raw = String(d.subject || d.subj || '').toLowerCase().trim();
     if (FAM[raw]) return raw;
+    if (ALIAS[raw]) return ALIAS[raw];
     for (const k in FAM) if (raw && (raw.includes(k) || raw.includes(FAM[k].name.toLowerCase()))) return k;
     return PAL2SUBJ[d.palette] || 'mind';
   }
@@ -242,7 +261,15 @@
     if (!n || n.kind !== 'ghost') return;
     n.kind = 'lesson'; n.ago = ago == null ? 0 : ago;
     if (animate) n.born = performance.now();
-    if (n.el) n.el.classList.remove('is-ghost');
+    if (n.el) {
+      // a ghost stop becomes a full idea bubble: its size, class and drawing change with it
+      n.el.classList.remove('is-ghost', 'k-ghost'); n.el.classList.add('k-idea');
+      n.el.style.width = n.el.style.height = nodeSize(n) + 'px';
+      n.el.style.marginLeft = n.el.style.marginTop = -nodeSize(n) / 2 + 'px';
+      n.lw = 0;
+      const em = n.lab && n.lab.querySelector('em'); if (em) em.remove();
+      paintNode(n, animate, n.born ? n.born - performance.now() + 200 : 0);
+    }
   }
 
   function addIdea(d, animate) {
@@ -399,6 +426,7 @@
     view = viewEl;
     root = document.createElement('div');
     root.className = 'pf';
+    root.dataset.orbs = orbStyle();
     root.innerHTML = `
       <div class="pf-scroll" data-scroll>
         <header class="pf-head">
@@ -407,7 +435,7 @@
           <div class="pf-streak" data-streak></div>
         </header>
         <div class="pf-stats" data-stats></div>
-        <section class="pf-gcard" aria-label="Your knowledge graph">
+        <section class="pf-gcard" aria-label="Your knowledge graph" data-keep-colour>
           <div class="pf-gtitle"><h2>Your knowledge graph</h2><p data-gsub></p></div>
           <button class="pf-fit" data-fit aria-label="Show the whole graph" hidden>${ICON.fit}</button>
           <div class="pf-stage" data-stage>
@@ -421,7 +449,7 @@
           <button class="pf-unlock" data-unlock>${ICON.lock}<span>See your whole graph</span></button>
           <div class="pf-ncard" data-ncard hidden></div>
         </section>
-        <div class="pf-legend" data-legend></div>
+        <div class="pf-legend" data-legend data-keep-colour></div>
         <section class="pf-arch" data-arch aria-label="Your learning shape"></section>
         <section class="pf-sec">
           <h2 class="pf-h2">Collectibles</h2>
@@ -429,7 +457,7 @@
         </section>
         <section class="pf-sec">
           <h2 class="pf-h2">Your courses</h2>
-          <div class="pf-courses" data-courses></div>
+          <div class="pf-courses" data-courses data-keep-colour></div>
         </section>
       </div>
       <div class="pf-topfade" aria-hidden="true"></div>`;
@@ -481,6 +509,14 @@
       if ('collectibles' in patch && visible) { renderShelf(true); renderStats(); }
       if ('streak' in patch && visible) renderHead();
     });
+    Bus.on('variant:change', ({ key } = {}) => {
+      if (key !== 'orbs' || !root) return;
+      root.dataset.orbs = orbStyle();
+      let i = 0;
+      nodes.forEach((n) => paintNode(n, true, n.kind === 'hub' ? 0 : 120 + (i++ % 12) * 45));
+      if (selected && nodes.get(selected) && !nodeCard.hidden) { const g = nodeCard.querySelector('.pf-nc-glyph'); if (g) g.innerHTML = orbSVG(nodes.get(selected), 64, { draw: !instant() }); }
+      renderCourses();
+    });
     Bus.on('paywall:close', ({ reason, upgraded } = {}) => { if (reason === 'graph' && upgraded && visible) applyPlan(true); });
   }
 
@@ -508,7 +544,7 @@
     if (pending.length) {
       const list = pending.splice(0).map((id) => nodes.get(id)).filter(Boolean);
       const t0 = performance.now() + 420;
-      list.forEach((n, i) => { n.born = t0 + i * 160; const h = nodes.get(hubId(n.subj)); if (h && n.kind === 'idea') { n.x = h.x; n.y = h.y; } });
+      list.forEach((n, i) => { n.born = t0 + i * 160; const h = nodes.get(hubId(n.subj)); if (h && n.kind === 'idea') { n.x = h.x; n.y = h.y; } paintNode(n, true, n.born - performance.now() + 200); });
       if (list.length) setTimeout(() => caption(list[list.length - 1]), 420);
     }
     snapAll();
@@ -607,11 +643,12 @@
     el.style.setProperty('--mid', f.mid); el.style.setProperty('--deep', f.deep);
     el.style.width = el.style.height = SIZE[n.kind === 'ghost' || n.kind === 'hub' ? n.kind : 'idea'] + 'px';
     el.style.marginLeft = el.style.marginTop = -SIZE[n.kind === 'ghost' || n.kind === 'hub' ? n.kind : 'idea'] / 2 + 'px';
-    const g = n.kind === 'hub' ? glyph(n.shape, n.subj, 90, true) : glyph(n.shape, n.subj, n.kind === 'ghost' ? 40 : 70, false);
-    el.innerHTML = `<span class="pf-bub">${g}</span><span class="pf-lab">${n.kind === 'ghost' ? '<em>Up next</em>' : ''}${esc(n.label)}</span>`;
+    el.innerHTML = `<span class="pf-bub"></span><span class="pf-lab">${n.kind === 'ghost' ? '<em>Up next</em>' : ''}${esc(n.label)}</span>`;
     el.setAttribute('aria-label', n.kind === 'hub' ? `${n.label} cluster` : n.label);
     el.addEventListener('click', (e) => { if (e.detail === 0) tapNode(n); }); // keyboard; pointer taps go through the stage
     n.el = el; n.lab = el.querySelector('.pf-lab');
+    // the drawing inks itself on as the bubble appears: hubs first, then their ideas
+    paintNode(n, true, n.born ? n.born - performance.now() + 200 : n.kind === 'hub' ? 60 : 260 + n.ord * 70);
     (fogged(n) ? layFog : layMain).appendChild(el);
     return el;
   }
@@ -803,6 +840,7 @@
       edges.forEach((e) => { if (e.a === n.id || e.b === n.id) e.born = n.born + 200; });
       ensureNodeEl(n);
       n.el.classList.remove('is-ghost');
+      paintNode(n, true, n.born - now + 200);
       const r = document.createElement('span'); r.className = 'pf-ripple'; n.el.appendChild(r); setTimeout(() => r.remove(), 1500);
     });
     // keep the camera honest: Plus fits the new shape; free stays on the course cluster
@@ -846,7 +884,7 @@
     else { metaLine = `${f.name} · Asked ${when(n.ago)}`; action = 'Revisit'; }
     nodeCard.style.setProperty('--mid', f.mid); nodeCard.style.setProperty('--deep', f.deep);
     nodeCard.innerHTML = `
-      <span class="pf-nc-glyph">${glyph(n.shape, n.subj, 70, false)}</span>
+      <span class="pf-nc-glyph">${orbSVG(n, 64, { draw: !instant() })}</span>
       <div class="pf-nc-txt"><p class="pf-nc-title">${esc(n.label)}</p><p class="pf-nc-meta">${esc(metaLine)}</p>
         ${fading ? '<p class="pf-nc-fade"><i></i>Fading. A quick revisit brings it back.</p>' : ''}</div>
       <button class="pf-nc-x" data-x aria-label="Close">${ICON.x}</button>
@@ -1095,7 +1133,7 @@
       const subj = C ? subjOf({ subject: C.subject, palette: C.palette }) : 'mind';
       const pct = total ? Math.round((done / total) * 100) : 0;
       return `<button class="pf-course" data-course="${esc(c.id)}" style="--mid:${FAM[subj].mid};--deep:${FAM[subj].deep}">
-        <span class="pf-c-glyph">${glyph(C ? C.shape : 'brain', subj, 80, false)}</span>
+        <span class="pf-c-glyph">${window.OrbGlyphs ? OrbGlyphs.svg('C:' + c.id, orbStyle(), subj, 44, { label: c.title }) : glyph(C ? C.shape : 'brain', subj, 80, false)}</span>
         <span class="pf-c-txt"><b>${esc(c.title)}</b><span>${total ? `${done} of ${total} stops` : 'Just started'}${c.id === st.activeCourse ? ' · Active' : ''}</span>
           <span class="pf-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${Math.max(pct, 3)}%"></i></span></span>
         <span class="pf-c-chev">${ICON.chev}</span></button>`;

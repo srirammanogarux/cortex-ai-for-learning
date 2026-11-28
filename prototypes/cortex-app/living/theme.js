@@ -107,6 +107,7 @@
   const SEL = '[style],[fill],[stroke],[stop-color],[flood-color]';
   function fixEl(el) {
     if (el.nodeType !== 1) return;
+    if (el.closest('[data-keep-colour]')) return; // opt-out: these colours are already chosen for Living (e.g. the Profile graph's subject hues)
     for (const a of ATTRS) {
       const v = el.getAttribute(a); if (!v) continue;
       const nv = remap(v); if (nv !== v) el.setAttribute(a, nv);

@@ -425,6 +425,38 @@
     return api;
   }
 
+  // ───────── The mascot (mascot/mascot.js) as home C's character, behind the pixel bot's API ─────────
+  // The pixel bot stays as the fallback when the mascot module isn't loaded.
+  const ICON_TOPIC = { cat: 'cat', sun: 'planet', croc: 'crocodile', brain: 'brain', camera: 'camera', octo: 'octopus', leaf: 'leaf', bulb: 'atom', heart: 'heart', chart: 'book', qmark: 'brain' };
+  const MOOD_STATE = { idle: 'idle', happy: 'happy', think: 'thinking', down: 'curious', listen: 'listening' };
+  function MascotBot(host, o = {}) {
+    const m = Mascot.create(host, { size: o.size || 168, state: 'idle', decorative: true });
+    let mood = 'idle', form = 'bot', pulseT = 0, calmT = 0;
+    const setForm = (f) => { form = f; if (o.onForm) o.onForm(f); };
+    return {
+      ms: m,
+      appear(instant) { if (!instant) m.setState('hello', { restart: true }); },
+      mood(md) { if (mood === md && m.state === (MOOD_STATE[md] || 'idle')) return; mood = md; m.setState(MOOD_STATE[md] || 'idle'); },
+      getMood: () => mood,
+      look(dc, dr) { m.look(dc, dr); },
+      lookAt(e) { const r = host.getBoundingClientRect(); if (!r.width) return; m.look(clamp((e.clientX - (r.left + r.width / 2)) / (r.width * 1.2), -1, 1), clamp((e.clientY - (r.top + r.height / 2)) / (r.height * 1.4), -1, 1)); },
+      level(v) { m.setLevel(v); },
+      hop() { m.play('hop'); }, bounce() { m.play('bounce'); }, wave() { m.play('wave'); }, blink() { m.play('blink'); },
+      // typing: it leans in and listens while you type, then settles back to curious
+      typing() {
+        m.setState('listening'); m.setLevel(0.7);
+        clearTimeout(pulseT); pulseT = setTimeout(() => m.setLevel(0), 180);
+        clearTimeout(calmT); calmT = setTimeout(() => { if (mood === 'down' && m.state === 'listening') m.setState('curious'); }, 1100);
+      },
+      toIcon(name, ms) { const t = ICON_TOPIC[name]; if (!t) return; setForm('icon'); m.setTopic(t, { ms: ms > 10 ? ms : 0, instant: !(ms > 10) }); if (t === 'brain') m.play('hop'); },
+      toBot(ms) { setForm('bot'); mood = 'idle'; m.setTopic(null, { ms: ms > 10 ? ms : 0, instant: !(ms > 10) }); m.setState('idle'); },
+      form: () => form,
+      pause() {},
+      destroy() { clearTimeout(pulseT); clearTimeout(calmT); m.destroy(); },
+    };
+  }
+  const mascotIcon = (id, size) => (window.Mascot ? Mascot.icon(ICON_TOPIC[ANSWER_ICON[id]] || 'brain', size) : pxSVG(ANSWER_ICON[id], size));
+
   // ───────── State ─────────
   let root, homeEl, chatEl, pagesEl, trailEl, backBtn, miniBtn, compForm, mapHost, popEl = null;
   let view = 'home', mounted = false, shown = false, hooksRan = false;
@@ -631,6 +663,7 @@
     return { shape, palette, html: `
       <div class="ak-q"><p>${esc(spec.q)}</p></div>
       <div class="ak-a">
+        ${window.Mascot ? '<div class="ak-status"><span class="ak-status-ms" aria-hidden="true"></span><p class="ak-status-t" aria-live="polite"></p></div>' : ''}
         <div class="ak-vis"><div class="ak-host" data-glyph="1" data-shape="${shape}" data-palette="${palette}"></div><p class="ak-think" aria-live="polite">Thinking</p><p class="ak-touch">${ic('hand', 14, 2)} Touch it</p></div>
         <p class="ak-lead"><span class="ak-lead-1">${first}</span>${rest}</p>
         <div class="ak-rest">${blocks}${foot}</div>
@@ -651,9 +684,41 @@
     play(turn, o);
     return turn;
   }
+  // The mascot docks beside the status line and narrates: thinking → searching → reading → connecting → ready,
+  // becomes the answer's topic as the answer forms, then steps aside.
+  const MT = C.mascot || { answers: {}, terms: {}, kinds: {} };
+  function turnTopic(spec) {
+    if (spec.kind === 'answer') return MT.answers[spec.a.id] || null;
+    if (spec.kind === 'term') return MT.terms[spec.tid] || null;
+    return MT.kinds[spec.type] || null;
+  }
+  function narrate(turn, o, instant) {
+    const host = turn.el.querySelector('.ak-status-ms'), lbl = turn.el.querySelector('.ak-status-t');
+    if (!host || !lbl || !window.Mascot) return;
+    turn.el.classList.add('has-ms');
+    const spec = turn.spec, topic = turnTopic(spec);
+    const n = spec.kind === 'answer' && spec.a.sources ? spec.a.sources.split('·').filter((x) => x.trim()).length : 0;
+    const subject = spec.kind === 'answer' ? spec.a.subject : spec.kind === 'term' ? spec.t.subject : '';
+    const srcs = n ? `${n} source${n > 1 ? 's' : ''}` : '';
+    const reading = n ? `Reading ${srcs}` : spec.kind === 'generic' ? 'Finding the closest answer' : 'Reading up';
+    const done = spec.kind === 'generic' ? 'Here’s the closest I have' : 'Here’s what I found';
+    const rest = subject ? [subject, srcs].filter(Boolean).join(' · ') : done;
+    const say = (t, busy) => { lbl.textContent = t; lbl.classList.toggle('is-busy', !!busy); };
+    if (instant) { turn.ms = Mascot.create(host, { size: 48, state: 'aside', topic, decorative: true }); say(rest); return; }
+    const think = !o.noThink;
+    const m = turn.ms = Mascot.create(host, { size: 48, state: think ? 'thinking' : 'reading', topic: think ? null : topic, decorative: true });
+    const steps = think
+      ? [[0, 'thinking', 'Thinking'], [650, 'searching', 'Searching'], [1150, 'reading', reading], [1750, 'analysing', 'Connecting ideas', true], [2650, 'ready', done], [4200, 'aside', rest]]
+      : [[0, 'reading', reading], [750, 'analysing', 'Connecting ideas', true], [1500, 'ready', done], [3000, 'aside', rest]];
+    steps.forEach(([ms, st, text, morph]) => setTimeout(() => {
+      m.setState(st); say(text, st !== 'ready' && st !== 'aside');
+      if (morph && topic) m.setTopic(topic);
+    }, ms));
+  }
   function play(turn, o) {
     const el = turn.el, instant = o.instant || still();
     const gate = !!o.gate;
+    narrate(turn, o, instant);
     if (instant) {
       el.classList.add('is-q', 'is-shown', 'is-done', 'is-instant');
       BR.take(turn.host, turn.shape, turn.palette, o.instant ? 900 : 10);
@@ -1520,10 +1585,11 @@
     stopC(); cBusy = false;
     const pills = (CC0.pills || []).filter((id) => A[id]);
     const un = CC0.unfinished && A[CC0.unfinished] ? CC0.unfinished : null;
-    const pill = (id, i, extra = '') => `<button type="button" class="ak-c-pill${extra ? ' is-open' : ''}" data-act="${extra ? 'c-resume' : 'c-ask'}" data-q="${id}" style="--d:${i}"><span class="ak-c-pill-ic">${pxSVG(ANSWER_ICON[id], 20)}</span><span>${esc(extra ? A[id].label : A[id].q)}</span>${extra ? `<em>${esc(extra)}</em>` : ''}</button>`;
-    homeEl.innerHTML = `<div class="ak-c" data-mode="home">
+    const pill = (id, i, extra = '') => `<button type="button" class="ak-c-pill${extra ? ' is-open' : ''}" data-act="${extra ? 'c-resume' : 'c-ask'}" data-q="${id}" style="--d:${i}"><span class="ak-c-pill-ic">${mascotIcon(id, 20)}</span><span>${esc(extra ? A[id].label : A[id].q)}</span>${extra ? `<em>${esc(extra)}</em>` : ''}</button>`;
+    const useMs = !!window.Mascot;
+    homeEl.innerHTML = `<div class="ak-c${useMs ? ' has-ms' : ''}" data-mode="home">
       <div class="ak-c-stage">
-        <button type="button" class="ak-bot" data-act="poke" aria-label="Cortex, your guide. Tap to say hi"><canvas aria-hidden="true"></canvas></button>
+        <button type="button" class="ak-bot" data-act="poke" aria-label="Cortex, your guide. Tap to say hi">${useMs ? '<span class="ak-bot-ms"></span>' : '<canvas aria-hidden="true"></canvas>'}</button>
         <p class="ak-c-bub" data-bub aria-live="polite"></p>
       </div>
       <header class="ak-c-head">
@@ -1543,16 +1609,21 @@
         </div>
         <button type="button" class="btn-lit ak-c-offer" data-act="c-ask" data-q="${C.show.ask}" data-src="show">${esc(A[C.show.ask] ? A[C.show.ask].q : '')}</button>
       </div>
-      <form class="ak-c-field" data-form="c-ask" autocomplete="off"><label class="ak-sr" for="akInC">Your question</label><input id="akInC" name="q" type="text" placeholder="Ask me anything…" enterkeyhint="send" autocomplete="off"><button type="submit" class="ak-c-send" aria-label="Send" disabled>${ic('up', 20, 2.6)}</button></form>
+      <form class="ak-c-field" data-form="c-ask" autocomplete="off">${useMs ? `<span class="ak-c-field-ic" aria-hidden="true">${ic('tee', 18, 2.2)}</span>` : ''}<label class="ak-sr" for="akInC">Your question</label><input id="akInC" name="q" type="text" placeholder="${useMs ? 'Type a question…' : 'Ask me anything…'}" enterkeyhint="send" autocomplete="off"><button type="submit" class="ak-c-send" aria-label="Send" disabled>${ic('up', 20, 2.6)}</button></form>
       <div class="ak-c-acts">
         <button type="button" class="ak-c-act" data-act="c-type" aria-pressed="false"><span class="ak-c-orb">${ic('tee', 22, 2.2)}</span><span class="ak-c-lbl">Type</span></button>
         <button type="button" class="ak-c-act is-main" data-act="c-talk" aria-label="Hold to talk"><span class="ak-c-orb"><i class="ak-c-ring" aria-hidden="true"></i><i class="ak-c-ring is-2" aria-hidden="true"></i>${ic('mic', 28, 2.2)}</span><span class="ak-c-lbl" data-talk-lbl>Hold to talk</span></button>
         <button type="button" class="ak-c-act" data-act="c-show" aria-pressed="false"><span class="ak-c-orb">${ic('camera', 22, 2.2)}</span><span class="ak-c-lbl">Show me</span></button>
       </div>
     </div>`;
-    cBot = PixelBot(cq('.ak-bot canvas'), { pitch: 14, cols: 20, rows: 17, by: 4, onForm: (f) => { const sg = cq('.ak-c-stage'); if (sg) sg.classList.toggle('is-icon', f === 'icon'); } });
+    const onForm = (f) => { const sg = cq('.ak-c-stage'); if (sg) sg.classList.toggle('is-icon', f === 'icon'); };
+    cBot = useMs ? MascotBot(cq('.ak-bot-ms'), { size: 168, onForm }) : PixelBot(cq('.ak-bot canvas'), { pitch: 14, cols: 20, rows: 17, by: 4, onForm });
     const root0 = cRoot();
-    if (still()) { cBot.appear(true); cGreeted = true; cLastIcon = null; return; }
+    // ?mstate= / ?mtopic= set the mascot's pose once it has said hello (for the lab and screenshots)
+    const mInit = useMs && Mascot.initial && (Mascot.initial.state || Mascot.initial.topic) ? Mascot.initial : null;
+    const applyInit = () => { if (!mInit || !cBot || !cBot.ms) return; if (mInit.topic) cBot.ms.setTopic(mInit.topic); if (mInit.state) cBot.ms.setState(mInit.state); };
+    if (still()) { cBot.appear(true); cGreeted = true; cLastIcon = null; applyInit(); return; }
+    if (mInit) cT(applyInit, 2600);
     if (cLastIcon) {
       // back from an answer: the icon regroups into the character
       const icon = cLastIcon; cLastIcon = null;
@@ -1560,6 +1631,13 @@
       root0.classList.add('is-back');
       cT(() => cBot.toBot(900), 260);
       cT(() => { cBot.hop(); bubble(CC0.back || 'What next?', 2000); }, 1150);
+    } else if (!cGreeted && useMs) {
+      // a Lovi-style hello: it hops in, rocks a little, then settles
+      cGreeted = true;
+      root0.classList.add('is-greet');
+      cBot.appear(false);
+      cT(() => bubble(CC0.hi || 'Hi', 2000), 760);
+      cT(() => { if (cBot && cBot.ms.state === 'hello') cBot.mood('idle'); }, 2500);
     } else if (!cGreeted) {
       cGreeted = true;
       root0.classList.add('is-greet');
@@ -1606,6 +1684,7 @@
   // Ask from C: the bot thinks (eyes up, a pixel drifting off), regroups into the topic icon, then the answer opens.
   function cAsk(q, o = {}) {
     if (cBusy || !cBot) return; cBusy = true;
+    if (cBot.ms) { cState.timers.forEach(clearTimeout); cState.timers = []; } // drop a pending hello
     const c0 = classify(q);
     const icon = o.icon || (c0.id ? ANSWER_ICON[c0.id] : KIND_ICON[c0.type]) || 'bulb';
     const label = o.label || (A[q] ? A[q].q : String(q).trim());
@@ -1617,7 +1696,8 @@
     if (still()) { cBot.toIcon(icon, 1); done(); return; }
     if (cBot.form() === 'icon') { cBot.bounce(); cT(done, 520); return; }
     cBot.mood('think'); bubble('');
-    cT(() => cBot.toIcon(icon, 1100), 1250);
+    if (cBot.ms) cT(() => { cBot.ms.setState('searching'); sb.textContent = 'Searching'; }, 650);
+    cT(() => { cBot.toIcon(icon, 1100); if (cBot.ms) { cBot.ms.setState('ready'); sb.textContent = 'Got it'; } }, 1250);
     cT(done, 2550);
   }
 
@@ -1710,6 +1790,7 @@
   // The bot's eyes follow the pointer a little
   function botLook(e) {
     if (!cBot || view !== 'home' || homeEl.dataset.v !== 'C') return;
+    if (cBot.lookAt) { cBot.lookAt(e); return; }
     const cv = cq('.ak-bot canvas'); if (!cv) return;
     const r = cv.getBoundingClientRect(), k = r.width / (cBot.cols * cBot.pitch);
     const [cx0, cy0] = cBot.centre(), dx = (e.clientX - (r.left + cx0 * k)) / k, dy = (e.clientY - (r.top + cy0 * k)) / k;
@@ -1826,8 +1907,11 @@
     if (f.dataset.form === 'c-ask' && cBot) {
       const had = f.classList.contains('has-text');
       f.classList.toggle('has-text', has); if (cRoot()) cRoot().classList.toggle('has-text', has);
-      if (has && !had) cBot.hop();
-      clearTimeout(typeT); typeT = setTimeout(() => { if (cBot && cRoot() && cRoot().dataset.mode === 'type') cBot.blink(); }, 500);
+      if (cBot.typing) { if (cRoot() && cRoot().dataset.mode !== 'type') cMode('type'); if (has) cBot.typing(); }
+      else {
+        if (has && !had) cBot.hop();
+        clearTimeout(typeT); typeT = setTimeout(() => { if (cBot && cRoot() && cRoot().dataset.mode === 'type') cBot.blink(); }, 500);
+      }
     }
   }
 
@@ -1889,6 +1973,8 @@
     const talkUp = (e) => { if (ct.on && e.target.closest && e.target.closest('[data-act="c-talk"]')) talkRelease(); };
     root.addEventListener('pointerup', talkUp); root.addEventListener('pointercancel', talkUp); root.addEventListener('lostpointercapture', talkUp, true);
     root.addEventListener('pointermove', botLook);
+    // C with the mascot: the question field sits on the home; focusing it is the same as tapping Type
+    root.addEventListener('focusin', (e) => { if (e.target.id === 'akInC' && cBot && !cBusy && cRoot() && cRoot().dataset.mode === 'home') { stopC(); cMode('type'); } });
     root.addEventListener('keydown', (e) => {
       const h = e.target.closest && e.target.closest('[data-act="c-talk"]');
       if (h && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) talkStart(); }

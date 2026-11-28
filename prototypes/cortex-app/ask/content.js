@@ -354,8 +354,8 @@ window.ASK_CONTENT = (function () {
   // C · the pixel character's home: what it says, and the pills under the greeting
   const charC = {
     hi: 'Hi!',
-    title: 'What’s on your mind?',
-    sub: 'Ask it, say it, or show me.',
+    title: 'Hi, I’m Cortex',
+    sub: 'Ask me anything. Type, talk or show me.',
     pills: ['purr', 'croc'],
     unfinished: 'brain', unfinishedTag: 'unfinished',
     back: 'What next?',
@@ -376,5 +376,17 @@ window.ASK_CONTENT = (function () {
     artifact: { name: 'something to make', gets: 'something to keep or share, like a card or a quiz', shape: 'ak-card', near: ['octo'] },
   };
 
-  return { answers, terms, wonder, suggestions, history, talk, show, kinds, charC };
+  // ───────── What the mascot becomes for each answer (see mascot/mascot.js topics) ─────────
+  const mascot = {
+    answers: { purr: 'cat', leaf: 'leaf', croc: 'crocodile', sun: 'planet', brain: 'brain', photo: 'camera', octo: 'octopus' },
+    terms: {
+      larynx: 'music', vibration: 'music', hertz: 'music', vocalfolds: 'music', solicit: 'cat', roar: 'cat',
+      chlorophyll: 'leaf', carotenoids: 'leaf', anthocyanins: 'leaf', crocodilians: 'crocodile', saltglands: 'crocodile', everglades: 'crocodile',
+      light: 'planet', supergiant: 'planet', fusion: 'atom', fmri: 'brain', energy: 'brain', glia: 'brain',
+      hearts: 'heart', hemocyanin: 'octopus', chromatophores: 'octopus', exposure: 'camera', aperture: 'camera', thirds: 'camera',
+    },
+    kinds: { explain: 'atom', compare: null, scale: 'planet', myth: 'brain', course: 'book', artifact: 'heart' },
+  };
+
+  return { answers, terms, wonder, suggestions, history, talk, show, kinds, charC, mascot };
 })();
